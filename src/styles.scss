@@ -79,14 +79,14 @@
   --canvas: #0c101b;
   --line: #2e364a;
   --line-soft: #232a3c;
-  --column-bg: #221f45;
-  --column-border: #4a4399;
-  --column-title: #eeecff;
-  --column-ink: #bdb6ff;
-  --column-chip: #16142f;
-  --column-chip-border: #5a52b0;
-  --column-dashed: #5a52b0;
-  --column-hover: #2f2b5e;
+  --column-bg: var(--accent);   /* same purple as the buttons */
+  --column-border: #9a91ff;
+  --column-title: #ffffff;
+  --column-ink: #ffffff;
+  --column-chip: #5a4fd4;
+  --column-chip-border: #a59dff;
+  --column-dashed: #c3bdff;
+  --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
 
   --accent: #7c71f5;
@@ -124,14 +124,14 @@
   --canvas: #0c101b;
   --line: #2e364a;
   --line-soft: #232a3c;
-  --column-bg: #221f45;
-  --column-border: #4a4399;
-  --column-title: #eeecff;
-  --column-ink: #bdb6ff;
-  --column-chip: #16142f;
-  --column-chip-border: #5a52b0;
-  --column-dashed: #5a52b0;
-  --column-hover: #2f2b5e;
+  --column-bg: var(--accent);   /* same purple as the buttons */
+  --column-border: #9a91ff;
+  --column-title: #ffffff;
+  --column-ink: #ffffff;
+  --column-chip: #5a4fd4;
+  --column-chip-border: #a59dff;
+  --column-dashed: #c3bdff;
+  --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
 
   --accent: #7c71f5;
