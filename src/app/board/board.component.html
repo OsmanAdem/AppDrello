@@ -33,7 +33,22 @@
       <button type="button" [class.is-active]="activeView === 'calendar'" [attr.aria-pressed]="activeView === 'calendar'" (click)="setActiveView('calendar')">
         <span aria-hidden="true">▣</span> Calendar
       </button>
+      <button type="button" [class.is-active]="activeView === 'timeline'" [attr.aria-pressed]="activeView === 'timeline'" (click)="setActiveView('timeline')">
+        <span aria-hidden="true">≡</span> Timeline
+      </button>
+      <button type="button" [class.is-active]="activeView === 'backlog'" [attr.aria-pressed]="activeView === 'backlog'" (click)="setActiveView('backlog')">
+        <span aria-hidden="true">☰</span> Backlog
+      </button>
     </div>
+    <button
+      type="button"
+      class="view-button"
+      *ngIf="activeSprint && activeView !== 'backlog'"
+      [class.is-active]="showActiveSprintOnly"
+      [attr.aria-pressed]="showActiveSprintOnly"
+      (click)="toggleActiveSprintFilter()">
+      ⚑ Only {{ activeSprint.name }}
+    </button>
     <label class="board-search">
       <span aria-hidden="true">⌕</span>
       <input
@@ -175,6 +190,90 @@
       <span class="calendar-footer-note">Showing {{ calendarScheduledTaskCount }} dated tasks</span>
     </footer>
   </section>
+
+  <!-- Backlog and sprint planning -->
+  <app-backlog
+    *ngIf="activeView === 'backlog'"
+    [boardId]="boardId"
+    [columns]="columns"
+    [cards]="backlogCards"
+    (cardsChanged)="saveColumns()"
+    (sprintsChanged)="onSprintsChanged($event)"
+    (openCard)="openCalendarCard($event)">
+  </app-backlog>
+
+  <!-- Timeline view: a four-week view where each task is a bar from start date to due date -->
+  <section class="calendar-view timeline-view" *ngIf="activeView === 'timeline'" aria-label="Task timeline">
+    <header class="calendar-header">
+      <div>
+        <p class="calendar-eyebrow">TIMELINE</p>
+        <h2>{{ timelineTitle }}</h2>
+        <p class="calendar-subtitle">See how tasks are spread out over the next weeks.</p>
+      </div>
+      <div class="calendar-controls">
+        <button type="button" class="calendar-today-button" (click)="goToCurrentWeek()">Today</button>
+        <div class="calendar-month-controls" aria-label="Move timeline">
+          <button type="button" (click)="moveTimeline(-1)" aria-label="Previous week">‹</button>
+          <button type="button" (click)="moveTimeline(1)" aria-label="Next week">›</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="calendar-grid-scroll">
+      <div class="timeline">
+        <div class="timeline-row timeline-days" [style.grid-template-columns]="'repeat(' + timelineLength + ', minmax(30px, 1fr))'">
+          <div
+            class="timeline-day"
+            *ngFor="let day of timelineDays"
+            [class.is-today]="day.isToday"
+            [class.is-week-start]="day.isWeekStart">
+            <span class="timeline-weekday">{{ day.date | date:'EEEEE' }}</span>
+            <span class="timeline-date">{{ day.date.getDate() }}</span>
+          </div>
+        </div>
+
+        <ng-container *ngFor="let group of timelineGroups">
+          <div class="timeline-group-label">
+            {{ group.column.title }} <span>{{ group.bars.length }}</span>
+          </div>
+          <div
+            class="timeline-row"
+            *ngFor="let bar of group.bars"
+            [style.grid-template-columns]="'repeat(' + timelineLength + ', minmax(30px, 1fr))'">
+            <button
+              type="button"
+              class="timeline-bar"
+              [style.grid-column]="bar.gridColumn"
+              [class.priority-high]="bar.card.priority === 'High'"
+              [class.priority-medium]="bar.card.priority === 'Medium'"
+              [class.priority-low]="bar.card.priority === 'Low'"
+              [class.starts-before]="bar.startsBefore"
+              [class.ends-after]="bar.endsAfter"
+              [class.is-overdue]="bar.isOverdue"
+              (click)="openCalendarCard(bar.card)"
+              [attr.aria-label]="bar.card.issueKey + ': ' + bar.card.title">
+              <span class="timeline-bar-key">{{ bar.card.issueKey }}</span>
+              <span class="timeline-bar-title">{{ bar.card.title }}</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <div class="timeline-empty" *ngIf="timelineGroups.length === 0">
+          <h3>No tasks in these weeks</h3>
+          <p>Give a task a due date (and optionally a start date) in its details to see it here.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="calendar-footer">
+      <span class="calendar-legend-item"><i class="legend-dot high-dot"></i> High priority</span>
+      <span class="calendar-legend-item"><i class="legend-dot medium-dot"></i> Medium</span>
+      <span class="calendar-legend-item"><i class="legend-dot low-dot"></i> Low</span>
+      <span class="calendar-footer-note">
+        Showing {{ timelineTaskCount }} tasks · {{ unscheduledTaskCount }} without a due date
+      </span>
+    </footer>
+  </section>
 </div>
 
 <div class="panel-backdrop" *ngIf="showActivityPanel" (click)="closeActivityPanel()">
@@ -217,6 +316,7 @@
         <div><span>Priority</span><strong>{{ selectedCalendarCard.priority || 'Not set' }}</strong></div>
         <div><span>Assignee</span><strong>{{ selectedCalendarCard.assignee || 'Unassigned' }}</strong></div>
         <div><span>Label</span><strong>{{ selectedCalendarCard.label || 'No label' }}</strong></div>
+        <div><span>Sprint</span><strong>{{ getSprintName(selectedCalendarCard) }}</strong></div>
       </div>
       <div class="calendar-checklist-summary" *ngIf="selectedCalendarCard.checklist?.length">
         <span>Checklist</span>

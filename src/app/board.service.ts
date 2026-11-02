@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BoardActivity, Card, Column, Board } from './card/card.model';
+import { BoardActivity, Card, Column, Board, Sprint } from './card/card.model';
 
 @Injectable({
   providedIn: 'root'
@@ -83,6 +83,7 @@ export class BoardService {
     this.writeBoards(boards);
     localStorage.removeItem(`drello-columns-${boardId}`);
     localStorage.removeItem(`drello-activity-${boardId}`);
+    localStorage.removeItem(`drello-sprints-${boardId}`);
 
     // Remove legacy data when deleting the legacy default board.
     if (boardId === 'default') {
@@ -106,6 +107,7 @@ export class BoardService {
         (
           key.startsWith('drello-columns-') ||
           key.startsWith('drello-activity-') ||
+          key.startsWith('drello-sprints-') ||
           key === this.legacyColumnsKey
         )
       ) {
@@ -190,6 +192,25 @@ export class BoardService {
       `drello-columns-${boardId}`,
       JSON.stringify(columns)
     );
+  }
+
+  getSprints(boardId: string): Sprint[] {
+    if (!this.isBrowser) return [];
+
+    try {
+      const stored = localStorage.getItem(`drello-sprints-${boardId}`);
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed as Sprint[] : [];
+    } catch (error) {
+      console.error('Could not load sprints:', error);
+      return [];
+    }
+  }
+
+  saveSprints(boardId: string, sprints: Sprint[]): void {
+    if (!this.isBrowser) return;
+
+    localStorage.setItem(`drello-sprints-${boardId}`, JSON.stringify(sprints));
   }
 
   getActivity(boardId: string): BoardActivity[] {

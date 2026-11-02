@@ -139,6 +139,16 @@
         </label>
 
         <label class="field-group">
+          <span>Start date</span>
+          <input
+            type="date"
+            [(ngModel)]="card.startDate"
+            (ngModelChange)="onTitleChange()"
+            [max]="card.dueDate || null"
+            aria-label="Start date">
+        </label>
+
+        <label class="field-group">
           <span>Due date</span>
           <input
             type="date"

@@ -18,6 +18,7 @@ export interface Card {
   label?: CardLabel;
   description?: string;
   assignee?: string;
+  startDate?: string;
   dueDate?: string;
   checklist?: ChecklistItem[];
   sprintId?: string;

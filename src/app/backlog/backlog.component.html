@@ -1,0 +1,100 @@
+<section class="calendar-view backlog-view" aria-label="Backlog and sprints">
+  <header class="calendar-header">
+    <div>
+      <p class="calendar-eyebrow">PLANNING</p>
+      <h2>Backlog &amp; sprints</h2>
+      <p class="calendar-subtitle">Plan what to work on next, one sprint at a time.</p>
+    </div>
+    <button type="button" class="backlog-primary" (click)="openCreateForm()" *ngIf="!showCreateForm">
+      + Create sprint
+    </button>
+  </header>
+
+  <!-- Create sprint form -->
+  <form class="sprint-form" *ngIf="showCreateForm" (ngSubmit)="createSprint()">
+    <label>
+      <span>Name</span>
+      <input name="name" [(ngModel)]="newSprint.name" maxlength="60" required>
+    </label>
+    <label class="sprint-form-goal">
+      <span>Sprint goal (optional)</span>
+      <input name="goal" [(ngModel)]="newSprint.goal" maxlength="160" placeholder="What should this sprint achieve?">
+    </label>
+    <label>
+      <span>Start</span>
+      <input type="date" name="startDate" [(ngModel)]="newSprint.startDate">
+    </label>
+    <label>
+      <span>End</span>
+      <input type="date" name="endDate" [(ngModel)]="newSprint.endDate" [min]="newSprint.startDate || null">
+    </label>
+    <p class="sprint-form-error" *ngIf="formError" role="alert">{{ formError }}</p>
+    <div class="sprint-form-actions">
+      <button type="button" class="backlog-secondary" (click)="showCreateForm = false">Cancel</button>
+      <button type="submit" class="backlog-primary">Create sprint</button>
+    </div>
+  </form>
+
+  <!-- Open sprints -->
+  <article class="sprint" *ngFor="let sprint of openSprints" [class.is-active]="sprint.status === 'active'">
+    <header class="sprint-header">
+      <div class="sprint-heading">
+        <h3>{{ sprint.name }}</h3>
+        <span class="sprint-status" [attr.data-status]="sprint.status">{{ sprint.status === 'active' ? 'Active' : 'Planned' }}</span>
+        <span class="sprint-dates" *ngIf="sprint.startDate || sprint.endDate">
+          {{ sprint.startDate | date:'MMM d' }} – {{ sprint.endDate | date:'MMM d' }}
+        </span>
+      </div>
+      <div class="sprint-actions">
+        <button type="button" class="backlog-primary" *ngIf="sprint.status === 'planned'" (click)="startSprint(sprint)">Start sprint</button>
+        <button type="button" class="backlog-primary" *ngIf="sprint.status === 'active'" (click)="completeSprint(sprint)">Complete sprint</button>
+        <button type="button" class="backlog-secondary" *ngIf="sprint.status === 'planned'" (click)="deleteSprint(sprint)" [attr.aria-label]="'Delete ' + sprint.name">Delete</button>
+      </div>
+    </header>
+    <p class="sprint-goal" *ngIf="sprint.goal">🎯 {{ sprint.goal }}</p>
+    <div class="sprint-progress" *ngIf="cardsInSprint(sprint).length">
+      <div class="sprint-progress-track"><span [style.width.%]="progress(sprint)"></span></div>
+      <small>{{ doneCount(sprint) }} of {{ cardsInSprint(sprint).length }} done</small>
+    </div>
+
+    <ng-container *ngTemplateOutlet="cardList; context: { $implicit: cardsInSprint(sprint), empty: 'Move tasks here from the backlog below.' }"></ng-container>
+  </article>
+
+  <!-- Backlog -->
+  <article class="sprint backlog-section">
+    <header class="sprint-header">
+      <div class="sprint-heading">
+        <h3>Backlog</h3>
+        <span class="sprint-count">{{ backlogCards.length }} tasks</span>
+      </div>
+    </header>
+    <ng-container *ngTemplateOutlet="cardList; context: { $implicit: backlogCards, empty: 'The backlog is empty. New cards land here until you plan them into a sprint.' }"></ng-container>
+  </article>
+
+  <p class="completed-note" *ngIf="completedSprints.length">
+    Completed sprints: {{ completedSprints.length }}
+  </p>
+</section>
+
+<!-- One reusable list of task rows, used by every sprint and the backlog -->
+<ng-template #cardList let-cards let-empty="empty">
+  <p class="backlog-empty" *ngIf="cards.length === 0">{{ empty }}</p>
+  <ul class="backlog-list" *ngIf="cards.length">
+    <li class="backlog-row" *ngFor="let card of cards" [class.is-done]="isDone(card)">
+      <button type="button" class="backlog-row-main" (click)="openCard.emit(card)">
+        <span class="backlog-priority" [attr.data-priority]="card.priority"></span>
+        <span class="backlog-key">{{ card.issueKey }}</span>
+        <span class="backlog-title">{{ card.title }}</span>
+      </button>
+      <span class="backlog-column">{{ columnTitle(card) }}</span>
+      <select
+        class="backlog-move"
+        [ngModel]="sprintValue(card)"
+        (ngModelChange)="moveCard(card, $event)"
+        [attr.aria-label]="'Move ' + card.title + ' to sprint'">
+        <option value="">Backlog</option>
+        <option *ngFor="let sprint of openSprints" [value]="sprint.id">{{ sprint.name }}</option>
+      </select>
+    </li>
+  </ul>
+</ng-template>

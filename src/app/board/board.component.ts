@@ -11,10 +11,17 @@ import { Subscription } from 'rxjs';
 import {
   BoardActivity,
   Card,
-  Column
+  Column,
+  Sprint
 } from '../card/card.model';
 import { BoardService } from '../board.service';
-import { toDateKey } from '../shared/date-utils';
+import {
+  addDays,
+  daysBetween,
+  parseDateKey,
+  startOfWeek,
+  toDateKey
+} from '../shared/date-utils';
 
 type TaskView =
   | 'all'
@@ -32,6 +39,28 @@ type TaskView =
 interface TaskViewGroup {
   title: string;
   views: { id: TaskView; label: string }[];
+}
+
+type BoardView = 'board' | 'calendar' | 'timeline' | 'backlog';
+
+interface TimelineDay {
+  date: Date;
+  key: string;
+  isToday: boolean;
+  isWeekStart: boolean;
+}
+
+interface TimelineBar {
+  card: Card;
+  gridColumn: string;   // CSS grid position, e.g. "3 / 8"
+  startsBefore: boolean; // the task began before the visible range
+  endsAfter: boolean;    // the task continues after the visible range
+  isOverdue: boolean;
+}
+
+interface TimelineGroup {
+  column: Column;
+  bars: TimelineBar[];
 }
 
 interface CalendarDay {
@@ -53,9 +82,13 @@ export class BoardComponent implements OnInit, OnDestroy {
   boardName = '';
   taskView: TaskView = 'all';
   taskSearch = '';
-  activeView: 'board' | 'calendar' = 'board';
+  activeView: BoardView = 'board';
+  timelineStart = startOfWeek(new Date());
+  readonly timelineLength = 28; // days shown at once (4 weeks)
   calendarAnchor = new Date();
   showActivityPanel = false;
+  sprints: Sprint[] = [];
+  showActiveSprintOnly = false;
   activity: BoardActivity[] = [];
   selectedCalendarCard: Card | null = null;
   readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -104,7 +137,8 @@ export class BoardComponent implements OnInit, OnDestroy {
       this.loadBoard();
     });
     this.routeSubscription.add(this.route.queryParamMap.subscribe(params => {
-      this.activeView = params.get('view') === 'calendar' ? 'calendar' : 'board';
+      const view = params.get('view');
+      this.activeView = view === 'calendar' || view === 'timeline' || view === 'backlog' ? view : 'board';
     }));
   }
 
@@ -164,12 +198,12 @@ export class BoardComponent implements OnInit, OnDestroy {
     ).length, 0);
   }
 
-  setActiveView(view: 'board' | 'calendar'): void {
+  setActiveView(view: BoardView): void {
     this.activeView = view;
     this.selectedCalendarCard = null;
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { view: view === 'calendar' ? 'calendar' : null },
+      queryParams: { view: view === 'board' ? null : view },
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
@@ -185,6 +219,109 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   goToCurrentMonth(): void {
     this.calendarAnchor = new Date();
+  }
+
+  // ----- Timeline view -----
+
+  get timelineEnd(): Date {
+    return addDays(this.timelineStart, this.timelineLength - 1);
+  }
+
+  get timelineTitle(): string {
+    const format = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+    return `${format.format(this.timelineStart)} – ${format.format(this.timelineEnd)}, ${this.timelineEnd.getFullYear()}`;
+  }
+
+  get timelineDays(): TimelineDay[] {
+    const todayKey = toDateKey(new Date());
+
+    return Array.from({ length: this.timelineLength }, (_, index) => {
+      const date = addDays(this.timelineStart, index);
+      const key = toDateKey(date);
+      return { date, key, isToday: key === todayKey, isWeekStart: date.getDay() === 1 };
+    });
+  }
+
+  /** Cards with a due date, grouped by column, positioned on the timeline grid. */
+  get timelineGroups(): TimelineGroup[] {
+    const firstKey = toDateKey(this.timelineStart);
+    const lastKey = toDateKey(this.timelineEnd);
+    const todayKey = toDateKey(new Date());
+
+    return this.columns
+      .map(column => {
+        const bars = this.getFilteredCards(column)
+          .filter(card => !!card.dueDate)
+          .map(card => {
+            // A card without a start date is shown as a one-day bar on its due date.
+            let start = card.startDate || card.dueDate!;
+            let end = card.dueDate!;
+            if (start > end) [start, end] = [end, start];
+            return { card, start, end };
+          })
+          // Keep only cards that overlap the visible four weeks.
+          .filter(item => item.end >= firstKey && item.start <= lastKey)
+          .sort((a, b) => a.start.localeCompare(b.start))
+          .map(item => {
+            const visibleStart = item.start < firstKey ? firstKey : item.start;
+            const visibleEnd = item.end > lastKey ? lastKey : item.end;
+            const startColumn = this.timelineDayIndex(visibleStart) + 1;
+            const endColumn = this.timelineDayIndex(visibleEnd) + 2;
+
+            return {
+              card: item.card,
+              gridColumn: `${startColumn} / ${endColumn}`,
+              startsBefore: item.start < firstKey,
+              endsAfter: item.end > lastKey,
+              isOverdue: item.end < todayKey && !this.isCompleted(item.card, column)
+            };
+          });
+
+        return { column, bars };
+      })
+      .filter(group => group.bars.length > 0);
+  }
+
+  get timelineTaskCount(): number {
+    return this.timelineGroups.reduce((total, group) => total + group.bars.length, 0);
+  }
+
+  moveTimeline(weeks: number): void {
+    this.timelineStart = addDays(this.timelineStart, weeks * 7);
+  }
+
+  goToCurrentWeek(): void {
+    this.timelineStart = startOfWeek(new Date());
+  }
+
+  // ----- Sprints -----
+
+  get activeSprint(): Sprint | undefined {
+    return this.sprints.find(sprint => sprint.status === 'active');
+  }
+
+  /** All cards for the backlog view: search and quick views apply, the sprint filter does not. */
+  get backlogCards(): Card[] {
+    return this.columns.flatMap(column => this.getFilteredCards(column, true));
+  }
+
+  onSprintsChanged(sprints: Sprint[]): void {
+    this.sprints = sprints;
+    if (!this.activeSprint) this.showActiveSprintOnly = false;
+  }
+
+  toggleActiveSprintFilter(): void {
+    this.showActiveSprintOnly = !this.showActiveSprintOnly;
+  }
+
+  getSprintName(card: Card): string {
+    return this.sprints.find(sprint =>
+      sprint.id === card.sprintId && sprint.status !== 'completed'
+    )?.name || 'Backlog';
+  }
+
+  private timelineDayIndex(dateKey: string): number {
+    return daysBetween(this.timelineStart, parseDateKey(dateKey));
   }
 
   openActivityPanel(): void {
@@ -241,7 +378,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   get filtersActive(): boolean {
-    return this.taskView !== 'all' || !!this.taskSearch.trim();
+    return this.taskView !== 'all' || !!this.taskSearch.trim() || this.showActiveSprintOnly;
   }
 
   get totalTaskCount(): number {
@@ -265,22 +402,26 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.taskView = view;
   }
 
-  getFilteredCards(column: Column): Card[] {
+  getFilteredCards(column: Column, ignoreSprintFilter = false): Card[] {
     const query = this.taskSearch.trim().toLocaleLowerCase();
+    const activeSprintId = this.activeSprint?.id;
     return column.cards.filter(card => {
+      const matchesSprint = ignoreSprintFilter || !this.showActiveSprintOnly ||
+        (!!activeSprintId && card.sprintId === activeSprintId);
       const matchesView = this.taskView === 'all' ||
         this.matchesTaskView(card, column, this.taskView);
       const searchableText = [card.title, card.description, card.issueKey]
         .filter(Boolean)
         .join(' ')
         .toLocaleLowerCase();
-      return matchesView && (!query || searchableText.includes(query));
+      return matchesSprint && matchesView && (!query || searchableText.includes(query));
     });
   }
 
   clearFilters(): void {
     this.taskView = 'all';
     this.taskSearch = '';
+    this.showActiveSprintOnly = false;
   }
 
   private matchesTaskView(card: Card, column: Column, view: TaskView): boolean {
@@ -450,6 +591,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.boardName = board?.name || 'Default Board';
     this.columns = this.boardService.loadColumns(this.boardId);
     this.lastSavedColumns = this.cloneColumns(this.columns);
+    this.sprints = this.boardService.getSprints(this.boardId);
+    this.showActiveSprintOnly = false;
     this.activity = this.boardService.getActivity(this.boardId);
   }
 
@@ -516,6 +659,7 @@ export class BoardComponent implements OnInit, OnDestroy {
       priority: 'the priority',
       label: 'the label',
       assignee: 'the assignee',
+      startDate: 'the start date',
       dueDate: 'the due date',
       checklist: 'the checklist'
     };
