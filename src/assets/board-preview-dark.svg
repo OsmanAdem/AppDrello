@@ -38,8 +38,8 @@
         .card-title{color:#eef1f8}
         .select{border-color:#2e364a;background:#121623;color:#d4dae6}
         .chevron{color:#8f9ab0}
-        .add-card-input{border-color:#2e364a;background:#171c2a;color:#eef1f8}
-        .add-card-input span{color:#8f9ab0}
+        .add-card-input{border-color:#3d4660;background:#262d40;color:#eef1f8}
+        .add-card-input span{color:#aab4c7}
         .add-card-button{border-color:#5a4fd4;background:#5a4fd4;color:#ffffff}
       </xhtml:style>
       <xhtml:section class="column">
