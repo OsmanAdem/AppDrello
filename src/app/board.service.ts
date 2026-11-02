@@ -16,25 +16,7 @@ export class BoardService {
   }
 
   getBoards(): Board[] {
-    if (!this.isBrowser) {
-      return [];
-    }
-
-    try {
-      const stored = localStorage.getItem(this.boardsKey);
-
-      // No stored boards means the gallery starts empty.
-      if (stored === null) {
-        return [];
-      }
-
-      const parsed: unknown = JSON.parse(stored);
-
-      return Array.isArray(parsed) ? parsed as Board[] : [];
-    } catch (error) {
-      console.error('Could not load boards:', error);
-      return [];
-    }
+    return this.readStoredBoards();
   }
 
   createBoard(name: string): Board {
@@ -54,7 +36,7 @@ export class BoardService {
     boards.push(board);
 
     this.writeBoards(boards);
-    this.saveColumns(board.id, this.getStandardColumns(board.id));
+    this.saveColumns(board.id, this.createDefaultColumns(board.id));
     this.recordActivity(board.id, 'Board created', `Created the “${cleanName}” board.`);
 
     return board;
@@ -338,7 +320,7 @@ export class BoardService {
     };
   }
 
-  private getStandardColumns(boardId: string): Column[] {
+  createDefaultColumns(boardId: string): Column[] {
     return [
       {
         id: `col-1-${boardId}`,

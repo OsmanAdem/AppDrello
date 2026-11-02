@@ -14,6 +14,7 @@ import {
   Column
 } from '../card/card.model';
 import { BoardService } from '../board.service';
+import { toDateKey } from '../shared/date-utils';
 
 type TaskView =
   | 'all'
@@ -125,13 +126,13 @@ export class BoardComponent implements OnInit, OnDestroy {
     const first = new Date(year, month, 1);
     const mondayOffset = (first.getDay() + 6) % 7;
     const start = new Date(year, month, 1 - mondayOffset);
-    const todayKey = this.toDateKey(new Date());
+    const todayKey = toDateKey(new Date());
     const cards = this.columns.flatMap(column => this.getFilteredCards(column));
 
     return Array.from({ length: 42 }, (_, index) => {
       const date = new Date(start);
       date.setDate(start.getDate() + index);
-      const key = this.toDateKey(date);
+      const key = toDateKey(date);
       return {
         date,
         key,
@@ -157,7 +158,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   get overdueCalendarTaskCount(): number {
-    const todayKey = this.toDateKey(new Date());
+    const todayKey = toDateKey(new Date());
     return this.columns.reduce((total, column) => total + this.getFilteredCards(column).filter(card =>
       !!card.dueDate && card.dueDate < todayKey && !this.isCompleted(card, column)
     ).length, 0);
@@ -233,10 +234,6 @@ export class BoardComponent implements OnInit, OnDestroy {
     if (value.includes('moved')) return '→';
     if (value.includes('renamed') || value.includes('updated')) return '✎';
     return '•';
-  }
-
-  private toDateKey(date: Date): string {
-    return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}-${`${date.getDate()}`.padStart(2, '0')}`;
   }
 
   getDropListIds(): string[] {
@@ -404,28 +401,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     if (!confirmed) return;
     this.clearCardActivityTimers();
 
-    // Restore the three default columns with empty cards.
-    // Only the current board is affected.
-    this.columns = [
-      {
-        id: `col-1-${this.boardId}`,
-        boardId: this.boardId,
-        title: 'To Do',
-        cards: []
-      },
-      {
-        id: `col-2-${this.boardId}`,
-        boardId: this.boardId,
-        title: 'In Progress',
-        cards: []
-      },
-      {
-        id: `col-3-${this.boardId}`,
-        boardId: this.boardId,
-        title: 'Done',
-        cards: []
-      }
-    ];
+    // Restore the default columns with empty cards. Only this board is affected.
+    this.columns = this.boardService.createDefaultColumns(this.boardId);
 
     this.clearFilters();
 
