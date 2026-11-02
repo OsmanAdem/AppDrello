@@ -17,8 +17,8 @@
   width: 100%;
   box-sizing: border-box;
   padding: 12px 12px 11px 15px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
   transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;

@@ -29,6 +29,10 @@
   --column-hover: #dfddff;
   --column-shadow: 0 6px 18px rgba(67, 53, 196, .11);
 
+  /* Task cards inside the columns */
+  --card-bg: var(--surface);
+  --card-border: var(--line);
+
   /* Board cards on the Boards page */
   --board-card-bg: var(--surface);
   --board-card-border: var(--line);
@@ -98,6 +102,8 @@
   --column-dashed: #c3bdff;
   --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  --card-bg: #262d40;   /* lighter than the page, so cards look raised on the purple column */
+  --card-border: #3d4660;
   --board-card-bg: var(--accent);   /* same purple as the buttons and columns */
   --board-card-border: #9a91ff;
   --board-card-title: #ffffff;
@@ -151,6 +157,8 @@
   --column-dashed: #c3bdff;
   --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  --card-bg: #262d40;   /* lighter than the page, so cards look raised on the purple column */
+  --card-border: #3d4660;
   --board-card-bg: var(--accent);   /* same purple as the buttons and columns */
   --board-card-border: #9a91ff;
   --board-card-title: #ffffff;

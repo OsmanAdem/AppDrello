@@ -27,7 +27,7 @@
         .column-title{color:#ffffff}
         .card-count{border-color:#a59dff;background:#5a4fd4;color:#ffffff}
         .rename,.delete{color:#ffffff}
-        .card{border-color:#2e364a;background:#171c2a;box-shadow:0 1px 2px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25)}
+        .card{border-color:#3d4660;background:#262d40;box-shadow:0 1px 2px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25)}
         .issue-key{color:#aab4c7}
         .label-badge{background:#232a3c;color:#d4dae6}
         .feature{background:#1e2a55;color:#aebfff}
