@@ -4,8 +4,8 @@
   min-height: 82px;
   padding: 18px 32px;
   border-top: 1px solid var(--line);
-  background: rgba(255,255,255,.72);
-  color: #59667c;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: var(--text-muted);
 }
 
 .footer-content {
@@ -19,7 +19,7 @@
   font-size: 12px;
 }
 
-.footer-content span:first-child { color: #4f46d1; font-size: 13px; font-weight: 800; letter-spacing: -.03em; }
+.footer-content span:first-child { color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: -.03em; }
 
 @media (max-width: 600px) {
   .site-footer { min-height: 72px; padding: 14px 18px; }

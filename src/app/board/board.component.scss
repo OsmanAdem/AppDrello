@@ -69,7 +69,7 @@
   padding: 9px 13px;
   border: 1px solid var(--line);
   border-radius: 11px;
-  background: #fff;
+  background: var(--surface);
   color: var(--text-strong);
   text-align: left;
 }
@@ -82,7 +82,7 @@
 
 .overdue-stat:hover,
 .overdue-stat.is-active {
-  border-color: #fecaca;
+  border-color: var(--danger-soft);
   background: var(--danger-soft);
 }
 
@@ -102,13 +102,13 @@
 }
 
 .total-icon {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: var(--surface-sunken);
+  color: var(--accent);
 }
 
 .overdue-icon {
   background: var(--danger-soft);
-  color: #dc2626;
+  color: var(--danger-strong);
 }
 
 .board-stat strong,
@@ -134,9 +134,9 @@
   gap: 7px;
   min-height: 44px;
   padding: 0 13px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--accent-soft);
   border-radius: 9px;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
   font-size: 12px;
   font-weight: 700;
@@ -145,8 +145,8 @@
 }
 
 .reset-board-button:hover {
-  border-color: #9eaabd;
-  background: #e8ecf3;
+  border-color: var(--line);
+  background: var(--line-soft);
   transform: translateY(-1px);
 }
 
@@ -160,7 +160,7 @@
   padding: 11px 13px;
   border: 1px solid var(--line);
   border-radius: 15px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 5px 16px rgba(29, 39, 74, .055);
 }
 
@@ -175,16 +175,16 @@
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: #fff;
-  color: #53617a;
+  background: var(--surface);
+  color: var(--text-muted);
 }
 
 .board-search:focus-within { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(81, 70, 216, .08); }
 .board-search > span { font-size: 20px; line-height: 1; }
-.board-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: #263653; font-size: 12px; }
+.board-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--accent-hover); font-size: 12px; }
 .board-search input::placeholder { color: var(--text-muted); opacity: 1; }
 .board-search input::-webkit-search-cancel-button { display: none; }
-.clear-search { display: grid; flex: 0 0 21px; place-items: center; width: 21px; height: 21px; border: 0; border-radius: 6px; background: transparent; color: #778399; font-size: 16px; cursor: pointer; }
+.clear-search { display: grid; flex: 0 0 21px; place-items: center; width: 21px; height: 21px; border: 0; border-radius: 6px; background: transparent; color: var(--text-subtle); font-size: 16px; cursor: pointer; }
 .clear-search:hover { background: var(--accent-soft); color: var(--accent); }
 
 .toolbar-label {
@@ -201,7 +201,7 @@
   flex-wrap: wrap;
   gap: 6px;
   padding-left: 12px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--accent-soft);
 }
 
 .quick-view-group-label {
@@ -228,7 +228,7 @@
   padding: 0 11px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   color: var(--text);
   font: inherit;
   font-size: 12px;
@@ -265,7 +265,7 @@
 }
 
 .view-button.is-active span {
-  background: #fff;
+  background: var(--surface);
   color: var(--accent-hover);
 }
 
@@ -281,7 +281,7 @@
 }
 
 .results-bar strong {
-  color: #334155;
+  color: var(--text);
 }
 
 .drag-hint {
@@ -305,7 +305,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--accent-border) transparent;
 }
 
 .columns-viewport::-webkit-scrollbar {
@@ -320,7 +320,7 @@
 .columns-viewport::-webkit-scrollbar-thumb {
   border: 2px solid var(--line-soft);
   border-radius: 8px;
-  background: #aeb9c8;
+  background: var(--line-soft);
 }
 
 .board {
@@ -343,7 +343,7 @@
   margin-top: 20px;
   margin-left: 0;
   padding: 12px;
-  border: 1px solid #8278d4;
+  border: 1px solid var(--accent-border);
   border-radius: 14px;
   background: var(--accent-softer);
   color: var(--accent-hover);
@@ -355,9 +355,9 @@
 }
 
 .add-column-button:hover {
-  border-color: #6255c7;
-  background: #eeebff;
-  color: #292078;
+  border-color: var(--accent);
+  background: var(--surface-sunken);
+  color: var(--accent-hover);
   box-shadow: 0 5px 15px rgba(67, 53, 196, .16);
   transform: translateY(-2px);
 }

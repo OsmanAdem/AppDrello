@@ -1,7 +1,7 @@
 .backlog-primary, .backlog-secondary { height: 36px; padding: 0 14px; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
 .backlog-primary { border: 1px solid var(--accent); background: var(--accent); color: #fff; }
 .backlog-primary:hover { background: var(--accent-hover); }
-.backlog-secondary { border: 1px solid var(--line); background: #fff; color: var(--text); }
+.backlog-secondary { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
 .backlog-secondary:hover { border-color: var(--accent-border); background: var(--accent-softer); }
 .backlog-primary:focus-visible, .backlog-secondary:focus-visible, .backlog-row-main:focus-visible, .backlog-move:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
@@ -13,8 +13,8 @@
 .sprint-form-error { grid-column: 1 / -1; margin: 0; color: var(--danger-strong); font-size: 12px; font-weight: 650; }
 .sprint-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
 
-.sprint { margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-.sprint.is-active { border-color: var(--accent-border); box-shadow: 0 0 0 3px #f0eeff; }
+.sprint { margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.sprint.is-active { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--line-soft); }
 .backlog-section { background: var(--surface-sunken); }
 .sprint-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .sprint-heading { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -31,7 +31,7 @@
 
 .backlog-empty { margin: 12px 0 2px; color: var(--text-subtle); font-size: 12px; }
 .backlog-list { margin: 12px 0 0; padding: 0; list-style: none; border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; }
-.backlog-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: #fff; }
+.backlog-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--surface); }
 .backlog-row + .backlog-row { border-top: 1px solid var(--line-soft); }
 .backlog-row.is-done .backlog-title { color: var(--text-subtle); text-decoration: line-through; }
 .backlog-row-main { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; padding: 4px; border: 0; border-radius: 6px; background: none; font: inherit; text-align: left; cursor: pointer; }
@@ -43,7 +43,7 @@
 .backlog-key { flex: 0 0 auto; color: var(--accent); font-size: 12px; font-weight: 800; }
 .backlog-title { min-width: 0; overflow: hidden; color: var(--text); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .backlog-column { flex: 0 0 auto; padding: 3px 8px; border-radius: 6px; background: var(--canvas); color: var(--text-muted); font-size: 12px; font-weight: 700; }
-.backlog-move { flex: 0 0 140px; height: 30px; padding: 0 6px; border: 1px solid var(--line); border-radius: 7px; background: #fff; font: inherit; font-size: 12px; }
+.backlog-move { flex: 0 0 140px; height: 30px; padding: 0 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font: inherit; font-size: 12px; }
 
 .completed-sprints { margin-top: 6px; }
 .completed-toggle { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 6px 4px; border: 0; background: none; color: var(--text-muted); font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }

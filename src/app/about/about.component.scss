@@ -57,7 +57,7 @@
   padding: 38px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: linear-gradient(145deg, #fff, var(--accent-softer));
+  background: linear-gradient(145deg, var(--surface), var(--accent-softer));
 }
 
 .mission-mark {
@@ -67,7 +67,7 @@
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--accent);
   font-size: 34px;
 }
@@ -121,7 +121,7 @@
   padding: 25px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--surface);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -264,7 +264,7 @@
 }
 
 .about-button:focus-visible {
-  outline: 3px solid #655bd2;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 

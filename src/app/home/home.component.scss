@@ -91,19 +91,19 @@
 
 .primary-button:focus-visible,
 .secondary-button:focus-visible {
-  outline: 3px solid #655bd2;
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
 .secondary-button {
   border: 1px solid var(--line);
-  background: #ffffff;
+  background: var(--surface);
   color: var(--text);
 }
 
 .secondary-button:hover {
-  border-color: #9fb3c8;
-  background: #f0f4f8;
+  border-color: var(--accent-border);
+  background: var(--surface-sunken);
   transform: translateY(-1px);
   box-shadow: 0 5px 12px rgba(29, 39, 74, .08);
 }
@@ -126,7 +126,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #48a999;
+  background: var(--success);
 }
 
 /* Workspace preview */
@@ -136,7 +136,7 @@
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: 20px;
-  background: #ffffff;
+  background: var(--surface);
   box-shadow: 0 22px 60px rgba(29, 39, 74, 0.09);
 }
 
@@ -176,7 +176,7 @@
   margin-bottom: 26px;
   padding: 16px;
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--surface-sunken);
 }
 
 .progress-heading {
@@ -261,7 +261,7 @@
   padding: 25px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--surface);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
