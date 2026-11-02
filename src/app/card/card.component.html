@@ -1,0 +1,223 @@
+<div class="card" *ngIf="card" [id]="'card-' + card.id">
+  <div class="card-top">
+    <span class="issue-key">{{ issueKey }}</span>
+    <div class="label-badge" *ngIf="card.label" [attr.data-label]="card.label">
+      {{ card.label }}
+    </div>
+    <button
+      type="button"
+      class="details-button"
+      title="Open task details"
+      aria-label="Open task details"
+      (pointerdown)="$event.stopPropagation()"
+      (click)="openDetails(); $event.stopPropagation()">
+      ↗
+    </button>
+    <button
+      type="button"
+      class="delete-card-button"
+      title="Delete card"
+      aria-label="Delete card"
+      (pointerdown)="$event.stopPropagation()"
+      (click)="deleteCard(); $event.stopPropagation()">
+      ×
+    </button>
+  </div>
+
+  <div class="card-main">
+    <span class="priority-indicator" [attr.data-priority]="card.priority"></span>
+    <textarea
+      #cardTextarea
+      [(ngModel)]="card.title"
+      class="card-title"
+      (input)="resizeTitle(cardTextarea)"
+      (ngModelChange)="onTitleChange()"
+      rows="1"
+      aria-label="Card title">
+    </textarea>
+
+  </div>
+
+  <div class="card-footer">
+    <div class="card-summary-meta" *ngIf="card.dueDate || card.assignee || card.checklist?.length">
+      <span class="due-date" *ngIf="card.dueDate" [class.is-overdue]="isOverdue">
+        <span aria-hidden="true">◷</span>
+        {{ card.dueDate | date:'MMM d' }}
+      </span>
+      <span class="assignee" *ngIf="card.assignee" [title]="card.assignee">
+        <span class="assignee-avatar">{{ assigneeInitials }}</span>
+        <span class="assignee-name">{{ card.assignee }}</span>
+      </span>
+      <span class="checklist-summary" *ngIf="card.checklist?.length" [attr.aria-label]="completedChecklistCount + ' of ' + (card.checklist?.length || 0) + ' checklist items complete'">
+        <span aria-hidden="true">☑</span>
+        {{ completedChecklistCount }}/{{ card.checklist?.length || 0 }}
+      </span>
+    </div>
+
+    <div class="card-options">
+      <select
+        [(ngModel)]="card.priority"
+        (ngModelChange)="onTitleChange()"
+        aria-label="Card priority"
+        class="priority-select">
+        <option value=""></option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+
+      <select
+        [(ngModel)]="card.label"
+        (ngModelChange)="onTitleChange()"
+        aria-label="Card label"
+        class="label-select">
+        <option value=""></option>
+        <option value="Bug">Bug</option>
+        <option value="Feature">Feature</option>
+        <option value="Improvement">Improvement</option>
+        <option value="Planning">Planning</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div
+  class="details-backdrop"
+  *ngIf="card && isDetailsOpen"
+  (click)="closeDetails()"
+  (pointerdown)="$event.stopPropagation()"
+  (keydown.escape)="closeDetails()">
+  <section
+    class="details-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="task-details-title"
+    tabindex="-1"
+    (click)="$event.stopPropagation()"
+    (pointerdown)="$event.stopPropagation()">
+    <header class="details-header">
+      <div>
+        <span class="details-issue-key">{{ issueKey }}</span>
+        <h2 id="task-details-title">Task details</h2>
+      </div>
+      <button
+        type="button"
+        class="details-close"
+        aria-label="Close task details"
+        (click)="closeDetails()">×</button>
+    </header>
+
+    <div class="details-content">
+      <label class="field-group title-field">
+        <span>Summary</span>
+        <input
+          [(ngModel)]="card.title"
+          (ngModelChange)="onTitleChange()"
+          aria-label="Task summary"
+          maxlength="160">
+      </label>
+
+      <label class="field-group">
+        <span>Description</span>
+        <textarea
+          [(ngModel)]="card.description"
+          (ngModelChange)="onTitleChange()"
+          placeholder="Add context, acceptance criteria, or notes…"
+          rows="5"
+          aria-label="Task description"></textarea>
+      </label>
+
+      <div class="details-fields">
+        <label class="field-group">
+          <span>Assignee</span>
+          <input
+            [(ngModel)]="card.assignee"
+            (ngModelChange)="onTitleChange()"
+            placeholder="Name"
+            aria-label="Assignee">
+        </label>
+
+        <label class="field-group">
+          <span>Due date</span>
+          <input
+            type="date"
+            [(ngModel)]="card.dueDate"
+            (ngModelChange)="onTitleChange()"
+            aria-label="Due date">
+        </label>
+
+        <label class="field-group">
+          <span>Priority</span>
+          <select
+            [(ngModel)]="card.priority"
+            (ngModelChange)="onTitleChange()"
+            aria-label="Task priority">
+            <option value=""></option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </label>
+
+        <label class="field-group">
+          <span>Label</span>
+          <select
+            [(ngModel)]="card.label"
+            (ngModelChange)="onTitleChange()"
+            aria-label="Task label">
+            <option value=""></option>
+            <option value="Bug">Bug</option>
+            <option value="Feature">Feature</option>
+            <option value="Improvement">Improvement</option>
+            <option value="Planning">Planning</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </label>
+      </div>
+
+      <section class="checklist-section" aria-labelledby="checklist-title">
+        <div class="checklist-heading">
+          <div>
+            <h3 id="checklist-title">Checklist</h3>
+            <span class="checklist-count">{{ completedChecklistCount }} of {{ card.checklist?.length || 0 }} completed</span>
+          </div>
+          <span class="checklist-percent">{{ checklistProgress }}%</span>
+        </div>
+        <div class="checklist-progress" role="progressbar" [attr.aria-valuenow]="checklistProgress" aria-valuemin="0" aria-valuemax="100" aria-label="Checklist progress">
+          <span [style.width.%]="checklistProgress"></span>
+        </div>
+
+        <ul class="checklist-items" *ngIf="card.checklist?.length">
+          <li class="checklist-item" *ngFor="let item of card.checklist">
+            <label class="checklist-item-label" [class.is-complete]="item.completed">
+              <input
+                type="checkbox"
+                [(ngModel)]="item.completed"
+                (ngModelChange)="onTitleChange()"
+                [attr.aria-label]="item.text">
+              <span>{{ item.text }}</span>
+            </label>
+            <button type="button" class="remove-checklist-item" (click)="removeChecklistItem(item)" [attr.aria-label]="'Remove ' + item.text">×</button>
+          </li>
+        </ul>
+        <p class="checklist-empty" *ngIf="!card.checklist?.length">Add a few steps to track progress on this task.</p>
+
+        <div class="checklist-add-row">
+          <input
+            [(ngModel)]="newChecklistItem"
+            (keyup.enter)="addChecklistItem()"
+            placeholder="Add a checklist item"
+            aria-label="New checklist item"
+            maxlength="120">
+          <button type="button" (click)="addChecklistItem()" [disabled]="!newChecklistItem.trim()">Add</button>
+        </div>
+      </section>
+    </div>
+
+    <footer class="details-footer">
+      <span>Changes save automatically</span>
+      <button type="button" class="done-button" (click)="closeDetails()">Done</button>
+    </footer>
+  </section>
+</div>

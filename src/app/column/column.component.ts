@@ -1,0 +1,130 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  CdkDragDrop,
+  moveItemInArray,
+  transferArrayItem
+} from '@angular/cdk/drag-drop';
+import { Card, Column } from '../card/card.model';
+import { BoardService } from '../board.service';
+
+@Component({
+  selector: 'app-column',
+  templateUrl: './column.component.html',
+  styleUrls: ['./column.component.scss']
+})
+export class ColumnComponent {
+  constructor(private boardService: BoardService) {}
+  @Input() column!: Column;
+  @Input() dropListId = '';
+  @Input() connectedDropLists: string[] = [];
+  @Input() filteredCards: Card[] = [];
+  @Input() filtersActive = false;
+
+  newCardTitle = ''; // State for the inline input
+  isEditingTitle = false; // State for renaming column
+  editTitle = '';
+
+  @Output() cardsChanged = new EventEmitter<void>();
+  @Output() deleteRequested = new EventEmitter<void>();
+  @Output() renameRequested = new EventEmitter<{oldTitle: string, newTitle: string}>();
+
+  addCard(): void {
+    const title = this.newCardTitle.trim();
+
+    if (title === '') return;
+
+    this.column.cards.push({
+      id: this.createCardId(),
+      issueKey: this.boardService.nextIssueKey(this.column.boardId),
+      boardId: this.column.boardId,
+      columnId: this.column.id,
+      title: title,
+      priority: '',
+      label: ''
+    });
+
+    this.newCardTitle = ''; // Reset input after adding
+    this.cardsChanged.emit();
+  }
+
+  startRename(): void {
+    this.isEditingTitle = true;
+    this.editTitle = this.column.title;
+  }
+
+  saveRename(): void {
+    if (this.editTitle.trim() && this.editTitle.trim() !== this.column.title) {
+      this.renameRequested.emit({
+        oldTitle: this.column.title,
+        newTitle: this.editTitle.trim()
+      });
+    }
+    this.isEditingTitle = false;
+  }
+
+  cancelRename(): void {
+    this.isEditingTitle = false;
+  }
+
+  private createCardId(): string {
+    let id: string;
+
+    do {
+      id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    } while (this.column.cards.some(card => card.id === id));
+
+    return id;
+  }
+
+  deleteColumn(): void {
+    this.deleteRequested.emit();
+  }
+
+  isOverdue(card: Card): boolean {
+    if (
+      !card.dueDate ||
+      card.label === 'Completed' ||
+      ['done', 'completed'].includes(this.column.title.trim().toLowerCase())
+    ) {
+      return false;
+    }
+
+    const now = new Date();
+    const today = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}-${`${now.getDate()}`.padStart(2, '0')}`;
+
+    return card.dueDate < today;
+  }
+
+  removeCard(cardId: string): void {
+    if (!window.confirm('Delete this card?')) return;
+
+    this.column.cards = this.column.cards.filter(
+      card => card.id !== cardId
+    );
+
+    this.cardsChanged.emit();
+  }
+
+  drop(event: CdkDragDrop<Card[]>): void {
+    if (this.filtersActive) return;
+
+    if (event.previousContainer === event.container) {
+      moveItemInArray(
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+      const movedCard = event.container.data[event.currentIndex];
+      if (movedCard) movedCard.columnId = this.column.id;
+    }
+
+    this.cardsChanged.emit();
+  }
+}

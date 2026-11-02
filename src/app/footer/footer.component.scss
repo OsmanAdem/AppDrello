@@ -1,0 +1,27 @@
+:host { display: block; width: 100%; }
+
+.site-footer {
+  min-height: 82px;
+  padding: 18px 32px;
+  border-top: 1px solid #cbd3df;
+  background: rgba(255,255,255,.72);
+  color: #59667c;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1200px;
+  min-height: 44px;
+  margin: 0 auto;
+  font-size: 11px;
+}
+
+.footer-content span:first-child { color: #4f46d1; font-size: 13px; font-weight: 800; letter-spacing: -.03em; }
+
+@media (max-width: 600px) {
+  .site-footer { min-height: 72px; padding: 14px 18px; }
+  .footer-content { justify-content: center; gap: 6px 16px; flex-wrap: wrap; text-align: center; }
+}

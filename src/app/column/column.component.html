@@ -1,0 +1,87 @@
+<div class="column">
+  <!-- Column title displayed at the very top -->
+  <div class="column-header">
+    <div class="title-container">
+      <h3 class="column-title" *ngIf="!isEditingTitle">
+        <span class="card-count" title="Tasks in this column">
+          {{ column.cards.length }}
+        </span>
+        <span class="column-name">{{ column.title }}</span>
+        <button
+          type="button"
+          class="rename-column-button"
+          title="Rename column"
+          (click)="startRename()"
+          aria-label="Rename column">
+          ✎
+        </button>
+      </h3>
+
+      <div class="edit-title-container" *ngIf="isEditingTitle">
+        <input
+          type="text"
+          [(ngModel)]="editTitle"
+          (keyup.enter)="saveRename()"
+          (keyup.escape)="cancelRename()"
+          class="edit-title-input"
+          autofocus>
+        <button class="save-title-button" (click)="saveRename()">✓</button>
+      </div>
+    </div>
+
+    <div class="column-actions">
+      <button
+        type="button"
+        class="delete-column-button"
+        (click)="deleteColumn()"
+        aria-label="Delete column"
+        title="Delete column">
+        ×
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards inside the column -->
+  <div
+    class="card-list"
+    cdkDropList
+    [id]="dropListId"
+    [cdkDropListData]="column.cards"
+    [cdkDropListDisabled]="filtersActive"
+    [cdkDropListConnectedTo]="connectedDropLists"
+    (cdkDropListDropped)="drop($event)">
+
+    <div
+      *ngIf="filteredCards.length === 0"
+      class="empty-placeholder">
+      {{ filtersActive && column.cards.length > 0 ? 'No tasks match these filters' : 'Drag a card here or add a new card' }}
+    </div>
+
+    <app-card
+      *ngFor="let card of filteredCards"
+      cdkDrag
+      [cdkDragDisabled]="filtersActive"
+      [cdkDragData]="card"
+      [card]="card"
+      [isOverdue]="isOverdue(card)"
+      (deleteRequested)="removeCard(card.id)"
+      (cardChanged)="cardsChanged.emit()">
+    </app-card>
+  </div>
+
+  <div class="add-card-container">
+    <input
+      type="text"
+      [(ngModel)]="newCardTitle"
+      (keyup.enter)="addCard()"
+      placeholder="+ Add a card..."
+      class="add-card-input">
+    <button
+      type="button"
+      class="add-card-button"
+      (click)="addCard()"
+      [disabled]="!newCardTitle.trim()">
+      Add
+    </button>
+  </div>
+</div>

@@ -1,0 +1,230 @@
+<div class="board-page">
+  <header class="board-header">
+    <div class="board-title-block">
+      <p class="board-eyebrow">PROJECT BOARD</p>
+      <h1 class="board-title">{{ boardName }}</h1>
+      <p class="board-subtitle">Keep the team aligned and the next step clear.</p>
+    </div>
+
+    <div class="board-header-actions">
+      <div class="board-stat">
+        <span class="stat-icon total-icon" aria-hidden="true">▦</span>
+        <span><strong>{{ totalTaskCount }}</strong><small>Total tasks</small></span>
+      </div>
+      <button type="button" class="activity-button" (click)="openActivityPanel()" aria-label="Open activity history">
+        <span aria-hidden="true">◷</span> Activity
+        <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
+      </button>
+      <button
+        type="button"
+        class="reset-board-button"
+        (click)="resetBoard()">
+        <span aria-hidden="true">↻</span>
+        Reset board
+      </button>
+    </div>
+  </header>
+
+  <section class="board-toolbar" aria-label="Task views">
+    <div class="board-view-switch" role="group" aria-label="Board view">
+      <button type="button" [class.is-active]="activeView === 'board'" [attr.aria-pressed]="activeView === 'board'" (click)="setActiveView('board')">
+        <span aria-hidden="true">▦</span> Board
+      </button>
+      <button type="button" [class.is-active]="activeView === 'calendar'" [attr.aria-pressed]="activeView === 'calendar'" (click)="setActiveView('calendar')">
+        <span aria-hidden="true">▣</span> Calendar
+      </button>
+    </div>
+    <label class="board-search">
+      <span aria-hidden="true">⌕</span>
+      <input
+        type="search"
+        [(ngModel)]="taskSearch"
+        placeholder="Search tasks"
+        aria-label="Search tasks">
+      <button
+        type="button"
+        *ngIf="taskSearch"
+        class="clear-search"
+        aria-label="Clear task search"
+        (click)="taskSearch = ''">×</button>
+    </label>
+    <span class="toolbar-label">Quick views</span>
+    <button type="button" class="view-button" [class.is-active]="taskView === 'all'" (click)="setTaskView('all')" [attr.aria-pressed]="taskView === 'all'">
+      All tasks <span>{{ totalTaskCount }}</span>
+    </button>
+    <div class="quick-view-group" *ngFor="let group of quickViewGroups">
+      <span class="quick-view-group-label">{{ group.title }}</span>
+      <div class="quick-views">
+        <button
+          type="button"
+          class="view-button"
+          *ngFor="let view of group.views"
+          [class.is-active]="taskView === view.id"
+          (click)="setTaskView(view.id)"
+          [attr.aria-pressed]="taskView === view.id">
+          {{ view.label }} <span>{{ countTasks(view.id) }}</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="results-bar" aria-live="polite" *ngIf="activeView === 'board'">
+    <span>
+      Showing <strong>{{ filteredTaskCount }}</strong> of {{ totalTaskCount }} tasks
+    </span>
+    <span class="drag-hint" *ngIf="filtersActive">
+      Choose All tasks to move cards between columns.
+    </span>
+    <span class="scroll-hint">
+      Scroll sideways to see more columns <span aria-hidden="true">→</span>
+    </span>
+  </div>
+
+  <section class="board-container" aria-label="Board columns" *ngIf="activeView === 'board'">
+    <div class="columns-viewport">
+      <div class="board">
+        <app-column
+          *ngFor="let column of columns; let i = index"
+          [column]="column"
+          [filteredCards]="getFilteredCards(column)"
+          [filtersActive]="filtersActive"
+          [dropListId]="'column-' + i"
+          [connectedDropLists]="getDropListIds()"
+          (cardsChanged)="saveColumns()"
+          (deleteRequested)="removeColumn(i)"
+          (renameRequested)="renameColumn($event)">
+        </app-column>
+
+        <button
+          type="button"
+          class="add-column-button"
+          (click)="addColumn()">
+          <span class="add-icon">+</span>
+          <span>Add column</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="calendar-view" *ngIf="activeView === 'calendar'" aria-label="Task calendar">
+    <header class="calendar-header">
+      <div>
+        <p class="calendar-eyebrow">SCHEDULE</p>
+        <h2>{{ calendarTitle }}</h2>
+        <p class="calendar-subtitle">See every deadline across this board.</p>
+      </div>
+      <div class="calendar-controls">
+        <button type="button" class="calendar-today-button" (click)="goToCurrentMonth()">Today</button>
+        <div class="calendar-month-controls" aria-label="Change month">
+          <button type="button" (click)="moveCalendarMonth(-1)" aria-label="Previous month">‹</button>
+          <button type="button" (click)="moveCalendarMonth(1)" aria-label="Next month">›</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="calendar-insights">
+      <div class="calendar-insight">
+        <span class="insight-icon scheduled-icon" aria-hidden="true">▣</span>
+        <span><strong>{{ calendarScheduledTaskCount }}</strong><small>Scheduled tasks</small></span>
+      </div>
+      <div class="calendar-insight">
+        <span class="insight-icon overdue-icon" aria-hidden="true">!</span>
+        <span><strong>{{ overdueCalendarTaskCount }}</strong><small>Overdue</small></span>
+      </div>
+      <div class="calendar-insight">
+        <span class="insight-icon unscheduled-icon" aria-hidden="true">＋</span>
+        <span><strong>{{ unscheduledTaskCount }}</strong><small>Unscheduled</small></span>
+      </div>
+    </div>
+
+    <div class="calendar-grid-scroll">
+      <div class="calendar-grid" role="grid" [attr.aria-label]="calendarTitle">
+        <div class="calendar-weekday" role="columnheader" *ngFor="let weekday of weekdays">{{ weekday }}</div>
+        <div
+          class="calendar-day"
+          role="gridcell"
+          *ngFor="let day of calendarDays"
+          [class.outside-month]="!day.inCurrentMonth"
+          [class.is-today]="day.isToday">
+          <div class="calendar-day-heading">
+            <span class="calendar-day-number">{{ day.date.getDate() }}</span>
+            <span class="calendar-day-count" *ngIf="day.cards.length">{{ day.cards.length }}</span>
+          </div>
+          <div class="calendar-day-tasks">
+            <button
+              type="button"
+              class="calendar-task"
+              *ngFor="let card of day.cards | slice:0:3"
+              [class.priority-high]="card.priority === 'High'"
+              [class.priority-medium]="card.priority === 'Medium'"
+              [class.priority-low]="card.priority === 'Low'"
+              (click)="openCalendarCard(card)"
+              [attr.aria-label]="card.issueKey + ': ' + card.title">
+              <span class="calendar-task-dot" [class.high-dot]="card.priority === 'High'" [class.medium-dot]="card.priority === 'Medium'" [class.low-dot]="card.priority === 'Low'"></span>
+              <span class="calendar-task-title">{{ card.title }}</span>
+            </button>
+            <span class="calendar-more" *ngIf="day.cards.length > 3">+{{ day.cards.length - 3 }} more</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="calendar-footer">
+      <span class="calendar-legend-item"><i class="legend-dot high-dot"></i> High priority</span>
+      <span class="calendar-legend-item"><i class="legend-dot medium-dot"></i> Medium</span>
+      <span class="calendar-legend-item"><i class="legend-dot low-dot"></i> Low</span>
+      <span class="calendar-footer-note">Showing {{ calendarScheduledTaskCount }} dated tasks</span>
+    </footer>
+  </section>
+</div>
+
+<div class="panel-backdrop" *ngIf="showActivityPanel" (click)="closeActivityPanel()">
+  <aside class="side-panel activity-panel" role="dialog" aria-modal="true" aria-labelledby="activity-title" (click)="$event.stopPropagation()">
+    <header class="side-panel-header">
+      <div><p class="panel-eyebrow">BOARD UPDATES</p><h2 id="activity-title">Activity history</h2><p>Recent changes on {{ boardName }}.</p></div>
+      <button type="button" class="panel-close" aria-label="Close activity history" (click)="closeActivityPanel()">×</button>
+    </header>
+    <div class="activity-empty" *ngIf="activity.length === 0">
+      <span class="activity-empty-icon" aria-hidden="true">◷</span>
+      <h3>No activity yet</h3>
+      <p>Changes to cards and columns will appear here.</p>
+    </div>
+    <ol class="activity-list" *ngIf="activity.length">
+      <li class="activity-item" *ngFor="let event of activity">
+        <span class="activity-marker" [class.is-delete]="event.action.toLowerCase().includes('deleted')" [class.is-create]="event.action.toLowerCase().includes('created') || event.action.toLowerCase().includes('added')">{{ getActivityIcon(event.action) }}</span>
+        <div class="activity-copy">
+          <div class="activity-line"><strong>{{ event.action }}</strong><span>{{ event.createdAt | date:'MMM d, h:mm a' }}</span></div>
+          <p>{{ event.description }}</p>
+          <small *ngIf="event.issueKey">{{ event.issueKey }}<span *ngIf="event.cardTitle"> · {{ event.cardTitle }}</span></small>
+        </div>
+      </li>
+    </ol>
+    <footer class="activity-panel-footer">Showing the latest {{ activity.length }} of up to 200 updates</footer>
+  </aside>
+</div>
+
+<div class="panel-backdrop" *ngIf="selectedCalendarCard" (click)="closeCalendarCard()">
+  <aside class="side-panel calendar-card-panel" role="dialog" aria-modal="true" aria-labelledby="calendar-card-title" (click)="$event.stopPropagation()">
+    <header class="side-panel-header">
+      <div><p class="panel-eyebrow">{{ selectedCalendarCard.issueKey }}</p><h2 id="calendar-card-title">Task details</h2></div>
+      <button type="button" class="panel-close" aria-label="Close task details" (click)="closeCalendarCard()">×</button>
+    </header>
+    <div class="calendar-card-content">
+      <span class="calendar-card-column">{{ getCardColumnTitle(selectedCalendarCard) }}</span>
+      <h3>{{ selectedCalendarCard.title }}</h3>
+      <p class="calendar-card-description">{{ selectedCalendarCard.description || 'No description added.' }}</p>
+      <div class="calendar-card-meta">
+        <div><span>Due date</span><strong>{{ selectedCalendarCard.dueDate | date:'MMMM d, y' }}</strong></div>
+        <div><span>Priority</span><strong>{{ selectedCalendarCard.priority || 'Not set' }}</strong></div>
+        <div><span>Assignee</span><strong>{{ selectedCalendarCard.assignee || 'Unassigned' }}</strong></div>
+        <div><span>Label</span><strong>{{ selectedCalendarCard.label || 'No label' }}</strong></div>
+      </div>
+      <div class="calendar-checklist-summary" *ngIf="selectedCalendarCard.checklist?.length">
+        <span>Checklist</span>
+        <strong>{{ getChecklistCompletedCount(selectedCalendarCard) }} / {{ selectedCalendarCard.checklist?.length || 0 }} completed</strong>
+      </div>
+    </div>
+    <footer class="calendar-card-footer">
+      <button type="button" class="calendar-open-board" (click)="showCardOnBoard()">Open in board <span aria-hidden="true">→</span></button>
+    </footer>
+  </aside>
+</div>

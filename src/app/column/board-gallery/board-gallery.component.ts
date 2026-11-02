@@ -1,0 +1,274 @@
+import {
+  Component,
+  OnInit,
+  Inject,
+  PLATFORM_ID
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Board } from '../../card/card.model';
+import { BoardService } from '../../board.service';
+
+@Component({
+  selector: 'app-board-gallery',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <main class="gallery-container">
+      <header class="gallery-header">
+        <div class="title-section">
+          <p class="eyebrow">YOUR WORKSPACE</p>
+          <h1>Boards</h1>
+          <p>Bring projects, plans, and priorities together.</p>
+        </div>
+        <div class="header-actions">
+          <span class="board-total">{{ boards.length }} {{ boards.length === 1 ? 'board' : 'boards' }}</span>
+          <button type="button" class="create-board-btn" (click)="openModal()">
+            <span class="plus-icon" aria-hidden="true">+</span> Create board
+          </button>
+        </div>
+      </header>
+
+      <section class="boards-grid" *ngIf="boards.length > 0" aria-label="Your boards">
+        <article *ngFor="let board of boards" class="board-card">
+          <button type="button" class="board-open" (click)="goToBoard(board.id)" [attr.aria-label]="'Open ' + board.name">
+            <span class="preview-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+            <span class="board-info">
+              <span class="board-name">{{ board.name }}</span>
+              <span class="board-meta">Created {{ board.createdAt | date:'mediumDate' }}</span>
+            </span>
+          </button>
+          <div class="board-actions" aria-label="Board actions">
+            <button type="button" class="action-btn" [attr.aria-label]="'Rename ' + board.name" title="Rename board" (click)="renameBoard(board, $event)">✎</button>
+            <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Delete ' + board.name" title="Delete board" (click)="deleteBoard(board.id, $event)">×</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="empty-state" *ngIf="boards.length === 0">
+        <div class="empty-illustration" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="eyebrow">A FRESH START</p>
+        <h2>Your workspace is ready.</h2>
+        <p>Create a board to bring your next project into focus.</p>
+        <button type="button" class="create-board-btn" (click)="openModal()"><span class="plus-icon" aria-hidden="true">+</span> Create your first board</button>
+      </section>
+
+      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()" (keydown.escape)="closeModal()">
+        <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="create-board-title" (click)="$event.stopPropagation()">
+          <div class="modal-mark" aria-hidden="true">＋</div>
+          <h2 id="create-board-title">Create a board</h2>
+          <p>Give your workspace a name. You can change it any time.</p>
+          <div class="input-group">
+            <label for="boardName">Board name</label>
+            <input #boardNameInput id="boardName" type="text" [(ngModel)]="newBoardName" placeholder="e.g. Product launch" maxlength="80" (keyup.enter)="createBoard()" (keydown.escape)="closeModal()" autofocus>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button type="button" class="confirm-btn" (click)="createBoard()" [disabled]="!newBoardName.trim()">Create board <span aria-hidden="true">→</span></button>
+          </div>
+        </section>
+      </div>
+    </main>
+  `,
+  styles: [`
+    :host { display: block; min-height: 100%; color: #172b4d; }
+    .gallery-container { width: min(100% - 64px, 1240px); min-height: calc(100vh - 72px); margin: 0 auto; padding: 46px 0 72px; }
+    .gallery-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+    .eyebrow { margin: 0 0 9px; color: #4335c4; font-size: 10px; font-weight: 800; letter-spacing: .15em; }
+    .title-section h1 { margin: 0; color: #172b4d; font-size: clamp(30px, 4vw, 38px); font-weight: 760; letter-spacing: -.055em; line-height: 1.12; }
+    .title-section > p:last-child { margin: 9px 0 0; color: #4e5b72; font-size: 14px; }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .board-total { color: #4e5b72; font-size: 12px; font-weight: 650; }
+    .create-board-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #4335c4; border-radius: 11px; background: linear-gradient(135deg, #574bdf, #4335c4); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(81,70,216,.18); transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+    .create-board-btn:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(81,70,216,.24); }
+    .create-board-btn:focus-visible, .action-btn:focus-visible, .board-open:focus-visible, .cancel-btn:focus-visible, .confirm-btn:focus-visible { outline: 3px solid #b7b2ff; outline-offset: 3px; }
+    .plus-icon { font-size: 19px; font-weight: 400; line-height: .8; }
+    .boards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr)); gap: 15px; }
+    .board-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 13px; border: 1px solid #cbd3df; border-radius: 15px; background: #fff; box-shadow: 0 2px 8px rgba(29,39,74,.035); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .board-card:hover { transform: translateY(-2px); border-color: #d8d5ff; box-shadow: 0 12px 28px rgba(29,39,74,.08); }
+    .board-open { display: flex; align-items: center; gap: 13px; flex: 1; min-width: 0; padding: 4px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+    .preview-icon { display: grid; flex: 0 0 48px; grid-template-columns: repeat(2, 7px); grid-template-rows: repeat(2, 7px); place-content: center; gap: 3px; width: 48px; height: 48px; border: 1px solid #ebe9ff; border-radius: 12px; background: linear-gradient(145deg,#f4f2ff,#ebe9ff); }
+    .preview-icon span { border-radius: 2px; background: #6c63dc; }
+    .preview-icon span:nth-child(2), .preview-icon span:nth-child(3) { opacity: .55; }
+    .board-info { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+    .board-name { overflow: hidden; color: #253653; font-size: 14px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+    .board-meta { color: #59667c; font-size: 11px; }
+    .board-actions { display: flex; gap: 4px; }
+    .action-btn { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; color: #58667e; font-size: 16px; cursor: pointer; transition: color .15s ease, background .15s ease; }
+    .action-btn:hover { background: #f0efff; color: #4335c4; }
+    .delete-btn:hover { background: #fff1f2; color: #dc3545; }
+    .empty-state { display: flex; align-items: center; flex-direction: column; margin-top: 32px; padding: 56px 24px; border: 1px dashed #d9dced; border-radius: 20px; background: linear-gradient(145deg,rgba(255,255,255,.9),rgba(246,246,255,.75)); text-align: center; }
+    .empty-illustration { display: flex; align-items: flex-start; gap: 5px; height: 78px; margin-bottom: 17px; padding: 12px; border: 1px solid #e6e4ff; border-radius: 17px; background: #f1f0ff; transform: rotate(-4deg); }
+    .empty-illustration span { width: 19px; height: 45px; border: 1px solid #dedcff; border-radius: 5px; background: white; box-shadow: 0 2px 4px rgba(29,39,74,.05); }
+    .empty-illustration span:nth-child(2) { height: 35px; }
+    .empty-illustration span:nth-child(3) { height: 25px; }
+    .empty-state h2 { margin: 2px 0 8px; color: #253653; font-size: 22px; letter-spacing: -.04em; }
+    .empty-state > p:not(.eyebrow) { margin: 0 0 22px; color: #4e5b72; font-size: 13px; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 20px; background: rgba(20,27,49,.42); backdrop-filter: blur(5px); animation: fadeIn .16s ease; }
+    .modal-content { width: min(100%, 440px); padding: 28px; border: 1px solid rgba(255,255,255,.8); border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(23,43,77,.24); animation: liftIn .2s ease-out; }
+    .modal-mark { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 18px; border-radius: 13px; background: #f0efff; color: #4335c4; font-size: 24px; }
+    .modal-content h2 { margin: 0 0 7px; color: #172b4d; font-size: 22px; letter-spacing: -.04em; }
+    .modal-content > p { margin: 0 0 24px; color: #4e5b72; font-size: 13px; line-height: 1.55; }
+    .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .input-group label { color: #42526e; font-size: 12px; font-weight: 700; }
+    .input-group input { width: 100%; min-height: 46px; padding: 0 13px; border: 1px solid #bdc8d7; border-radius: 10px; background: #fff; color: #172b4d; font-size: 13px; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+    .input-group input::placeholder { color: #68758b; }
+    .input-group input:focus { border-color: #8179ed; box-shadow: 0 0 0 3px rgba(108,99,220,.12); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 9px; }
+    .cancel-btn, .confirm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 41px; padding: 0 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cancel-btn { border: 1px solid #c6cfdd; background: #fff; color: #59677f; }
+    .cancel-btn:hover { background: #f8f9fc; }
+    .confirm-btn { border: 1px solid #4335c4; background: #4335c4; color: white; }
+    .confirm-btn:hover:not(:disabled) { background: #33269d; }
+    .confirm-btn:disabled { opacity: .45; cursor: not-allowed; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes liftIn { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (max-width: 640px) {
+      .gallery-container { width: calc(100% - 32px); padding: 30px 0 48px; }
+      .gallery-header { align-items: flex-start; flex-direction: column; gap: 18px; margin-bottom: 22px; }
+      .header-actions { width: 100%; justify-content: space-between; }
+      .board-card { padding: 10px; }
+      .empty-state { margin-top: 12px; padding: 42px 18px; }
+      .modal-content { padding: 23px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  `]
+})
+export class BoardGalleryComponent implements OnInit {
+  boards: Board[] = [];
+  showModal = false;
+  newBoardName = '';
+
+  private isBrowser: boolean;
+
+  constructor(
+    @Inject(PLATFORM_ID) platformId: object,
+    private router: Router,
+    private boardService: BoardService
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
+
+  ngOnInit(): void {
+    this.refreshBoards();
+  }
+
+  private refreshBoards(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    this.boards = this.boardService.getBoards();
+  }
+
+  openModal(): void {
+    this.newBoardName = '';
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.newBoardName = '';
+  }
+
+  createBoard(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const name = this.newBoardName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    try {
+      this.boardService.createBoard(name);
+      this.closeModal();
+      this.refreshBoards();
+    } catch (error) {
+      console.error('Could not create board:', error);
+      window.alert('Could not create the board.');
+    }
+  }
+
+  goToBoard(boardId: string): void {
+    this.router.navigate(['/boards', boardId]);
+  }
+
+  renameBoard(board: Board, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const newName = window.prompt(
+      'Enter the new board name:',
+      board.name
+    );
+
+    if (newName === null) {
+      return;
+    }
+
+    if (!newName.trim()) {
+      window.alert('Board name cannot be empty.');
+      return;
+    }
+
+    const success = this.boardService.renameBoard(
+      board.id,
+      newName.trim()
+    );
+
+    if (success) {
+      this.refreshBoards();
+    } else {
+      window.alert('Could not rename the board.');
+    }
+  }
+
+  deleteBoard(boardId: string, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const board = this.boards.find(item => item.id === boardId);
+
+    if (!board) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete "\${board.name}" and all its columns and cards? This cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.boardService.deleteBoard(boardId);
+    this.refreshBoards();
+  }
+
+  deleteAllBoards(): void {
+    if (!this.isBrowser || this.boards.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Delete ALL boards and their columns and cards? This cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.boardService.deleteAllBoards();
+    this.refreshBoards();
+  }
+}

@@ -1,0 +1,14 @@
+<header class="site-header">
+  <nav class="navbar container" aria-label="Main navigation">
+    <a class="navbar-brand" routerLink="/home" aria-label="Drello home">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+      <span>Drello</span>
+    </a>
+
+    <div class="navbar-menu">
+      <a class="navbar-link" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">Boards</a>
+      <a class="navbar-link" routerLink="/about" routerLinkActive="is-active">About</a>
+    </div>
+  </nav>
+</header>
