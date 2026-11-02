@@ -29,6 +29,16 @@
   --column-hover: #dfddff;
   --column-shadow: 0 6px 18px rgba(67, 53, 196, .11);
 
+  /* Board cards on the Boards page */
+  --board-card-bg: var(--surface);
+  --board-card-border: var(--line);
+  --board-card-title: var(--text-strong);
+  --board-card-meta: var(--text-muted);
+  --board-card-icon-bg: var(--accent-soft);
+  --board-card-icon: var(--accent);
+  --board-card-action: var(--text-muted);
+  --board-card-action-hover: var(--accent-soft);
+
   /* Brand */
   --accent: #4335c4;
   --accent-hover: #34289f;
@@ -88,6 +98,14 @@
   --column-dashed: #c3bdff;
   --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  --board-card-bg: var(--accent);   /* same purple as the buttons and columns */
+  --board-card-border: #9a91ff;
+  --board-card-title: #ffffff;
+  --board-card-meta: #e4e0ff;
+  --board-card-icon-bg: #5a4fd4;
+  --board-card-icon: #ffffff;
+  --board-card-action: #ffffff;
+  --board-card-action-hover: #5a4fd4;
 
   --accent: #7c71f5;
   --accent-hover: #a59dff;
@@ -133,6 +151,14 @@
   --column-dashed: #c3bdff;
   --column-hover: #4a3fc2;
   --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  --board-card-bg: var(--accent);   /* same purple as the buttons and columns */
+  --board-card-border: #9a91ff;
+  --board-card-title: #ffffff;
+  --board-card-meta: #e4e0ff;
+  --board-card-icon-bg: #5a4fd4;
+  --board-card-icon: #ffffff;
+  --board-card-action: #ffffff;
+  --board-card-action-hover: #5a4fd4;
 
   --accent: #7c71f5;
   --accent-hover: #a59dff;

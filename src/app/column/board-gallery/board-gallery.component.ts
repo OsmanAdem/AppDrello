@@ -105,18 +105,18 @@ import { BoardService } from '../../board.service';
     .create-board-btn:focus-visible, .action-btn:focus-visible, .board-open:focus-visible, .cancel-btn:focus-visible, .confirm-btn:focus-visible { outline: 3px solid var(--accent-border); outline-offset: 3px; }
     .plus-icon { font-size: 19px; font-weight: 400; line-height: .8; }
     .boards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr)); gap: 15px; }
-    .board-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: 0 2px 8px rgba(29,39,74,.035); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
-    .board-card:hover { transform: translateY(-2px); border-color: var(--accent-soft); box-shadow: 0 12px 28px rgba(29,39,74,.08); }
+    .board-card { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 13px; border: 1px solid var(--board-card-border); border-radius: 15px; background: var(--board-card-bg); box-shadow: var(--shadow-sm); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+    .board-card:hover { transform: translateY(-2px); border-color: var(--accent-border); box-shadow: var(--shadow-md); }
     .board-open { display: flex; align-items: center; gap: 13px; flex: 1; min-width: 0; padding: 4px; border: 0; background: transparent; text-align: left; cursor: pointer; }
-    .preview-icon { display: grid; flex: 0 0 48px; grid-template-columns: repeat(2, 7px); grid-template-rows: repeat(2, 7px); place-content: center; gap: 3px; width: 48px; height: 48px; border: 1px solid var(--accent-soft); border-radius: 12px; background: linear-gradient(145deg,var(--accent-softer),var(--accent-soft)); }
-    .preview-icon span { border-radius: 2px; background: var(--accent); }
+    .preview-icon { display: grid; flex: 0 0 48px; grid-template-columns: repeat(2, 7px); grid-template-rows: repeat(2, 7px); place-content: center; gap: 3px; width: 48px; height: 48px; border: 0; border-radius: 12px; background: var(--board-card-icon-bg); }
+    .preview-icon span { border-radius: 2px; background: var(--board-card-icon); }
     .preview-icon span:nth-child(2), .preview-icon span:nth-child(3) { opacity: .55; }
     .board-info { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
-    .board-name { overflow: hidden; color: var(--text-strong); font-size: 14px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
-    .board-meta { color: var(--text-muted); font-size: 12px; }
+    .board-name { overflow: hidden; color: var(--board-card-title); font-size: 14px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+    .board-meta { color: var(--board-card-meta); font-size: 12px; }
     .board-actions { display: flex; gap: 4px; }
-    .action-btn { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; color: var(--text-muted); font-size: 16px; cursor: pointer; transition: color .15s ease, background .15s ease; }
-    .action-btn:hover { background: var(--accent-soft); color: var(--accent); }
+    .action-btn { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; color: var(--board-card-action); font-size: 16px; cursor: pointer; transition: color .15s ease, background .15s ease; }
+    .action-btn:hover { background: var(--board-card-action-hover); color: var(--board-card-action); }
     .delete-btn:hover { background: var(--danger-soft); color: var(--danger-strong); }
     .empty-state { display: flex; align-items: center; flex-direction: column; margin-top: 32px; padding: 56px 24px; border: 1px dashed var(--accent-border); border-radius: 20px; background: linear-gradient(145deg,color-mix(in srgb, var(--surface) 90%, transparent),rgba(246,246,255,.75)); text-align: center; }
     .empty-illustration { display: flex; align-items: flex-start; gap: 5px; height: 78px; margin-bottom: 17px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 17px; background: var(--surface-sunken); transform: rotate(-4deg); }
