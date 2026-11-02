@@ -18,9 +18,16 @@
   --line: #d5dbe5;
   --line-soft: #e7ebf1;
 
-  /* Board columns: a calm tray between the page background and the white cards */
-  --column-bg: #e8ebf2;
-  --column-border: #dce1ea;
+  /* Board columns: the original lavender look */
+  --column-bg: #d8d4f5;
+  --column-border: #8278d4;
+  --column-title: #29234f;
+  --column-ink: #33269d;
+  --column-chip: #ffffff;
+  --column-chip-border: #948bdc;
+  --column-dashed: #8178cf;
+  --column-hover: #dfddff;
+  --column-shadow: 0 6px 18px rgba(67, 53, 196, .11);
 
   /* Brand */
   --accent: #4335c4;
@@ -72,8 +79,15 @@
   --canvas: #0c101b;
   --line: #2e364a;
   --line-soft: #232a3c;
-  --column-bg: #10141f;
-  --column-border: #1f2636;
+  --column-bg: #221f45;
+  --column-border: #4a4399;
+  --column-title: #eeecff;
+  --column-ink: #bdb6ff;
+  --column-chip: #16142f;
+  --column-chip-border: #5a52b0;
+  --column-dashed: #5a52b0;
+  --column-hover: #2f2b5e;
+  --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
 
   --accent: #7c71f5;
   --accent-hover: #a59dff;
@@ -110,8 +124,15 @@
   --canvas: #0c101b;
   --line: #2e364a;
   --line-soft: #232a3c;
-  --column-bg: #10141f;
-  --column-border: #1f2636;
+  --column-bg: #221f45;
+  --column-border: #4a4399;
+  --column-title: #eeecff;
+  --column-ink: #bdb6ff;
+  --column-chip: #16142f;
+  --column-chip-border: #5a52b0;
+  --column-dashed: #5a52b0;
+  --column-hover: #2f2b5e;
+  --column-shadow: 0 6px 18px rgba(0, 0, 0, .35);
 
   --accent: #7c71f5;
   --accent-hover: #a59dff;

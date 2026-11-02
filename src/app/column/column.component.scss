@@ -5,6 +5,8 @@
   margin: 18px 2px 0;
 }
 
+/* The original lavender column. Colors come from the --column-* tokens in styles.scss,
+   so light and dark mode each get their own version. */
 .column {
   width: 100%;
   min-height: 180px;
@@ -13,35 +15,35 @@
   border-top: 3px solid var(--accent);
   border-radius: 13px;
   background: var(--column-bg);
-  box-shadow: none;
+  box-shadow: var(--column-shadow);
   transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .column-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
 .title-container { flex: 1; min-width: 0; }
 .edit-title-container { display: flex; align-items: center; gap: 6px; }
-.edit-title-input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--surface); color: var(--text-strong); font-size: 13px; font-weight: 650; outline: 0; box-shadow: 0 0 0 3px var(--accent-soft); }
-.save-title-button { display: grid; place-items: center; width: 31px; height: 31px; border: 0; border-radius: 8px; background: var(--surface); color: var(--accent-hover); cursor: pointer; font-weight: 700; }
+.edit-title-input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid var(--column-border); border-radius: 8px; background: var(--surface); color: var(--text-strong); font-size: 13px; font-weight: 650; outline: 0; box-shadow: 0 0 0 3px var(--accent-soft); }
+.save-title-button { display: grid; place-items: center; width: 31px; height: 31px; border: 0; border-radius: 8px; background: var(--column-chip); color: var(--column-ink); cursor: pointer; font-weight: 700; }
 .column-actions { display: flex; align-items: center; }
 
-.column-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 2px 0; color: var(--text-strong); font-size: 13px; font-weight: 730; overflow-wrap: anywhere; }
+.column-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 2px 0; color: var(--column-title); font-size: 13px; font-weight: 730; overflow-wrap: anywhere; }
 .column-name { min-width: 0; }
-.card-count { display: inline-flex; min-width: 22px; height: 22px; padding: 0 6px; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: var(--accent-soft); color: var(--accent-hover); font-size: 11px; font-weight: 750; }
+.card-count { display: inline-flex; min-width: 22px; height: 22px; padding: 0 6px; align-items: center; justify-content: center; border: 1px solid var(--column-chip-border); border-radius: 7px; background: var(--column-chip); color: var(--column-ink); font-size: 11px; font-weight: 750; }
 
-.rename-column-button { display: inline-grid; place-items: center; width: 27px; height: 27px; margin-left: auto; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--text-subtle); font-size: 14px; cursor: pointer; opacity: .84; transition: color .15s ease, background .15s ease, opacity .15s ease; }
+.rename-column-button { display: inline-grid; place-items: center; width: 27px; height: 27px; margin-left: auto; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--column-ink); font-size: 14px; cursor: pointer; opacity: .84; transition: color .15s ease, background .15s ease, opacity .15s ease; }
 .column:hover .rename-column-button, .rename-column-button:focus-visible { opacity: 1; }
-.rename-column-button:hover { background: var(--surface); color: var(--accent-hover); }
-.delete-column-button { display: inline-grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--text-subtle); font-size: 19px; line-height: 1; cursor: pointer; transition: color .15s ease, background .15s ease; }
+.rename-column-button:hover { background: color-mix(in srgb, var(--column-chip) 62%, transparent); }
+.delete-column-button { display: inline-grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--column-ink); font-size: 19px; line-height: 1; cursor: pointer; transition: color .15s ease, background .15s ease; }
 .delete-column-button:hover { background: var(--danger-soft); color: var(--danger-strong); }
 
 .card-list { display: flex; flex-direction: column; gap: 9px; min-height: 70px; padding: 3px 0; }
-.empty-placeholder { display: flex; min-height: 68px; padding: 11px; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: 10px; background: transparent; color: var(--text-subtle); text-align: center; font-size: 12px; line-height: 1.5; }
+.empty-placeholder { display: flex; min-height: 68px; padding: 11px; align-items: center; justify-content: center; border: 1px dashed var(--column-dashed); border-radius: 10px; background: color-mix(in srgb, var(--column-chip) 38%, transparent); color: var(--column-ink); text-align: center; font-size: 12px; line-height: 1.5; }
 .add-card-container { display: flex; gap: 7px; margin-top: 10px; }
 .add-card-input { min-width: 0; flex: 1; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text-strong); font-size: 12px; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
 .add-card-input::placeholder { color: var(--text-muted); opacity: 1; }
-.add-card-input:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
-.add-card-button { padding: 0 11px; border: 1px solid var(--accent); border-radius: 9px; background: var(--accent); color: #ffffff; font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
-.add-card-button:hover:not(:disabled) { border-color: var(--accent-pressed); background: var(--accent-pressed); }
+.add-card-input:focus { border-color: var(--column-border); box-shadow: 0 0 0 3px var(--accent-soft); }
+.add-card-button { padding: 0 11px; border: 1px solid var(--column-chip); border-radius: 9px; background: var(--column-chip); color: var(--column-ink); font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.add-card-button:hover:not(:disabled) { border-color: var(--column-hover); background: var(--column-hover); }
 .add-card-button:disabled { opacity: .4; cursor: not-allowed; }
 
 .delete-column-button:focus-visible, .rename-column-button:focus-visible, .save-title-button:focus-visible, .add-card-button:focus-visible, .add-card-input:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
