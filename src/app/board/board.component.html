@@ -15,24 +15,44 @@
         <span aria-hidden="true">◷</span> Activity
         <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
       </button>
-      <button type="button" class="activity-button" (click)="openAutomationsPanel()" aria-label="Manage automations">
-        <span aria-hidden="true">⚡</span> Automations
-        <span class="activity-count" *ngIf="automations.length">{{ automations.length }}</span>
-      </button>
-      <button type="button" class="activity-button" (click)="openFieldsPanel()" aria-label="Manage custom fields">
-        <span aria-hidden="true">⊞</span> Fields
-        <span class="activity-count" *ngIf="customFields.length">{{ customFields.length }}</span>
-      </button>
-      <button type="button" class="activity-button" (click)="saveAsTemplate()" *ngIf="boardId !== 'default'">
-        <span aria-hidden="true">⧉</span> Save as template
-      </button>
-      <button
-        type="button"
-        class="reset-board-button"
-        (click)="resetBoard()">
-        <span aria-hidden="true">↻</span>
-        Reset board
-      </button>
+      <div class="settings-menu">
+        <button
+          type="button"
+          class="activity-button"
+          (click)="showSettingsMenu = !showSettingsMenu"
+          [attr.aria-expanded]="showSettingsMenu"
+          aria-haspopup="menu">
+          <span aria-hidden="true">⚙</span> Board settings <span class="menu-caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="menu-dismiss" *ngIf="showSettingsMenu" (click)="showSettingsMenu = false"></div>
+        <div class="settings-dropdown" role="menu" *ngIf="showSettingsMenu" (click)="showSettingsMenu = false">
+          <button type="button" role="menuitem" (click)="openAutomationsPanel()">
+            <span class="menu-icon" aria-hidden="true">⚡</span>
+            <span><strong>Automations</strong><small>{{ automations.length ? automations.length + ' active rule(s)' : 'Automate repetitive steps' }}</small></span>
+          </button>
+          <button type="button" role="menuitem" (click)="openFieldsPanel()">
+            <span class="menu-icon" aria-hidden="true">⊞</span>
+            <span><strong>Custom fields</strong><small>{{ customFields.length ? customFields.length + ' field(s)' : 'Add your own card fields' }}</small></span>
+          </button>
+          <button type="button" role="menuitem" (click)="saveAsTemplate()" *ngIf="boardId !== 'default'">
+            <span class="menu-icon" aria-hidden="true">⧉</span>
+            <span><strong>Save as template</strong><small>Reuse these columns and fields</small></span>
+          </button>
+          <button type="button" role="menuitem" (click)="renameBoard()" *ngIf="boardId !== 'default'">
+            <span class="menu-icon" aria-hidden="true">✎</span>
+            <span><strong>Rename board</strong></span>
+          </button>
+          <div class="menu-divider" role="separator"></div>
+          <button type="button" role="menuitem" class="is-danger" (click)="resetBoard()">
+            <span class="menu-icon" aria-hidden="true">↻</span>
+            <span><strong>Reset board</strong><small>Remove all cards</small></span>
+          </button>
+          <button type="button" role="menuitem" class="is-danger" (click)="deleteCurrentBoard()" *ngIf="boardId !== 'default'">
+            <span class="menu-icon" aria-hidden="true">🗑</span>
+            <span><strong>Delete board</strong></span>
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 

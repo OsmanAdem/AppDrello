@@ -2,11 +2,11 @@
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  color: #172b4d;
+  color: var(--text-strong);
 }
 
 .page-content {
   flex: 1 0 auto;
   min-height: calc(100vh - 154px);
-  background: #f7f8fc;
+  background: var(--surface-sunken);
 }

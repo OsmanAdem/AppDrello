@@ -1,5 +1,6 @@
 import {
   Component,
+  HostListener,
   Inject,
   OnDestroy,
   OnInit,
@@ -94,6 +95,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   readonly timelineLength = 28; // days shown at once (4 weeks)
   calendarAnchor = new Date();
   showActivityPanel = false;
+  showSettingsMenu = false;
   sprints: Sprint[] = [];
   showActiveSprintOnly = false;
   customFields: CustomFieldDefinition[] = [];
@@ -177,6 +179,12 @@ export class BoardComponent implements OnInit, OnDestroy {
       const view = params.get('view');
       this.activeView = view === 'calendar' || view === 'timeline' || view === 'backlog' ? view : 'board';
     }));
+  }
+
+  /** Escape closes the settings menu, like any native menu. */
+  @HostListener('document:keydown.escape')
+  closeMenus(): void {
+    this.showSettingsMenu = false;
   }
 
   ngOnDestroy(): void {

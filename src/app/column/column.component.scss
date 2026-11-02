@@ -10,7 +10,7 @@
   min-height: 180px;
   padding: 13px;
   border: 1px solid #8278d4;
-  border-top: 3px solid #4335c4;
+  border-top: 3px solid var(--accent);
   border-radius: 13px;
   background: #d8d4f5;
   box-shadow: 0 6px 18px rgba(67, 53, 196, .11);
@@ -20,31 +20,31 @@
 .column-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
 .title-container { flex: 1; min-width: 0; }
 .edit-title-container { display: flex; align-items: center; gap: 6px; }
-.edit-title-input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid #847bdd; border-radius: 8px; background: #fff; color: #192841; font-size: 13px; font-weight: 650; outline: 0; box-shadow: 0 0 0 3px rgba(67,53,196,.1); }
-.save-title-button { display: grid; place-items: center; width: 31px; height: 31px; border: 0; border-radius: 8px; background: #fff; color: #33269d; cursor: pointer; font-weight: 700; }
+.edit-title-input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid #847bdd; border-radius: 8px; background: #fff; color: var(--text-strong); font-size: 13px; font-weight: 650; outline: 0; box-shadow: 0 0 0 3px rgba(67,53,196,.1); }
+.save-title-button { display: grid; place-items: center; width: 31px; height: 31px; border: 0; border-radius: 8px; background: #fff; color: var(--accent-hover); cursor: pointer; font-weight: 700; }
 .column-actions { display: flex; align-items: center; }
 
 .column-title { display: flex; align-items: center; gap: 8px; margin: 0; padding: 2px 0; color: #29234f; font-size: 13px; font-weight: 730; overflow-wrap: anywhere; }
 .column-name { min-width: 0; }
-.card-count { display: inline-flex; min-width: 22px; height: 22px; padding: 0 6px; align-items: center; justify-content: center; border: 1px solid #948bdc; border-radius: 7px; background: #fff; color: #33269d; font-size: 10px; font-weight: 750; }
+.card-count { display: inline-flex; min-width: 22px; height: 22px; padding: 0 6px; align-items: center; justify-content: center; border: 1px solid #948bdc; border-radius: 7px; background: #fff; color: var(--accent-hover); font-size: 11px; font-weight: 750; }
 
-.rename-column-button { display: inline-grid; place-items: center; width: 27px; height: 27px; margin-left: auto; padding: 0; border: 0; border-radius: 7px; background: transparent; color: #33269d; font-size: 14px; cursor: pointer; opacity: .84; transition: color .15s ease, background .15s ease, opacity .15s ease; }
+.rename-column-button { display: inline-grid; place-items: center; width: 27px; height: 27px; margin-left: auto; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--accent-hover); font-size: 14px; cursor: pointer; opacity: .84; transition: color .15s ease, background .15s ease, opacity .15s ease; }
 .column:hover .rename-column-button, .rename-column-button:focus-visible { opacity: 1; }
 .rename-column-button:hover { background: rgba(255,255,255,.62); color: #241a77; }
-.delete-column-button { display: inline-grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; border-radius: 7px; background: transparent; color: #33269d; font-size: 19px; line-height: 1; cursor: pointer; transition: color .15s ease, background .15s ease; }
-.delete-column-button:hover { background: #fff0f1; color: #c2414b; }
+.delete-column-button { display: inline-grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--accent-hover); font-size: 19px; line-height: 1; cursor: pointer; transition: color .15s ease, background .15s ease; }
+.delete-column-button:hover { background: var(--danger-soft); color: #c2414b; }
 
 .card-list { display: flex; flex-direction: column; gap: 9px; min-height: 70px; padding: 3px 0; }
-.empty-placeholder { display: flex; min-height: 68px; padding: 11px; align-items: center; justify-content: center; border: 1px dashed #8178cf; border-radius: 10px; background: rgba(255,255,255,.38); color: #33269d; text-align: center; font-size: 11px; line-height: 1.5; }
+.empty-placeholder { display: flex; min-height: 68px; padding: 11px; align-items: center; justify-content: center; border: 1px dashed #8178cf; border-radius: 10px; background: rgba(255,255,255,.38); color: var(--accent-hover); text-align: center; font-size: 12px; line-height: 1.5; }
 .add-card-container { display: flex; gap: 7px; margin-top: 10px; }
-.add-card-input { min-width: 0; flex: 1; padding: 9px 10px; border: 1px solid #bdc8d7; border-radius: 9px; background: #fff; color: #1e2c45; font-size: 11px; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
-.add-card-input::placeholder { color: #58667e; opacity: 1; }
+.add-card-input { min-width: 0; flex: 1; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #1e2c45; font-size: 12px; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+.add-card-input::placeholder { color: var(--text-muted); opacity: 1; }
 .add-card-input:focus { border-color: #756bd6; box-shadow: 0 0 0 3px rgba(67,53,196,.12); }
-.add-card-button { padding: 0 11px; border: 1px solid #fff; border-radius: 9px; background: #fff; color: #33269d; font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.add-card-button { padding: 0 11px; border: 1px solid #fff; border-radius: 9px; background: #fff; color: var(--accent-hover); font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
 .add-card-button:hover:not(:disabled) { border-color: #dfddff; background: #dfddff; }
 .add-card-button:disabled { opacity: .4; cursor: not-allowed; }
 
-.delete-column-button:focus-visible, .rename-column-button:focus-visible, .save-title-button:focus-visible, .add-card-button:focus-visible, .add-card-input:focus-visible { outline: 3px solid #aaa5f0; outline-offset: 2px; }
+.delete-column-button:focus-visible, .rename-column-button:focus-visible, .save-title-button:focus-visible, .add-card-button:focus-visible, .add-card-input:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 @media (max-width: 600px) { :host { flex-basis: 272px; width: 272px; margin-top: 12px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
