@@ -309,7 +309,7 @@
 </div>
 
 <div class="panel-backdrop" *ngIf="showActivityPanel" (click)="closeActivityPanel()">
-  <aside class="side-panel activity-panel" role="dialog" aria-modal="true" aria-labelledby="activity-title" (click)="$event.stopPropagation()">
+  <div class="side-panel activity-panel" role="dialog" aria-modal="true" aria-labelledby="activity-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD UPDATES</p><h2 id="activity-title">Activity history</h2><p>Recent changes on {{ boardName }}.</p></div>
       <button type="button" class="panel-close" aria-label="Close activity history" (click)="closeActivityPanel()">×</button>
@@ -330,11 +330,11 @@
       </li>
     </ol>
     <footer class="activity-panel-footer">Showing the latest {{ activity.length }} of up to 200 updates</footer>
-  </aside>
+  </div>
 </div>
 
 <div class="panel-backdrop" *ngIf="selectedCalendarCard" (click)="closeCalendarCard()">
-  <aside class="side-panel calendar-card-panel" role="dialog" aria-modal="true" aria-labelledby="calendar-card-title" (click)="$event.stopPropagation()">
+  <div class="side-panel calendar-card-panel" role="dialog" aria-modal="true" aria-labelledby="calendar-card-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">{{ selectedCalendarCard.issueKey }}</p><h2 id="calendar-card-title">Task details</h2></div>
       <button type="button" class="panel-close" aria-label="Close task details" (click)="closeCalendarCard()">×</button>
@@ -359,12 +359,12 @@
     <footer class="calendar-card-footer">
       <button type="button" class="calendar-open-board" (click)="showCardOnBoard()">Open in board <span aria-hidden="true">→</span></button>
     </footer>
-  </aside>
+  </div>
 </div>
 
 <!-- Custom fields: the board owner decides which extra fields every card has -->
 <div class="panel-backdrop" *ngIf="showFieldsPanel" (click)="closeFieldsPanel()">
-  <aside class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="fields-title" (click)="$event.stopPropagation()">
+  <div class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="fields-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="fields-title">Custom fields</h2><p>Extra fields shown in every card's details on {{ boardName }}.</p></div>
       <button type="button" class="panel-close" aria-label="Close custom fields" (click)="closeFieldsPanel()">×</button>
@@ -403,12 +403,12 @@
         <button type="submit" class="fields-add">Add field</button>
       </form>
     </div>
-  </aside>
+  </div>
 </div>
 
 <!-- Automations: "When something happens on the board, do something to the card" -->
 <div class="panel-backdrop" *ngIf="showAutomationsPanel" (click)="closeAutomationsPanel()">
-  <aside class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="automations-title" (click)="$event.stopPropagation()">
+  <div class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="automations-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="automations-title">Automations</h2><p>Let {{ boardName }} handle repetitive steps for you.</p></div>
       <button type="button" class="panel-close" aria-label="Close automations" (click)="closeAutomationsPanel()">×</button>
@@ -483,5 +483,5 @@
         <button type="submit" class="fields-add">Add automation</button>
       </form>
     </div>
-  </aside>
+  </div>
 </div>
