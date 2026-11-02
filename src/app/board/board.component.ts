@@ -377,11 +377,11 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   renameColumn(event: {
-    oldTitle: string;
+    columnId: string;
     newTitle: string;
   }): void {
     const index = this.columns.findIndex(
-      column => column.title === event.oldTitle
+      column => column.id === event.columnId
     );
 
     if (index === -1) return;

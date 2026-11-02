@@ -26,7 +26,7 @@ export class ColumnComponent {
 
   @Output() cardsChanged = new EventEmitter<void>();
   @Output() deleteRequested = new EventEmitter<void>();
-  @Output() renameRequested = new EventEmitter<{oldTitle: string, newTitle: string}>();
+  @Output() renameRequested = new EventEmitter<{ columnId: string; newTitle: string }>();
 
   addCard(): void {
     const title = this.newCardTitle.trim();
@@ -55,7 +55,7 @@ export class ColumnComponent {
   saveRename(): void {
     if (this.editTitle.trim() && this.editTitle.trim() !== this.column.title) {
       this.renameRequested.emit({
-        oldTitle: this.column.title,
+        columnId: this.column.id,
         newTitle: this.editTitle.trim()
       });
     }
