@@ -245,9 +245,9 @@
   gap: 12px;
   min-height: 46px;
   padding: 0 20px;
-  border: 1px solid var(--text);
+  border: 1px solid var(--accent);
   border-radius: 7px;
-  background: var(--text);
+  background: var(--accent);
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
@@ -260,7 +260,8 @@
 
 .about-button:hover {
   transform: translateY(-1px);
-  background: var(--text-strong);
+  border-color: var(--accent-pressed);
+  background: var(--accent-pressed);
 }
 
 .about-button:focus-visible {

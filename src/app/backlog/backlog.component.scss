@@ -1,6 +1,6 @@
 .backlog-primary, .backlog-secondary { height: 36px; padding: 0 14px; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
 .backlog-primary { border: 1px solid var(--accent); background: var(--accent); color: #fff; }
-.backlog-primary:hover { background: var(--accent-hover); }
+.backlog-primary:hover { background: var(--accent-pressed); }
 .backlog-secondary { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
 .backlog-secondary:hover { border-color: var(--accent-border); background: var(--accent-softer); }
 .backlog-primary:focus-visible, .backlog-secondary:focus-visible, .backlog-row-main:focus-visible, .backlog-move:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }

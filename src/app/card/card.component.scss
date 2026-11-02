@@ -495,7 +495,7 @@
   cursor: pointer;
 }
 
-.checklist-add-row button:hover:not(:disabled) { background: var(--accent-hover); }
+.checklist-add-row button:hover:not(:disabled) { background: var(--accent-pressed); }
 .checklist-add-row button:disabled { opacity: .45; cursor: not-allowed; }
 
 .field-group {

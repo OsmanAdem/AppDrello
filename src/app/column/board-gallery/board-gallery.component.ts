@@ -153,7 +153,7 @@ import { BoardService } from '../../board.service';
     .cancel-btn { border: 1px solid var(--line); background: var(--surface); color: var(--text-muted); }
     .cancel-btn:hover { background: var(--surface-sunken); }
     .confirm-btn { border: 1px solid var(--accent); background: var(--accent); color: white; }
-    .confirm-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .confirm-btn:hover:not(:disabled) { background: var(--accent-pressed); }
     .confirm-btn:disabled { opacity: .45; cursor: not-allowed; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes liftIn { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
