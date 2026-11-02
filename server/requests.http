@@ -1,0 +1,35 @@
+### Try the API from VS Code: install the "REST Client" extension,
+### then click "Send Request" above each request.
+
+### Is the server and database working?
+GET http://localhost:3000/api/health
+
+### List boards
+GET http://localhost:3000/api/boards
+
+### Create a board
+POST http://localhost:3000/api/boards
+Content-Type: application/json
+
+{ "name": "My first API board" }
+
+### Get a board's columns and cards (replace BOARD_ID)
+GET http://localhost:3000/api/boards/BOARD_ID/columns
+
+### Add a card to a column (replace COLUMN_ID)
+POST http://localhost:3000/api/columns/COLUMN_ID/cards
+Content-Type: application/json
+
+{ "title": "Write the API" }
+
+### Update a card (replace CARD_ID)
+PATCH http://localhost:3000/api/cards/CARD_ID
+Content-Type: application/json
+
+{ "priority": "High", "dueDate": "2026-11-20" }
+
+### Move a card to another column, first position (replace the IDs)
+POST http://localhost:3000/api/cards/CARD_ID/move
+Content-Type: application/json
+
+{ "columnId": "COLUMN_ID", "position": 0 }

@@ -24,6 +24,24 @@ export interface BoardTemplate {
   builtIn?: boolean; // built-in templates can't be deleted
 }
 
+/** What starts an automation. */
+export type AutomationTrigger = 'card-created' | 'card-moved' | 'checklist-completed';
+
+/** What an automation does to the card. */
+export type AutomationAction = 'set-label' | 'set-priority' | 'set-assignee' | 'move-to-column' | 'set-due-in-days';
+
+/** A rule: "When <trigger> happens, do <action>". */
+export interface AutomationRule {
+  id: string;
+  boardId: string;
+  enabled: boolean;
+  trigger: AutomationTrigger;
+  triggerColumnId?: string; // empty = any column
+  action: AutomationAction;
+  actionValue: string;      // label, priority, name, column id or number of days
+  createdAt: string;
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;

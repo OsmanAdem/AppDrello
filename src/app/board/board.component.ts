@@ -9,8 +9,13 @@ import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
+  AutomationAction,
+  AutomationRule,
+  AutomationTrigger,
   BoardActivity,
   Card,
+  CardLabel,
+  CardPriority,
   Column,
   CustomFieldDefinition,
   CustomFieldType,
@@ -92,6 +97,25 @@ export class BoardComponent implements OnInit, OnDestroy {
   sprints: Sprint[] = [];
   showActiveSprintOnly = false;
   customFields: CustomFieldDefinition[] = [];
+  automations: AutomationRule[] = [];
+  showAutomationsPanel = false;
+  newRule: { trigger: AutomationTrigger; triggerColumnId: string; action: AutomationAction; actionValue: string } =
+    { trigger: 'card-moved', triggerColumnId: '', action: 'set-label', actionValue: '' };
+  ruleError = '';
+  readonly triggerOptions: { value: AutomationTrigger; label: string }[] = [
+    { value: 'card-moved', label: 'A card is moved to…' },
+    { value: 'card-created', label: 'A card is created in…' },
+    { value: 'checklist-completed', label: 'A checklist is completed' }
+  ];
+  readonly actionOptions: { value: AutomationAction; label: string }[] = [
+    { value: 'set-label', label: 'Set the label' },
+    { value: 'set-priority', label: 'Set the priority' },
+    { value: 'set-assignee', label: 'Assign to someone' },
+    { value: 'move-to-column', label: 'Move it to a column' },
+    { value: 'set-due-in-days', label: 'Set a due date' }
+  ];
+  readonly labelOptions: CardLabel[] = ['Bug', 'Feature', 'Improvement', 'Planning', 'Completed'];
+  readonly priorityOptions: CardPriority[] = ['Low', 'Medium', 'High'];
   showFieldsPanel = false;
   newField: { name: string; type: CustomFieldType; options: string } = { name: '', type: 'text', options: '' };
   fieldError = '';
@@ -376,6 +400,167 @@ export class BoardComponent implements OnInit, OnDestroy {
     if (value === undefined || value === '') return 'Not set';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     return String(value);
+  }
+
+  // ----- Automations -----
+
+  openAutomationsPanel(): void {
+    this.newRule = { trigger: 'card-moved', triggerColumnId: this.columns[0]?.id || '', action: 'set-label', actionValue: '' };
+    this.ruleError = '';
+    this.showAutomationsPanel = true;
+  }
+
+  closeAutomationsPanel(): void {
+    this.showAutomationsPanel = false;
+  }
+
+  setRuleAction(action: AutomationAction): void {
+    this.newRule.action = action;
+    this.newRule.actionValue = action === 'set-due-in-days' ? '3' : '';
+  }
+
+  addAutomation(): void {
+    const { trigger, triggerColumnId, action } = this.newRule;
+    const actionValue = String(this.newRule.actionValue ?? '').trim();
+
+    if (trigger === 'card-moved' && !triggerColumnId) {
+      this.ruleError = 'Choose which column the card is moved to.';
+      return;
+    }
+    if (!actionValue) {
+      this.ruleError = 'Choose what the automation should do.';
+      return;
+    }
+    if (action === 'set-due-in-days') {
+      const days = Number(actionValue);
+      if (!Number.isInteger(days) || days < 0 || days > 365) {
+        this.ruleError = 'Days must be a whole number between 0 and 365.';
+        return;
+      }
+    }
+    if (action === 'move-to-column' && trigger !== 'checklist-completed' && actionValue === triggerColumnId) {
+      this.ruleError = 'The card is already in that column. Pick another one.';
+      return;
+    }
+
+    const rule: AutomationRule = {
+      id: `rule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      boardId: this.boardId,
+      enabled: true,
+      trigger,
+      triggerColumnId: trigger === 'checklist-completed' ? undefined : triggerColumnId || undefined,
+      action,
+      actionValue,
+      createdAt: new Date().toISOString()
+    };
+
+    this.automations = [...this.automations, rule];
+    this.boardService.saveAutomations(this.boardId, this.automations);
+    this.recordActivity('Automation added', `${this.describeRule(rule)}.`);
+    this.setRuleAction('set-label');
+    this.ruleError = '';
+  }
+
+  toggleAutomation(rule: AutomationRule): void {
+    this.automations = this.automations.map(item =>
+      item.id === rule.id ? { ...item, enabled: !item.enabled } : item
+    );
+    this.boardService.saveAutomations(this.boardId, this.automations);
+  }
+
+  removeAutomation(rule: AutomationRule): void {
+    if (!window.confirm('Delete this automation?')) return;
+
+    this.automations = this.automations.filter(item => item.id !== rule.id);
+    this.boardService.saveAutomations(this.boardId, this.automations);
+    this.recordActivity('Automation removed', `${this.describeRule(rule)}.`);
+  }
+
+  /** Plain-English summary, e.g. "When a card is moved to Done → set the label to Completed". */
+  describeRule(rule: AutomationRule): string {
+    const column = (id?: string) => this.columns.find(item => item.id === id)?.title || 'a deleted column';
+
+    const when = rule.trigger === 'card-moved'
+      ? `When a card is moved to ${column(rule.triggerColumnId)}`
+      : rule.trigger === 'card-created'
+        ? `When a card is created${rule.triggerColumnId ? ` in ${column(rule.triggerColumnId)}` : ''}`
+        : 'When a checklist is completed';
+
+    const days = Number(rule.actionValue);
+    const then = {
+      'set-label': `set the label to ${rule.actionValue}`,
+      'set-priority': `set the priority to ${rule.actionValue}`,
+      'set-assignee': `assign it to ${rule.actionValue}`,
+      'move-to-column': `move it to ${column(rule.actionValue)}`,
+      'set-due-in-days': days === 0 ? 'set the due date to today' : `set the due date ${days} day${days === 1 ? '' : 's'} ahead`
+    }[rule.action];
+
+    return `${when} → ${then}`;
+  }
+
+  /**
+   * Compares the board before and after the user's change, finds what happened
+   * (card created, card moved, checklist completed) and runs matching rules once.
+   * Rules don't trigger each other, so an automation can never loop forever.
+   */
+  private runAutomations(previous: Column[]): { rule: AutomationRule; card: Card }[] {
+    const rules = this.automations.filter(rule => rule.enabled);
+    if (!rules.length) return [];
+
+    const previousCards = new Map(previous.flatMap(column => column.cards).map(card => [card.id, card]));
+    const isChecklistDone = (card?: Card) => !!card?.checklist?.length && card.checklist.every(item => item.completed);
+    const events: { trigger: AutomationTrigger; card: Card; columnId: string }[] = [];
+
+    this.columns.forEach(column => column.cards.forEach(card => {
+      const before = previousCards.get(card.id);
+      if (!before) {
+        events.push({ trigger: 'card-created', card, columnId: column.id });
+      } else if (before.columnId !== card.columnId) {
+        events.push({ trigger: 'card-moved', card, columnId: column.id });
+      }
+      if (isChecklistDone(card) && !isChecklistDone(before)) {
+        events.push({ trigger: 'checklist-completed', card, columnId: column.id });
+      }
+    }));
+
+    const results: { rule: AutomationRule; card: Card }[] = [];
+
+    for (const event of events) {
+      for (const rule of rules) {
+        if (rule.trigger !== event.trigger) continue;
+        if (rule.triggerColumnId && rule.triggerColumnId !== event.columnId) continue;
+        if (this.applyAutomation(rule, event.card)) results.push({ rule, card: event.card });
+      }
+    }
+
+    return results;
+  }
+
+  private applyAutomation(rule: AutomationRule, card: Card): boolean {
+    switch (rule.action) {
+      case 'set-label':
+        card.label = rule.actionValue as CardLabel;
+        return true;
+      case 'set-priority':
+        card.priority = rule.actionValue as CardPriority;
+        return true;
+      case 'set-assignee':
+        card.assignee = rule.actionValue;
+        return true;
+      case 'set-due-in-days':
+        card.dueDate = toDateKey(addDays(new Date(), Number(rule.actionValue)));
+        return true;
+      case 'move-to-column': {
+        const target = this.columns.find(column => column.id === rule.actionValue);
+        const source = this.columns.find(column => column.cards.includes(card));
+        if (!target || !source || source === target) return false;
+
+        source.cards.splice(source.cards.indexOf(card), 1);
+        target.cards.push(card);
+        card.columnId = target.id;
+        return true;
+      }
+    }
   }
 
   // ----- Templates -----
@@ -673,11 +858,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   saveColumns(trackActivity = true): void {
     if (!this.isBrowser) return;
 
+    // Automations run first, so their changes are saved together with the user's change.
+    const automationResults = trackActivity ? this.runAutomations(this.lastSavedColumns) : [];
+
     const nextColumns = this.cloneColumns(this.columns);
     this.boardService.saveColumns(this.boardId, this.columns);
     if (trackActivity) {
       this.trackColumnChanges(this.lastSavedColumns, nextColumns);
     }
+    automationResults.forEach(({ rule, card }) =>
+      this.recordActivity('Automation ran', `${this.describeRule(rule)} — on “${card.title}”.`, card)
+    );
     this.lastSavedColumns = nextColumns;
     this.refreshActivity();
   }
@@ -699,6 +890,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.sprints = this.boardService.getSprints(this.boardId);
     this.showActiveSprintOnly = false;
     this.customFields = this.boardService.getCustomFields(this.boardId);
+    this.automations = this.boardService.getAutomations(this.boardId);
     this.activity = this.boardService.getActivity(this.boardId);
   }
 

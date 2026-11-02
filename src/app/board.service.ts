@@ -1,6 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import {
+  AutomationRule,
   BoardActivity,
   BoardTemplate,
   Card,
@@ -151,6 +152,7 @@ export class BoardService {
     localStorage.removeItem(`drello-activity-${boardId}`);
     localStorage.removeItem(`drello-sprints-${boardId}`);
     localStorage.removeItem(`drello-fields-${boardId}`);
+    localStorage.removeItem(`drello-automations-${boardId}`);
 
     // Remove legacy data when deleting the legacy default board.
     if (boardId === 'default') {
@@ -176,6 +178,7 @@ export class BoardService {
           key.startsWith('drello-activity-') ||
           key.startsWith('drello-sprints-') ||
           key.startsWith('drello-fields-') ||
+          key.startsWith('drello-automations-') ||
           key === this.legacyColumnsKey
         )
       ) {
@@ -300,6 +303,27 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-fields-${boardId}`, JSON.stringify(fields));
+  }
+
+  // ----- Automations -----
+
+  getAutomations(boardId: string): AutomationRule[] {
+    if (!this.isBrowser) return [];
+
+    try {
+      const stored = localStorage.getItem(`drello-automations-${boardId}`);
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed as AutomationRule[] : [];
+    } catch (error) {
+      console.error('Could not load automations:', error);
+      return [];
+    }
+  }
+
+  saveAutomations(boardId: string, rules: AutomationRule[]): void {
+    if (!this.isBrowser) return;
+
+    localStorage.setItem(`drello-automations-${boardId}`, JSON.stringify(rules));
   }
 
   // ----- Templates -----

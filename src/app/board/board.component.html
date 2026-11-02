@@ -15,6 +15,10 @@
         <span aria-hidden="true">◷</span> Activity
         <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
       </button>
+      <button type="button" class="activity-button" (click)="openAutomationsPanel()" aria-label="Manage automations">
+        <span aria-hidden="true">⚡</span> Automations
+        <span class="activity-count" *ngIf="automations.length">{{ automations.length }}</span>
+      </button>
       <button type="button" class="activity-button" (click)="openFieldsPanel()" aria-label="Manage custom fields">
         <span aria-hidden="true">⊞</span> Fields
         <span class="activity-count" *ngIf="customFields.length">{{ customFields.length }}</span>
@@ -377,6 +381,86 @@
         </label>
         <p class="fields-error" *ngIf="fieldError" role="alert">{{ fieldError }}</p>
         <button type="submit" class="fields-add">Add field</button>
+      </form>
+    </div>
+  </aside>
+</div>
+
+<!-- Automations: "When something happens on the board, do something to the card" -->
+<div class="panel-backdrop" *ngIf="showAutomationsPanel" (click)="closeAutomationsPanel()">
+  <aside class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="automations-title" (click)="$event.stopPropagation()">
+    <header class="side-panel-header">
+      <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="automations-title">Automations</h2><p>Let {{ boardName }} handle repetitive steps for you.</p></div>
+      <button type="button" class="panel-close" aria-label="Close automations" (click)="closeAutomationsPanel()">×</button>
+    </header>
+
+    <div class="fields-body">
+      <p class="fields-empty" *ngIf="automations.length === 0">No automations yet. For example: when a card is moved to Done, set its label to Completed.</p>
+
+      <ul class="fields-list" *ngIf="automations.length">
+        <li *ngFor="let rule of automations" [class.is-disabled]="!rule.enabled">
+          <label class="automation-toggle">
+            <input type="checkbox" [checked]="rule.enabled" (change)="toggleAutomation(rule)" [attr.aria-label]="(rule.enabled ? 'Turn off: ' : 'Turn on: ') + describeRule(rule)">
+            <span>{{ describeRule(rule) }}</span>
+          </label>
+          <button type="button" class="fields-remove" (click)="removeAutomation(rule)" aria-label="Delete automation">×</button>
+        </li>
+      </ul>
+
+      <form class="fields-form" (ngSubmit)="addAutomation()">
+        <h3>New automation</h3>
+        <label>
+          <span>When</span>
+          <select name="trigger" [(ngModel)]="newRule.trigger">
+            <option *ngFor="let option of triggerOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </label>
+        <label *ngIf="newRule.trigger !== 'checklist-completed'">
+          <span>Column</span>
+          <select name="triggerColumn" [(ngModel)]="newRule.triggerColumnId">
+            <option value="" *ngIf="newRule.trigger === 'card-created'">Any column</option>
+            <option *ngFor="let column of columns" [value]="column.id">{{ column.title }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Then</span>
+          <select name="action" [ngModel]="newRule.action" (ngModelChange)="setRuleAction($event)">
+            <option *ngFor="let option of actionOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </label>
+
+        <label *ngIf="newRule.action === 'set-label'">
+          <span>Label</span>
+          <select name="value" [(ngModel)]="newRule.actionValue">
+            <option value="">Choose…</option>
+            <option *ngFor="let label of labelOptions" [value]="label">{{ label }}</option>
+          </select>
+        </label>
+        <label *ngIf="newRule.action === 'set-priority'">
+          <span>Priority</span>
+          <select name="value" [(ngModel)]="newRule.actionValue">
+            <option value="">Choose…</option>
+            <option *ngFor="let priority of priorityOptions" [value]="priority">{{ priority }}</option>
+          </select>
+        </label>
+        <label *ngIf="newRule.action === 'set-assignee'">
+          <span>Name</span>
+          <input name="value" [(ngModel)]="newRule.actionValue" maxlength="60" placeholder="e.g. Osman">
+        </label>
+        <label *ngIf="newRule.action === 'move-to-column'">
+          <span>Move to</span>
+          <select name="value" [(ngModel)]="newRule.actionValue">
+            <option value="">Choose…</option>
+            <option *ngFor="let column of columns" [value]="column.id">{{ column.title }}</option>
+          </select>
+        </label>
+        <label *ngIf="newRule.action === 'set-due-in-days'">
+          <span>Days from today</span>
+          <input name="value" type="number" min="0" max="365" [(ngModel)]="newRule.actionValue">
+        </label>
+
+        <p class="fields-error" *ngIf="ruleError" role="alert">{{ ruleError }}</p>
+        <button type="submit" class="fields-add">Add automation</button>
       </form>
     </div>
   </aside>
