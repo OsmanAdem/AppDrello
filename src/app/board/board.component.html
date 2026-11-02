@@ -353,7 +353,7 @@
       </div>
       <div class="calendar-checklist-summary" *ngIf="selectedCalendarCard.checklist?.length">
         <span>Checklist</span>
-        <strong>{{ getChecklistCompletedCount(selectedCalendarCard) }} / {{ selectedCalendarCard.checklist?.length || 0 }} completed</strong>
+        <strong>{{ getChecklistCompletedCount(selectedCalendarCard) }} / {{ selectedCalendarCard.checklist.length }} completed</strong>
       </div>
     </div>
     <footer class="calendar-card-footer">
@@ -377,7 +377,7 @@
         <li *ngFor="let field of customFields">
           <div>
             <strong>{{ field.name }}</strong>
-            <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="field.options?.length"> · {{ field.options?.join(', ') }}</span></small>
+            <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="field.options?.length"> · {{ field.options.join(', ') }}</span></small>
           </div>
           <button type="button" class="fields-remove" (click)="removeCustomField(field)" [attr.aria-label]="'Remove ' + field.name">×</button>
         </li>

@@ -48,9 +48,9 @@
         <span class="assignee-avatar">{{ assigneeInitials }}</span>
         <span class="assignee-name">{{ card.assignee }}</span>
       </span>
-      <span class="checklist-summary" *ngIf="card.checklist?.length" [attr.aria-label]="completedChecklistCount + ' of ' + (card.checklist?.length || 0) + ' checklist items complete'">
+      <span class="checklist-summary" *ngIf="card.checklist?.length" [attr.aria-label]="completedChecklistCount + ' of ' + card.checklist.length + ' checklist items complete'">
         <span aria-hidden="true">☑</span>
-        {{ completedChecklistCount }}/{{ card.checklist?.length || 0 }}
+        {{ completedChecklistCount }}/{{ card.checklist.length }}
       </span>
     </div>
 
