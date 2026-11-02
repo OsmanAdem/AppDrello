@@ -1,23 +1,37 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { RouterModule } from '@angular/router';
 import { NavbarComponent } from './navbar.component';
 
 describe('NavbarComponent', () => {
-  let component: NavbarComponent;
   let fixture: ComponentFixture<NavbarComponent>;
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
-      declarations: [NavbarComponent]
-    })
-    .compileComponents();
-    
+      declarations: [NavbarComponent],
+      imports: [RouterModule.forRoot([])]
+    }).compileComponents();
+
     fixture = TestBed.createComponent(NavbarComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+  });
+
   it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('switches between light and dark mode', () => {
+    const theme = fixture.componentInstance.theme;
+    theme.set('light');
+
+    theme.toggle();
+
+    expect(theme.current).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 });
