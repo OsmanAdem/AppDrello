@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="890" height="430" viewBox="0 0 890 430">
+  <foreignObject x="0" y="0" width="890" height="430">
+    <xhtml:div class="board">
+      <xhtml:style>
+        .board{display:flex;align-items:flex-start;gap:14px;width:max-content;min-width:100%;padding:2px 2px 16px;box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#192841}
+        .column{flex:0 0 282px;width:282px;margin:18px 2px 0;padding:13px;border:1px solid #8278d4;border-top:3px solid #4335c4;border-radius:13px;background:#d8d4f5;box-shadow:0 6px 18px rgba(67,53,196,.11);box-sizing:border-box}
+        .column-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+        .title-container{flex:1;min-width:0}.column-title{display:flex;align-items:center;gap:8px;margin:0;padding:2px 0;color:#29234f;font-size:13px;font-weight:730;overflow-wrap:anywhere}
+        .card-count{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border:1px solid #948bdc;border-radius:7px;background:#fff;color:#33269d;font-size:10px;font-weight:750;box-sizing:border-box}
+        .column-name{min-width:0}.column-actions{display:flex;align-items:center}.rename{display:inline-grid;place-items:center;width:27px;height:27px;margin-left:auto;border:0;border-radius:7px;background:transparent;color:#33269d;font-size:14px}.delete{display:inline-grid;width:28px;height:28px;place-items:center;border:0;border-radius:7px;background:transparent;color:#33269d;font-size:19px;line-height:1}
+        .card-list{display:flex;flex-direction:column;gap:9px;min-height:70px;padding:3px 0;box-sizing:border-box}
+        .card{position:relative;display:flex;align-items:flex-start;flex-direction:column;gap:9px;width:100%;padding:12px 12px 11px 15px;border:1px solid #bdc7d7;border-radius:12px;background:#fff;box-shadow:0 2px 5px rgba(29,39,74,.045);box-sizing:border-box;overflow:hidden}
+        .card-top{display:flex;align-items:center;justify-content:flex-start;gap:7px;width:100%;margin-bottom:4px}
+        .issue-key{color:#58667e;font-size:10px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+        .label-badge{display:inline-block;width:fit-content;padding:2px 8px;border-radius:6px;background:#f4f5f7;color:#5e6c84;font-size:9px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+        .feature{background:#e1e8ff;color:#2545a5}.planning{background:#f5f3ff;color:#5635ad}.improvement{background:#fffbeb;color:#8a4b08}.completed{background:#ecfdf5;color:#0b694b}
+        .card-action{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;margin-left:auto;border:0;border-radius:6px;background:#f6f7fa;color:#58667e;font-size:17px;line-height:1}.card-action+.card-action{flex:0 0 24px;width:24px;margin-left:0;font-size:15px}
+        .card-main{display:flex;align-items:flex-start;gap:8px;width:100%;min-width:0;min-height:24px}.priority-indicator{position:absolute;left:0;top:0;bottom:0;width:4px}.high{background:#ef4444}.medium{background:#f59e0b}.low{background:#22a06b}
+        .card-title{display:block;flex:1;width:100%;min-width:0;min-height:20px;padding:2px;border:0;background:transparent;color:#172b4d;font-size:14px;line-height:20px;font-weight:500;overflow-wrap:anywhere}
+        .card-footer{display:flex;flex-direction:column;gap:10px;width:100%}.card-options{display:flex;flex-wrap:wrap;gap:6px;width:100%;opacity:.88}
+        .select{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;max-width:100%;padding:4px 6px;border:1px solid #cbd3df;border-radius:7px;background:#fff;color:#43516a;font-size:10px;line-height:12px;white-space:nowrap}
+        .chevron{font-size:9px;color:#58667e}
+        .add-card-container{display:flex;gap:7px;margin-top:10px}.add-card-input{min-width:0;flex:1;padding:9px 10px;border:1px solid #bdc8d7;border-radius:9px;background:#fff;color:#1e2c45;font-size:11px;line-height:13px;white-space:nowrap}.add-card-input span{color:#58667e}.add-card-button{display:inline-flex;align-items:center;justify-content:center;padding:0 11px;border:1px solid #fff;border-radius:9px;background:#fff;color:#33269d;font-size:11px;line-height:31px;font-weight:700}
+              /* Dark version: same colors as the real columns and cards in dark mode */
+        .board{color:#eef1f8}
+        .column{border-color:#9a91ff;border-top-color:#7c71f5;background:#7c71f5;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+        .column-title{color:#ffffff}
+        .card-count{border-color:#a59dff;background:#5a4fd4;color:#ffffff}
+        .rename,.delete{color:#ffffff}
+        .card{border-color:#2e364a;background:#171c2a;box-shadow:0 1px 2px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25)}
+        .issue-key{color:#aab4c7}
+        .label-badge{background:#232a3c;color:#d4dae6}
+        .feature{background:#1e2a55;color:#aebfff}
+        .planning{background:#2a2754;color:#c9c2ff}
+        .improvement{background:#3a2c15;color:#f0c27a}
+        .completed{background:#14332a;color:#66d9a8}
+        .card-action{background:#121623;color:#aab4c7}
+        .card-title{color:#eef1f8}
+        .select{border-color:#2e364a;background:#121623;color:#d4dae6}
+        .chevron{color:#8f9ab0}
+        .add-card-input{border-color:#2e364a;background:#171c2a;color:#eef1f8}
+        .add-card-input span{color:#8f9ab0}
+        .add-card-button{border-color:#5a4fd4;background:#5a4fd4;color:#ffffff}
+      </xhtml:style>
+      <xhtml:section class="column">
+        <xhtml:header class="column-header"><xhtml:div class="title-container"><xhtml:h3 class="column-title"><xhtml:span class="card-count">2</xhtml:span><xhtml:span class="column-name">To do</xhtml:span><xhtml:span class="rename">✎</xhtml:span></xhtml:h3></xhtml:div><xhtml:div class="column-actions"><xhtml:span class="delete">×</xhtml:span></xhtml:div></xhtml:header>
+        <xhtml:div class="card-list">
+          <xhtml:article class="card"><xhtml:div class="card-top"><xhtml:span class="issue-key">DRL-001</xhtml:span><xhtml:span class="label-badge feature">Feature</xhtml:span><xhtml:span class="card-action">↗</xhtml:span><xhtml:span class="card-action">×</xhtml:span></xhtml:div><xhtml:div class="card-main"><xhtml:span class="priority-indicator high"></xhtml:span><xhtml:div class="card-title">Plan new features</xhtml:div></xhtml:div><xhtml:div class="card-footer"><xhtml:div class="card-options"><xhtml:span class="select">High <xhtml:span class="chevron">▾</xhtml:span></xhtml:span><xhtml:span class="select">Feature <xhtml:span class="chevron">▾</xhtml:span></xhtml:span></xhtml:div></xhtml:div></xhtml:article>
+          <xhtml:article class="card"><xhtml:div class="card-top"><xhtml:span class="issue-key">DRL-002</xhtml:span><xhtml:span class="label-badge planning">Planning</xhtml:span><xhtml:span class="card-action">↗</xhtml:span><xhtml:span class="card-action">×</xhtml:span></xhtml:div><xhtml:div class="card-main"><xhtml:span class="priority-indicator medium"></xhtml:span><xhtml:div class="card-title">Review project goals</xhtml:div></xhtml:div><xhtml:div class="card-footer"><xhtml:div class="card-options"><xhtml:span class="select">Medium <xhtml:span class="chevron">▾</xhtml:span></xhtml:span><xhtml:span class="select">Planning <xhtml:span class="chevron">▾</xhtml:span></xhtml:span></xhtml:div></xhtml:div></xhtml:article>
+        </xhtml:div>
+        <xhtml:div class="add-card-container"><xhtml:div class="add-card-input"><xhtml:span>+ Add a card...</xhtml:span></xhtml:div><xhtml:span class="add-card-button">Add</xhtml:span></xhtml:div>
+      </xhtml:section>
+      <xhtml:section class="column">
+        <xhtml:header class="column-header"><xhtml:div class="title-container"><xhtml:h3 class="column-title"><xhtml:span class="card-count">1</xhtml:span><xhtml:span class="column-name">In progress</xhtml:span><xhtml:span class="rename">✎</xhtml:span></xhtml:h3></xhtml:div><xhtml:div class="column-actions"><xhtml:span class="delete">×</xhtml:span></xhtml:div></xhtml:header>
+        <xhtml:div class="card-list"><xhtml:article class="card"><xhtml:div class="card-top"><xhtml:span class="issue-key">DRL-003</xhtml:span><xhtml:span class="label-badge improvement">Improvement</xhtml:span><xhtml:span class="card-action">↗</xhtml:span><xhtml:span class="card-action">×</xhtml:span></xhtml:div><xhtml:div class="card-main"><xhtml:span class="priority-indicator medium"></xhtml:span><xhtml:div class="card-title">Improve the interface</xhtml:div></xhtml:div><xhtml:div class="card-footer"><xhtml:div class="card-options"><xhtml:span class="select">Medium <xhtml:span class="chevron">▾</xhtml:span></xhtml:span><xhtml:span class="select">Improvement <xhtml:span class="chevron">▾</xhtml:span></xhtml:span></xhtml:div></xhtml:div></xhtml:article></xhtml:div>
+        <xhtml:div class="add-card-container"><xhtml:div class="add-card-input"><xhtml:span>+ Add a card...</xhtml:span></xhtml:div><xhtml:span class="add-card-button">Add</xhtml:span></xhtml:div>
+      </xhtml:section>
+      <xhtml:section class="column">
+        <xhtml:header class="column-header"><xhtml:div class="title-container"><xhtml:h3 class="column-title"><xhtml:span class="card-count">1</xhtml:span><xhtml:span class="column-name">Done</xhtml:span><xhtml:span class="rename">✎</xhtml:span></xhtml:h3></xhtml:div><xhtml:div class="column-actions"><xhtml:span class="delete">×</xhtml:span></xhtml:div></xhtml:header>
+        <xhtml:div class="card-list"><xhtml:article class="card"><xhtml:div class="card-top"><xhtml:span class="issue-key">DRL-004</xhtml:span><xhtml:span class="label-badge completed">Completed</xhtml:span><xhtml:span class="card-action">↗</xhtml:span><xhtml:span class="card-action">×</xhtml:span></xhtml:div><xhtml:div class="card-main"><xhtml:span class="priority-indicator low"></xhtml:span><xhtml:div class="card-title">Set up the board</xhtml:div></xhtml:div><xhtml:div class="card-footer"><xhtml:div class="card-options"><xhtml:span class="select">Low <xhtml:span class="chevron">▾</xhtml:span></xhtml:span><xhtml:span class="select">Completed <xhtml:span class="chevron">▾</xhtml:span></xhtml:span></xhtml:div></xhtml:div></xhtml:article></xhtml:div>
+        <xhtml:div class="add-card-container"><xhtml:div class="add-card-input"><xhtml:span>+ Add a card...</xhtml:span></xhtml:div><xhtml:span class="add-card-button">Add</xhtml:span></xhtml:div>
+      </xhtml:section>
+    </xhtml:div>
+  </foreignObject>
+</svg>

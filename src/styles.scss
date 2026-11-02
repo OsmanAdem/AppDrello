@@ -428,7 +428,3 @@ h1, h2, h3 { color: var(--text-strong); font-feature-settings: "cv11", "ss01"; }
 body { font-feature-settings: "cv11"; line-height: 1.5; }
 input::placeholder, textarea::placeholder { color: var(--text-subtle); opacity: 1; }
 :focus-visible { outline-color: var(--focus-ring); }
-
-/* Images and illustrations made for a light background get a softer look in dark mode */
-:root[data-theme="dark"] img { filter: brightness(.9) contrast(1.05); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) img { filter: brightness(.9) contrast(1.05); } }
