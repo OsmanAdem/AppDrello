@@ -35,6 +35,11 @@ export class CardComponent implements AfterViewInit, AfterViewChecked {
   isDetailsOpen = false;
   newChecklistItem = '';
 
+  /** Number of checklist items (0 when the card has no checklist). */
+  get checklistTotal(): number {
+    return this.card?.checklist?.length ?? 0;
+  }
+
   get completedChecklistCount(): number {
     return this.card?.checklist?.filter(item => item.completed).length || 0;
   }

@@ -351,9 +351,9 @@
         <div><span>Sprint</span><strong>{{ getSprintName(selectedCalendarCard) }}</strong></div>
         <div *ngFor="let field of customFields"><span>{{ field.name }}</span><strong>{{ formatFieldValue(selectedCalendarCard, field) }}</strong></div>
       </div>
-      <div class="calendar-checklist-summary" *ngIf="selectedCalendarCard.checklist?.length">
+      <div class="calendar-checklist-summary" *ngIf="getChecklistTotal(selectedCalendarCard)">
         <span>Checklist</span>
-        <strong>{{ getChecklistCompletedCount(selectedCalendarCard) }} / {{ selectedCalendarCard.checklist.length }} completed</strong>
+        <strong>{{ getChecklistCompletedCount(selectedCalendarCard) }} / {{ getChecklistTotal(selectedCalendarCard) }} completed</strong>
       </div>
     </div>
     <footer class="calendar-card-footer">
@@ -377,7 +377,7 @@
         <li *ngFor="let field of customFields">
           <div>
             <strong>{{ field.name }}</strong>
-            <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="field.options?.length"> · {{ field.options.join(', ') }}</span></small>
+            <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="fieldOptionsText(field)"> · {{ fieldOptionsText(field) }}</span></small>
           </div>
           <button type="button" class="fields-remove" (click)="removeCustomField(field)" [attr.aria-label]="'Remove ' + field.name">×</button>
         </li>

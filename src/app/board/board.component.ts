@@ -658,6 +658,15 @@ export class BoardComponent implements OnInit, OnDestroy {
     return this.columns.find(column => column.id === card.columnId)?.title || 'No column';
   }
 
+  getChecklistTotal(card: Card): number {
+    return card.checklist?.length ?? 0;
+  }
+
+  /** "Small, Medium, Large" for a dropdown field, or '' when it has no options. */
+  fieldOptionsText(field: CustomFieldDefinition): string {
+    return field.options?.join(', ') ?? '';
+  }
+
   getChecklistCompletedCount(card: Card): number {
     return card.checklist?.filter(item => item.completed).length || 0;
   }
