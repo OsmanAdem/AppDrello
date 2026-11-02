@@ -20,7 +20,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(29, 39, 74, .045);
+  box-shadow: var(--shadow-sm);
   transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
   overflow: hidden;
 }
