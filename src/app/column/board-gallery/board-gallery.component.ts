@@ -7,7 +7,7 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Board } from '../../card/card.model';
+import { Board, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
 
 @Component({
@@ -58,11 +58,31 @@ import { BoardService } from '../../board.service';
         <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="create-board-title" (click)="$event.stopPropagation()">
           <div class="modal-mark" aria-hidden="true">＋</div>
           <h2 id="create-board-title">Create a board</h2>
-          <p>Give your workspace a name. You can change it any time.</p>
+          <p>Give your workspace a name and pick a template to start from. You can change both later.</p>
           <div class="input-group">
             <label for="boardName">Board name</label>
             <input #boardNameInput id="boardName" type="text" [(ngModel)]="newBoardName" placeholder="e.g. Product launch" maxlength="80" (keyup.enter)="createBoard()" (keydown.escape)="closeModal()" autofocus>
           </div>
+          <fieldset class="template-picker">
+            <legend>Template</legend>
+            <label class="template-option" *ngFor="let template of templates" [class.is-selected]="selectedTemplateId === template.id">
+              <input type="radio" name="template" [value]="template.id" [(ngModel)]="selectedTemplateId">
+              <span class="template-name">
+                {{ template.name }}
+                <button
+                  type="button"
+                  class="template-delete"
+                  *ngIf="!template.builtIn"
+                  (click)="deleteTemplate(template, $event)"
+                  [attr.aria-label]="'Delete template ' + template.name">×</button>
+              </span>
+              <span class="template-description">{{ template.description }}</span>
+              <span class="template-columns">{{ template.columns.join(' → ') }}</span>
+              <span class="template-fields" *ngIf="template.fields.length">
+                Fields: {{ fieldNames(template) }}
+              </span>
+            </label>
+          </fieldset>
           <div class="modal-footer">
             <button type="button" class="cancel-btn" (click)="closeModal()">Cancel</button>
             <button type="button" class="confirm-btn" (click)="createBoard()" [disabled]="!newBoardName.trim()">Create board <span aria-hidden="true">→</span></button>
@@ -106,7 +126,7 @@ import { BoardService } from '../../board.service';
     .empty-state h2 { margin: 2px 0 8px; color: #253653; font-size: 22px; letter-spacing: -.04em; }
     .empty-state > p:not(.eyebrow) { margin: 0 0 22px; color: #4e5b72; font-size: 13px; }
     .modal-overlay { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 20px; background: rgba(20,27,49,.42); backdrop-filter: blur(5px); animation: fadeIn .16s ease; }
-    .modal-content { width: min(100%, 440px); padding: 28px; border: 1px solid rgba(255,255,255,.8); border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(23,43,77,.24); animation: liftIn .2s ease-out; }
+    .modal-content { width: min(100%, 620px); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; border: 1px solid rgba(255,255,255,.8); border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(23,43,77,.24); animation: liftIn .2s ease-out; }
     .modal-mark { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 18px; border-radius: 13px; background: #f0efff; color: #4335c4; font-size: 24px; }
     .modal-content h2 { margin: 0 0 7px; color: #172b4d; font-size: 22px; letter-spacing: -.04em; }
     .modal-content > p { margin: 0 0 24px; color: #4e5b72; font-size: 13px; line-height: 1.55; }
@@ -116,6 +136,19 @@ import { BoardService } from '../../board.service';
     .input-group input::placeholder { color: #68758b; }
     .input-group input:focus { border-color: #8179ed; box-shadow: 0 0 0 3px rgba(108,99,220,.12); }
     .modal-footer { display: flex; justify-content: flex-end; gap: 9px; }
+    .template-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; padding: 0; border: 0; }
+    .template-picker legend { margin-bottom: 8px; padding: 0; color: #42526e; font-size: 12px; font-weight: 700; }
+    .template-option { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 13px; border: 1px solid #d4dbe7; border-radius: 12px; background: #fff; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+    .template-option:hover { border-color: #aaa3ef; }
+    .template-option.is-selected { border-color: #4335c4; background: #f7f6ff; box-shadow: 0 0 0 3px rgba(108,99,220,.12); }
+    .template-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .template-option:focus-within { outline: 3px solid #aaa5f0; outline-offset: 2px; }
+    .template-name { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #172b4d; font-size: 13px; font-weight: 750; }
+    .template-description { color: #4e5b72; font-size: 11px; line-height: 1.45; }
+    .template-columns, .template-fields { color: #6157c7; font-size: 10px; font-weight: 700; line-height: 1.45; }
+    .template-fields { color: #58667e; }
+    .template-delete { width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: #8a94a6; font-size: 16px; line-height: 1; cursor: pointer; }
+    .template-delete:hover { background: #fdecec; color: #c8333a; }
     .cancel-btn, .confirm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 41px; padding: 0 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
     .cancel-btn { border: 1px solid #c6cfdd; background: #fff; color: #59677f; }
     .cancel-btn:hover { background: #f8f9fc; }
@@ -125,6 +158,7 @@ import { BoardService } from '../../board.service';
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes liftIn { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @media (max-width: 640px) {
+      .template-picker { grid-template-columns: 1fr; }
       .gallery-container { width: calc(100% - 32px); padding: 30px 0 48px; }
       .gallery-header { align-items: flex-start; flex-direction: column; gap: 18px; margin-bottom: 22px; }
       .header-actions { width: 100%; justify-content: space-between; }
@@ -139,6 +173,8 @@ export class BoardGalleryComponent implements OnInit {
   boards: Board[] = [];
   showModal = false;
   newBoardName = '';
+  templates: BoardTemplate[] = [];
+  selectedTemplateId = 'blank';
 
   private isBrowser: boolean;
 
@@ -164,7 +200,24 @@ export class BoardGalleryComponent implements OnInit {
 
   openModal(): void {
     this.newBoardName = '';
+    this.templates = this.boardService.getTemplates();
+    this.selectedTemplateId = 'blank';
     this.showModal = true;
+  }
+
+  fieldNames(template: BoardTemplate): string {
+    return template.fields.map(field => field.name).join(', ');
+  }
+
+  deleteTemplate(template: BoardTemplate, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!window.confirm(`Delete the “${template.name}” template? Boards made from it are not affected.`)) return;
+
+    this.boardService.deleteTemplate(template.id);
+    this.templates = this.boardService.getTemplates();
+    if (this.selectedTemplateId === template.id) this.selectedTemplateId = 'blank';
   }
 
   closeModal(): void {
@@ -184,7 +237,7 @@ export class BoardGalleryComponent implements OnInit {
     }
 
     try {
-      this.boardService.createBoard(name);
+      this.boardService.createBoard(name, this.selectedTemplateId);
       this.closeModal();
       this.refreshBoards();
     } catch (error) {

@@ -15,6 +15,13 @@
         <span aria-hidden="true">◷</span> Activity
         <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
       </button>
+      <button type="button" class="activity-button" (click)="openFieldsPanel()" aria-label="Manage custom fields">
+        <span aria-hidden="true">⊞</span> Fields
+        <span class="activity-count" *ngIf="customFields.length">{{ customFields.length }}</span>
+      </button>
+      <button type="button" class="activity-button" (click)="saveAsTemplate()" *ngIf="boardId !== 'default'">
+        <span aria-hidden="true">⧉</span> Save as template
+      </button>
       <button
         type="button"
         class="reset-board-button"
@@ -105,6 +112,7 @@
           [filtersActive]="filtersActive"
           [dropListId]="'column-' + i"
           [connectedDropLists]="getDropListIds()"
+          [customFields]="customFields"
           (cardsChanged)="saveColumns()"
           (deleteRequested)="removeColumn(i)"
           (renameRequested)="renameColumn($event)">
@@ -317,6 +325,7 @@
         <div><span>Assignee</span><strong>{{ selectedCalendarCard.assignee || 'Unassigned' }}</strong></div>
         <div><span>Label</span><strong>{{ selectedCalendarCard.label || 'No label' }}</strong></div>
         <div><span>Sprint</span><strong>{{ getSprintName(selectedCalendarCard) }}</strong></div>
+        <div *ngFor="let field of customFields"><span>{{ field.name }}</span><strong>{{ formatFieldValue(selectedCalendarCard, field) }}</strong></div>
       </div>
       <div class="calendar-checklist-summary" *ngIf="selectedCalendarCard.checklist?.length">
         <span>Checklist</span>
@@ -326,5 +335,49 @@
     <footer class="calendar-card-footer">
       <button type="button" class="calendar-open-board" (click)="showCardOnBoard()">Open in board <span aria-hidden="true">→</span></button>
     </footer>
+  </aside>
+</div>
+
+<!-- Custom fields: the board owner decides which extra fields every card has -->
+<div class="panel-backdrop" *ngIf="showFieldsPanel" (click)="closeFieldsPanel()">
+  <aside class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="fields-title" (click)="$event.stopPropagation()">
+    <header class="side-panel-header">
+      <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="fields-title">Custom fields</h2><p>Extra fields shown in every card's details on {{ boardName }}.</p></div>
+      <button type="button" class="panel-close" aria-label="Close custom fields" (click)="closeFieldsPanel()">×</button>
+    </header>
+
+    <div class="fields-body">
+      <p class="fields-empty" *ngIf="customFields.length === 0">No custom fields yet. Add one below, e.g. "Story points" or "Customer".</p>
+
+      <ul class="fields-list" *ngIf="customFields.length">
+        <li *ngFor="let field of customFields">
+          <div>
+            <strong>{{ field.name }}</strong>
+            <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="field.options?.length"> · {{ field.options?.join(', ') }}</span></small>
+          </div>
+          <button type="button" class="fields-remove" (click)="removeCustomField(field)" [attr.aria-label]="'Remove ' + field.name">×</button>
+        </li>
+      </ul>
+
+      <form class="fields-form" (ngSubmit)="addCustomField()">
+        <h3>Add a field</h3>
+        <label>
+          <span>Name</span>
+          <input name="fieldName" [(ngModel)]="newField.name" maxlength="40" placeholder="e.g. Story points">
+        </label>
+        <label>
+          <span>Type</span>
+          <select name="fieldType" [(ngModel)]="newField.type">
+            <option *ngFor="let type of fieldTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+        </label>
+        <label *ngIf="newField.type === 'select'">
+          <span>Options (comma separated)</span>
+          <input name="fieldOptions" [(ngModel)]="newField.options" placeholder="e.g. Small, Medium, Large">
+        </label>
+        <p class="fields-error" *ngIf="fieldError" role="alert">{{ fieldError }}</p>
+        <button type="submit" class="fields-add">Add field</button>
+      </form>
+    </div>
   </aside>
 </div>

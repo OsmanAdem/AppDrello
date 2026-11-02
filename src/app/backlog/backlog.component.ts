@@ -31,6 +31,7 @@ export class BacklogComponent implements OnChanges {
 
   sprints: Sprint[] = [];
   showCreateForm = false;
+  showCompleted = false;
   newSprint = { name: '', goal: '', startDate: '', endDate: '' };
   formError = '';
 
@@ -56,8 +57,11 @@ export class BacklogComponent implements OnChanges {
       .sort((a, b) => order[a.status] - order[b.status] || a.createdAt.localeCompare(b.createdAt));
   }
 
+  /** Most recently created first, so the latest finished sprint is on top. */
   get completedSprints(): Sprint[] {
-    return this.sprints.filter(sprint => sprint.status === 'completed');
+    return this.sprints
+      .filter(sprint => sprint.status === 'completed')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   /** Cards that are not in any open sprint. */
@@ -169,6 +173,34 @@ export class BacklogComponent implements OnChanges {
     this.sprints = this.sprints.filter(item => item.id !== sprint.id);
     this.saveSprints();
     this.boardService.recordActivity(this.boardId, 'Sprint deleted', `Deleted “${sprint.name}”.`);
+    this.cardsChanged.emit();
+  }
+
+  /** Removes completed sprints from the history. The tasks themselves are kept. */
+  clearCompletedSprints(sprintToRemove?: Sprint): void {
+    const toRemove = sprintToRemove ? [sprintToRemove] : this.completedSprints;
+    const message = sprintToRemove
+      ? `Remove “${sprintToRemove.name}” from the history? Its tasks are kept.`
+      : `Remove all ${toRemove.length} completed sprint(s) from the history? The tasks are kept.`;
+
+    if (!toRemove.length || !window.confirm(message)) return;
+
+    const removedIds = new Set(toRemove.map(sprint => sprint.id));
+
+    // Use every card on the board (not just the filtered ones) so none keep a link to a removed sprint.
+    this.columns
+      .flatMap(column => column.cards)
+      .filter(card => card.sprintId && removedIds.has(card.sprintId))
+      .forEach(card => delete card.sprintId);
+
+    this.sprints = this.sprints.filter(sprint => !removedIds.has(sprint.id));
+    this.saveSprints();
+    this.boardService.recordActivity(
+      this.boardId,
+      'Sprint history cleared',
+      sprintToRemove ? `Removed “${sprintToRemove.name}” from the history.` : 'Removed all completed sprints from the history.'
+    );
+    if (!this.completedSprints.length) this.showCompleted = false;
     this.cardsChanged.emit();
   }
 

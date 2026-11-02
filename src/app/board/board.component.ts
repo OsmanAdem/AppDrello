@@ -12,6 +12,8 @@ import {
   BoardActivity,
   Card,
   Column,
+  CustomFieldDefinition,
+  CustomFieldType,
   Sprint
 } from '../card/card.model';
 import { BoardService } from '../board.service';
@@ -89,6 +91,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   showActivityPanel = false;
   sprints: Sprint[] = [];
   showActiveSprintOnly = false;
+  customFields: CustomFieldDefinition[] = [];
+  showFieldsPanel = false;
+  newField: { name: string; type: CustomFieldType; options: string } = { name: '', type: 'text', options: '' };
+  fieldError = '';
+  readonly fieldTypes: { value: CustomFieldType; label: string }[] = [
+    { value: 'text', label: 'Text' },
+    { value: 'number', label: 'Number' },
+    { value: 'date', label: 'Date' },
+    { value: 'select', label: 'Dropdown' },
+    { value: 'checkbox', label: 'Checkbox' }
+  ];
   activity: BoardActivity[] = [];
   selectedCalendarCard: Card | null = null;
   readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -292,6 +305,98 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   goToCurrentWeek(): void {
     this.timelineStart = startOfWeek(new Date());
+  }
+
+  // ----- Custom fields -----
+
+  openFieldsPanel(): void {
+    this.newField = { name: '', type: 'text', options: '' };
+    this.fieldError = '';
+    this.showFieldsPanel = true;
+  }
+
+  closeFieldsPanel(): void {
+    this.showFieldsPanel = false;
+  }
+
+  fieldTypeLabel(type: CustomFieldType): string {
+    return this.fieldTypes.find(item => item.value === type)?.label || type;
+  }
+
+  addCustomField(): void {
+    const name = this.newField.name.trim();
+    const options = this.newField.options
+      .split(',')
+      .map(option => option.trim())
+      .filter(Boolean);
+
+    if (!name) {
+      this.fieldError = 'Give the field a name.';
+      return;
+    }
+    if (this.customFields.some(field => field.name.toLowerCase() === name.toLowerCase())) {
+      this.fieldError = 'A field with that name already exists.';
+      return;
+    }
+    if (this.newField.type === 'select' && options.length < 2) {
+      this.fieldError = 'A dropdown needs at least two options, separated by commas.';
+      return;
+    }
+
+    const field: CustomFieldDefinition = {
+      id: `field-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      type: this.newField.type,
+      options: this.newField.type === 'select' ? options : undefined
+    };
+
+    this.customFields = [...this.customFields, field];
+    this.boardService.saveCustomFields(this.boardId, this.customFields);
+    this.recordActivity('Field added', `Added the “${name}” field.`);
+    this.newField = { name: '', type: 'text', options: '' };
+    this.fieldError = '';
+  }
+
+  removeCustomField(field: CustomFieldDefinition): void {
+    if (!window.confirm(`Remove the “${field.name}” field? Its values on every card are deleted too.`)) return;
+
+    // Delete the stored values so cards don't keep data for a field that no longer exists.
+    this.columns.forEach(column => column.cards.forEach(card => {
+      if (card.customFields) delete card.customFields[field.id];
+    }));
+
+    this.customFields = this.customFields.filter(item => item.id !== field.id);
+    this.boardService.saveCustomFields(this.boardId, this.customFields);
+    this.saveColumns(false);
+    this.recordActivity('Field removed', `Removed the “${field.name}” field.`);
+  }
+
+  formatFieldValue(card: Card, field: CustomFieldDefinition): string {
+    const value = card.customFields?.[field.id];
+    if (value === undefined || value === '') return 'Not set';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    return String(value);
+  }
+
+  // ----- Templates -----
+
+  saveAsTemplate(): void {
+    if (!this.isBrowser) return;
+
+    const name = window.prompt(
+      'Name the template. It saves this board\'s columns and custom fields (not the cards):',
+      `${this.boardName} template`
+    );
+
+    if (name === null) return;
+
+    if (!name.trim()) {
+      window.alert('Template name cannot be empty.');
+      return;
+    }
+
+    this.boardService.saveBoardAsTemplate(this.boardId, name);
+    window.alert(`Saved “${name.trim()}”. Pick it the next time you create a board.`);
   }
 
   // ----- Sprints -----
@@ -593,6 +698,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.lastSavedColumns = this.cloneColumns(this.columns);
     this.sprints = this.boardService.getSprints(this.boardId);
     this.showActiveSprintOnly = false;
+    this.customFields = this.boardService.getCustomFields(this.boardId);
     this.activity = this.boardService.getActivity(this.boardId);
   }
 
@@ -661,7 +767,8 @@ export class BoardComponent implements OnInit, OnDestroy {
       assignee: 'the assignee',
       startDate: 'the start date',
       dueDate: 'the due date',
-      checklist: 'the checklist'
+      checklist: 'the checklist',
+      customFields: 'a custom field'
     };
 
     return Object.keys(fieldLabels).filter(key =>

@@ -186,6 +186,39 @@
         </label>
       </div>
 
+      <section class="custom-fields-section" *ngIf="customFields.length" aria-labelledby="custom-fields-title">
+        <h3 id="custom-fields-title">Custom fields</h3>
+        <div class="details-fields">
+          <ng-container *ngFor="let field of customFields">
+            <label class="field-group" *ngIf="field.type !== 'checkbox'">
+              <span>{{ field.name }}</span>
+              <input
+                *ngIf="field.type === 'text' || field.type === 'number' || field.type === 'date'"
+                [type]="field.type"
+                [ngModel]="fieldValue(field)"
+                (ngModelChange)="setFieldValue(field, $event)"
+                [attr.aria-label]="field.name">
+              <select
+                *ngIf="field.type === 'select'"
+                [ngModel]="fieldValue(field) ?? ''"
+                (ngModelChange)="setFieldValue(field, $event)"
+                [attr.aria-label]="field.name">
+                <option value=""></option>
+                <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
+              </select>
+            </label>
+
+            <label class="field-group custom-checkbox" *ngIf="field.type === 'checkbox'">
+              <input
+                type="checkbox"
+                [ngModel]="!!fieldValue(field)"
+                (ngModelChange)="setFieldValue(field, $event)">
+              <span>{{ field.name }}</span>
+            </label>
+          </ng-container>
+        </div>
+      </section>
+
       <section class="checklist-section" aria-labelledby="checklist-title">
         <div class="checklist-heading">
           <div>

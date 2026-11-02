@@ -1,6 +1,57 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BoardActivity, Card, Column, Board, Sprint } from './card/card.model';
+import {
+  BoardActivity,
+  BoardTemplate,
+  Card,
+  Column,
+  Board,
+  CustomFieldDefinition,
+  Sprint
+} from './card/card.model';
+
+/** Templates that always exist. Users can add their own with "Save as template". */
+const BUILT_IN_TEMPLATES: BoardTemplate[] = [
+  {
+    id: 'blank',
+    name: 'Basic',
+    description: 'A simple To Do, In Progress, Done board.',
+    columns: ['To Do', 'In Progress', 'Done'],
+    fields: [],
+    builtIn: true
+  },
+  {
+    id: 'scrum',
+    name: 'Scrum',
+    description: 'Sprint work with a review step and story points.',
+    columns: ['To Do', 'In Progress', 'Review', 'Done'],
+    fields: [{ id: 'field-story-points', name: 'Story points', type: 'number' }],
+    builtIn: true
+  },
+  {
+    id: 'bugs',
+    name: 'Bug tracking',
+    description: 'Follow bugs from report to fix.',
+    columns: ['Reported', 'Triaged', 'Fixing', 'Testing', 'Done'],
+    fields: [
+      { id: 'field-severity', name: 'Severity', type: 'select', options: ['Critical', 'Major', 'Minor'] },
+      { id: 'field-environment', name: 'Environment', type: 'select', options: ['Production', 'Staging', 'Local'] },
+      { id: 'field-reproducible', name: 'Reproducible', type: 'checkbox' }
+    ],
+    builtIn: true
+  },
+  {
+    id: 'content',
+    name: 'Content calendar',
+    description: 'Plan articles and posts from idea to published.',
+    columns: ['Ideas', 'Writing', 'Editing', 'Scheduled', 'Done'],
+    fields: [
+      { id: 'field-channel', name: 'Channel', type: 'select', options: ['Blog', 'Newsletter', 'Social'] },
+      { id: 'field-word-count', name: 'Word count', type: 'number' }
+    ],
+    builtIn: true
+  }
+];
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +61,7 @@ export class BoardService {
 
   private readonly boardsKey = 'drello-boards';
   private readonly legacyColumnsKey = 'drello-columns';
+  private readonly templatesKey = 'drello-templates';
 
   constructor(@Inject(PLATFORM_ID) platformId: object) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -19,7 +71,7 @@ export class BoardService {
     return this.readStoredBoards();
   }
 
-  createBoard(name: string): Board {
+  createBoard(name: string, templateId = 'blank'): Board {
     const cleanName = name.trim();
 
     if (!cleanName) {
@@ -36,8 +88,22 @@ export class BoardService {
     boards.push(board);
 
     this.writeBoards(boards);
-    this.saveColumns(board.id, this.createDefaultColumns(board.id));
-    this.recordActivity(board.id, 'Board created', `Created the “${cleanName}” board.`);
+    const template = this.getTemplates().find(item => item.id === templateId);
+    const columns = template
+      ? this.columnsFromTemplate(board.id, template)
+      : this.createDefaultColumns(board.id);
+
+    this.saveColumns(board.id, columns);
+    // Copy the fields so later edits on this board never change the template.
+    this.saveCustomFields(board.id, (template?.fields || []).map(field => ({
+      ...field,
+      options: field.options ? [...field.options] : undefined
+    })));
+    this.recordActivity(
+      board.id,
+      'Board created',
+      `Created the “${cleanName}” board${template ? ` from the ${template.name} template` : ''}.`
+    );
 
     return board;
   }
@@ -84,6 +150,7 @@ export class BoardService {
     localStorage.removeItem(`drello-columns-${boardId}`);
     localStorage.removeItem(`drello-activity-${boardId}`);
     localStorage.removeItem(`drello-sprints-${boardId}`);
+    localStorage.removeItem(`drello-fields-${boardId}`);
 
     // Remove legacy data when deleting the legacy default board.
     if (boardId === 'default') {
@@ -108,6 +175,7 @@ export class BoardService {
           key.startsWith('drello-columns-') ||
           key.startsWith('drello-activity-') ||
           key.startsWith('drello-sprints-') ||
+          key.startsWith('drello-fields-') ||
           key === this.legacyColumnsKey
         )
       ) {
@@ -213,6 +281,59 @@ export class BoardService {
     localStorage.setItem(`drello-sprints-${boardId}`, JSON.stringify(sprints));
   }
 
+  // ----- Custom fields -----
+
+  getCustomFields(boardId: string): CustomFieldDefinition[] {
+    if (!this.isBrowser) return [];
+
+    try {
+      const stored = localStorage.getItem(`drello-fields-${boardId}`);
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed as CustomFieldDefinition[] : [];
+    } catch (error) {
+      console.error('Could not load custom fields:', error);
+      return [];
+    }
+  }
+
+  saveCustomFields(boardId: string, fields: CustomFieldDefinition[]): void {
+    if (!this.isBrowser) return;
+
+    localStorage.setItem(`drello-fields-${boardId}`, JSON.stringify(fields));
+  }
+
+  // ----- Templates -----
+
+  getTemplates(): BoardTemplate[] {
+    return [...BUILT_IN_TEMPLATES, ...this.readCustomTemplates()];
+  }
+
+  /** Saves a board's columns and custom fields (not its cards) as a new template. */
+  saveBoardAsTemplate(boardId: string, name: string, description = ''): BoardTemplate {
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+      throw new Error('Template name cannot be empty.');
+    }
+
+    const template: BoardTemplate = {
+      id: `template-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: cleanName,
+      description: description.trim() || 'Saved from one of your boards.',
+      columns: this.loadColumns(boardId).map(column => column.title),
+      fields: this.getCustomFields(boardId)
+    };
+
+    this.writeCustomTemplates([...this.readCustomTemplates(), template]);
+    return template;
+  }
+
+  deleteTemplate(templateId: string): void {
+    this.writeCustomTemplates(
+      this.readCustomTemplates().filter(template => template.id !== templateId)
+    );
+  }
+
   getActivity(boardId: string): BoardActivity[] {
     if (!this.isBrowser) return [];
 
@@ -301,6 +422,34 @@ export class BoardService {
       console.error('Migration failed:', error);
       return { success: false };
     }
+  }
+
+  private columnsFromTemplate(boardId: string, template: BoardTemplate): Column[] {
+    return template.columns.map((title, index) => ({
+      id: `col-${index + 1}-${boardId}`,
+      boardId,
+      title,
+      cards: []
+    }));
+  }
+
+  private readCustomTemplates(): BoardTemplate[] {
+    if (!this.isBrowser) return [];
+
+    try {
+      const stored = localStorage.getItem(this.templatesKey);
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed as BoardTemplate[] : [];
+    } catch (error) {
+      console.error('Could not load templates:', error);
+      return [];
+    }
+  }
+
+  private writeCustomTemplates(templates: BoardTemplate[]): void {
+    if (!this.isBrowser) return;
+
+    localStorage.setItem(this.templatesKey, JSON.stringify(templates));
   }
 
   private readStoredBoards(): Board[] {

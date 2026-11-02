@@ -208,3 +208,24 @@ button:disabled { cursor: not-allowed; }
 .timeline-empty { padding: 40px 20px; color: #58667e; text-align: center; }
 .timeline-empty h3 { margin: 0 0 6px; color: #1d2b45; font-size: 15px; }
 .timeline-empty p { margin: 0; font-size: 12px; }
+
+
+/* Custom fields panel */
+.fields-body { display: flex; flex-direction: column; gap: 18px; padding: 20px 24px 28px; }
+.fields-empty { margin: 0; color: #66728a; font-size: 13px; }
+.fields-list { margin: 0; padding: 0; list-style: none; border: 1px solid #e7eaf1; border-radius: 12px; overflow: hidden; }
+.fields-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; }
+.fields-list li + li { border-top: 1px solid #eef1f6; }
+.fields-list strong { display: block; color: #192741; font-size: 13px; }
+.fields-list small { display: block; margin-top: 2px; color: #66728a; font-size: 11px; }
+.fields-remove { width: 30px; height: 30px; border: 1px solid #e3e7ef; border-radius: 8px; background: #fff; color: #66728a; font-size: 18px; cursor: pointer; }
+.fields-remove:hover { border-color: #f3c4c6; background: #fdecec; color: #c8333a; }
+.fields-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid #d9d5fb; border-radius: 12px; background: #faf9ff; }
+.fields-form h3 { margin: 0; color: #192741; font-size: 14px; }
+.fields-form label { display: flex; flex-direction: column; gap: 5px; }
+.fields-form label span { color: #58667e; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.fields-form input, .fields-form select { height: 38px; padding: 0 10px; border: 1px solid #d4dbe7; border-radius: 8px; background: #fff; font: inherit; font-size: 13px; }
+.fields-error { margin: 0; color: #c8333a; font-size: 12px; font-weight: 650; }
+.fields-add { align-self: flex-end; height: 36px; padding: 0 16px; border: 1px solid #4335c4; border-radius: 9px; background: #4335c4; color: #fff; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.fields-add:hover { background: #33269d; }
+.fields-remove:focus-visible, .fields-add:focus-visible { outline: 3px solid #aaa5f0; outline-offset: 2px; }

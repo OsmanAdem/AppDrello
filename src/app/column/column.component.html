@@ -64,6 +64,7 @@
       [cdkDragData]="card"
       [card]="card"
       [isOverdue]="isOverdue(card)"
+      [customFields]="customFields"
       (deleteRequested)="removeCard(card.id)"
       (cardChanged)="cardsChanged.emit()">
     </app-card>

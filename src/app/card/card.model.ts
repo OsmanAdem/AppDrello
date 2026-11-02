@@ -2,6 +2,28 @@ export type CardPriority = 'Low' | 'Medium' | 'High' | '';
 
 export type CardLabel = 'Bug' | 'Feature' | 'Improvement' | 'Planning' | 'Completed' | '';
 
+export type CustomFieldType = 'text' | 'number' | 'select' | 'checkbox' | 'date';
+
+export type CustomFieldValue = string | number | boolean;
+
+/** A field the board owner adds themselves, e.g. "Story points" or "Severity". */
+export interface CustomFieldDefinition {
+  id: string;
+  name: string;
+  type: CustomFieldType;
+  options?: string[]; // only used by 'select' fields
+}
+
+/** A reusable starting point for new boards: which columns and fields they get. */
+export interface BoardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  columns: string[];
+  fields: CustomFieldDefinition[];
+  builtIn?: boolean; // built-in templates can't be deleted
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;
@@ -22,6 +44,7 @@ export interface Card {
   dueDate?: string;
   checklist?: ChecklistItem[];
   sprintId?: string;
+  customFields?: Record<string, CustomFieldValue>; // field id → value
 }
 
 export interface Column {

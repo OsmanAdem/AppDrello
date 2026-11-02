@@ -4,7 +4,7 @@ import {
   moveItemInArray,
   transferArrayItem
 } from '@angular/cdk/drag-drop';
-import { Card, Column } from '../card/card.model';
+import { Card, Column, CustomFieldDefinition } from '../card/card.model';
 import { BoardService } from '../board.service';
 import { toDateKey } from '../shared/date-utils';
 
@@ -20,6 +20,7 @@ export class ColumnComponent {
   @Input() connectedDropLists: string[] = [];
   @Input() filteredCards: Card[] = [];
   @Input() filtersActive = false;
+  @Input() customFields: CustomFieldDefinition[] = [];
 
   newCardTitle = ''; // State for the inline input
   isEditingTitle = false; // State for renaming column

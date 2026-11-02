@@ -9,7 +9,12 @@ import {
   ViewChild
 } from '@angular/core';
 
-import { Card, ChecklistItem } from './card.model';
+import {
+  Card,
+  ChecklistItem,
+  CustomFieldDefinition,
+  CustomFieldValue
+} from './card.model';
 
 @Component({
   selector: 'app-card',
@@ -19,6 +24,7 @@ import { Card, ChecklistItem } from './card.model';
 export class CardComponent implements AfterViewInit, AfterViewChecked {
   @Input() card?: Card;
   @Input() isOverdue = false;
+  @Input() customFields: CustomFieldDefinition[] = [];
 
   @Output() deleteRequested = new EventEmitter<void>();
   @Output() cardChanged = new EventEmitter<void>();
@@ -96,6 +102,25 @@ export class CardComponent implements AfterViewInit, AfterViewChecked {
       completed: false
     });
     this.newChecklistItem = '';
+    this.onTitleChange();
+  }
+
+  fieldValue(field: CustomFieldDefinition): CustomFieldValue | undefined {
+    return this.card?.customFields?.[field.id];
+  }
+
+  /** Saves a custom field value. Empty values are removed so the card stays tidy. */
+  setFieldValue(field: CustomFieldDefinition, value: CustomFieldValue | null): void {
+    if (!this.card) return;
+
+    this.card.customFields ||= {};
+
+    if (value === null || value === '' || value === false) {
+      delete this.card.customFields[field.id];
+    } else {
+      this.card.customFields[field.id] = field.type === 'number' ? Number(value) : value;
+    }
+
     this.onTitleChange();
   }
 

@@ -71,9 +71,51 @@
     <ng-container *ngTemplateOutlet="cardList; context: { $implicit: backlogCards, empty: 'The backlog is empty. New cards land here until you plan them into a sprint.' }"></ng-container>
   </article>
 
-  <p class="completed-note" *ngIf="completedSprints.length">
-    Completed sprints: {{ completedSprints.length }}
-  </p>
+  <!-- Completed sprints: hidden by default, shown with a toggle -->
+  <section class="completed-sprints" *ngIf="completedSprints.length">
+    <button
+      type="button"
+      class="completed-toggle"
+      (click)="showCompleted = !showCompleted"
+      [attr.aria-expanded]="showCompleted">
+      <span aria-hidden="true">{{ showCompleted ? '▾' : '▸' }}</span>
+      Completed sprints ({{ completedSprints.length }})
+    </button>
+    <button type="button" class="backlog-secondary clear-completed" *ngIf="showCompleted" (click)="clearCompletedSprints()">
+      Clear all
+    </button>
+
+    <ng-container *ngIf="showCompleted">
+      <article class="sprint is-completed" *ngFor="let sprint of completedSprints">
+        <header class="sprint-header">
+          <div class="sprint-heading">
+            <h3>{{ sprint.name }}</h3>
+            <span class="sprint-status" data-status="completed">Completed</span>
+            <span class="sprint-dates" *ngIf="sprint.startDate || sprint.endDate">
+              {{ sprint.startDate | date:'MMM d' }} – {{ sprint.endDate | date:'MMM d, y' }}
+            </span>
+          </div>
+          <div class="sprint-actions">
+            <span class="sprint-count">{{ cardsInSprint(sprint).length }} tasks finished</span>
+            <button type="button" class="backlog-secondary" (click)="clearCompletedSprints(sprint)" [attr.aria-label]="'Remove ' + sprint.name + ' from history'">Remove</button>
+          </div>
+        </header>
+        <p class="sprint-goal" *ngIf="sprint.goal">🎯 {{ sprint.goal }}</p>
+
+        <p class="backlog-empty" *ngIf="cardsInSprint(sprint).length === 0">No tasks were finished in this sprint.</p>
+        <ul class="backlog-list" *ngIf="cardsInSprint(sprint).length">
+          <li class="backlog-row is-done" *ngFor="let card of cardsInSprint(sprint)">
+            <button type="button" class="backlog-row-main" (click)="openCard.emit(card)">
+              <span class="backlog-priority" [attr.data-priority]="card.priority"></span>
+              <span class="backlog-key">{{ card.issueKey }}</span>
+              <span class="backlog-title">{{ card.title }}</span>
+            </button>
+            <span class="backlog-column">{{ columnTitle(card) }}</span>
+          </li>
+        </ul>
+      </article>
+    </ng-container>
+  </section>
 </section>
 
 <!-- One reusable list of task rows, used by every sprint and the backlog -->
