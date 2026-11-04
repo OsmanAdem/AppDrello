@@ -119,13 +119,18 @@ authRouter.post('/forgot-password', asyncHandler(async (req, res) => {
     );
 
     const appUrl = process.env['CLIENT_ORIGIN'] || 'http://localhost:4200';
-    await sendEmail(
-      user.email,
-      'Reset your Drello password',
-      `Hi ${user.name},\n\nOpen this link to choose a new password:\n${appUrl}/reset-password?token=${token}\n\n` +
-      `The link works once and expires in ${RESET_LINK_LIFETIME_MINUTES} minutes. ` +
-      "If you didn't ask for this, you can ignore this email."
-    );
+    try {
+      await sendEmail(
+        user.email,
+        'Reset your Drello password',
+        `Hi ${user.name},\n\nOpen this link to choose a new password:\n${appUrl}/reset-password?token=${token}\n\n` +
+        `The link works once and expires in ${RESET_LINK_LIFETIME_MINUTES} minutes. ` +
+        "If you didn't ask for this, you can ignore this email."
+      );
+    } catch (error: any) {
+      // Log it for the developer, but answer the same as always (see below).
+      console.error('Could not send the password reset email:', error?.message ?? error);
+    }
   }
 
   // Same answer whether or not the email has an account, so nobody can test which emails exist.

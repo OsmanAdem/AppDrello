@@ -33,8 +33,11 @@ import { describeAuthError } from './auth-errors';
         <ng-template #sentMessage>
           <p class="auth-success" role="status">{{ sent }}</p>
           <p class="auth-subtitle dev-note">
-            While developing, the link isn't emailed: it's printed in the terminal where the server
-            runs (<code>npm run dev</code>). Open it from there.
+            Check your inbox, and your spam folder. The link works once and expires in 1 hour.
+          </p>
+          <p class="auth-subtitle dev-note">
+            Developing without email settings? Then the link is printed in the server terminal
+            (<code>npm run dev</code>) instead.
           </p>
         </ng-template>
 
