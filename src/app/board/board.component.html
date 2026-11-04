@@ -56,6 +56,12 @@
     </div>
   </header>
 
+  <p class="sync-warning" *ngIf="hasUnsavedChanges" role="alert">
+    <strong>Not saved to the server.</strong>
+    Your latest changes are only in this browser. Check that the server is running
+    (<code>npm run dev</code> in the server folder); they'll be sent again automatically.
+  </p>
+
   <section class="board-toolbar" aria-label="Task views">
     <div class="board-view-switch" role="group" aria-label="Board view">
       <button type="button" [class.is-active]="activeView === 'board'" [attr.aria-pressed]="activeView === 'board'" (click)="setActiveView('board')">

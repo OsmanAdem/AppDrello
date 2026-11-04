@@ -109,3 +109,7 @@
 @keyframes logout-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes logout-lift { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .logout-backdrop, .logout-dialog { animation: none; } }
+
+.logout-warning { margin: -10px 0 20px !important; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger-strong) !important; font-size: 13px !important; }
+.logout-warning code { font-size: 12px; }
+.logout-confirm:disabled { opacity: .7; cursor: progress; }

@@ -192,6 +192,11 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.clearCardActivityTimers();
   }
 
+  /** True when some changes are only saved in this browser (the server didn't get them). */
+  get hasUnsavedChanges(): boolean {
+    return this.boardService.hasUnsavedChanges;
+  }
+
   get calendarTitle(): string {
     return new Intl.DateTimeFormat('en-US', {
       month: 'long',

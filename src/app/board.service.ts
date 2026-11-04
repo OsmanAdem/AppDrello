@@ -78,6 +78,13 @@ export class BoardService {
 
   /** True when the last request to the server failed (e.g. the server isn't running). */
   serverUnavailable = false;
+  /** Boards with changes that failed to reach the server. They are sent again before the next sync. */
+  private unsavedBoards = new Set<string>();
+
+  /** True when some changes are only saved in this browser, not on the server yet. */
+  get hasUnsavedChanges(): boolean {
+    return this.unsavedBoards.size > 0;
+  }
 
   constructor(
     @Inject(PLATFORM_ID) platformId: object,
@@ -97,6 +104,10 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     try {
+      // Never load from the server while our own latest changes are still on their way there.
+      await this.flushPendingWrites();
+      if (this.hasUnsavedChanges) return; // keep the local copy; it has changes the server doesn't
+
       const serverBoards = await firstValueFrom(this.api.getBoards());
       const localBoards = this.readStoredBoards();
 
@@ -121,6 +132,10 @@ export class BoardService {
     if (!this.isBrowser || boardId === 'default') return;
 
     try {
+      await this.flushPendingWrites();
+      // If an earlier save failed, the local copy is newer than the server's: keep it.
+      if (this.unsavedBoards.has(boardId)) return;
+
       const state = await firstValueFrom(this.api.getBoardState(boardId));
 
       const boards = this.readStoredBoards().filter(board => board.id !== boardId);
@@ -142,14 +157,51 @@ export class BoardService {
     }
   }
 
+  /**
+   * Sends any column saves that are still waiting for their pause, then waits until every
+   * queued change has been answered by the server. Boards whose saves failed are sent again in full.
+   */
+  async flushPendingWrites(): Promise<void> {
+    if (!this.isBrowser) return;
+
+    for (const [boardId, timer] of this.columnTimers) {
+      clearTimeout(timer);
+      this.columnTimers.delete(boardId);
+      const latest = this.loadColumns(boardId);
+      this.sendToServer(boardId, () => this.api.saveColumns(boardId, latest));
+    }
+    await this.writeQueue;
+
+    for (const boardId of [...this.unsavedBoards]) {
+      const board = this.readStoredBoards().find(item => item.id === boardId);
+      if (!board) {
+        this.unsavedBoards.delete(boardId);
+        continue;
+      }
+      try {
+        await this.uploadBoard(board);
+        this.unsavedBoards.delete(boardId);
+        this.serverUnavailable = false;
+      } catch {
+        this.serverUnavailable = true;
+        break; // the server is still unreachable; try again later
+      }
+    }
+  }
+
+  /** Sends one board and everything on it to the server. */
+  private async uploadBoard(board: Board): Promise<void> {
+    await firstValueFrom(this.api.saveBoard(board));
+    await firstValueFrom(this.api.saveCustomFields(board.id, this.getCustomFields(board.id)));
+    await firstValueFrom(this.api.saveSprints(board.id, this.getSprints(board.id)));
+    await firstValueFrom(this.api.saveColumns(board.id, this.loadColumns(board.id)));
+    await firstValueFrom(this.api.saveAutomations(board.id, this.getAutomations(board.id)));
+  }
+
   /** Sends everything stored in this browser to the server (runs once, the first time). */
   private async uploadLocalData(boards: Board[]): Promise<void> {
     for (const board of boards) {
-      await firstValueFrom(this.api.saveBoard(board));
-      await firstValueFrom(this.api.saveCustomFields(board.id, this.getCustomFields(board.id)));
-      await firstValueFrom(this.api.saveSprints(board.id, this.getSprints(board.id)));
-      await firstValueFrom(this.api.saveColumns(board.id, this.loadColumns(board.id)));
-      await firstValueFrom(this.api.saveAutomations(board.id, this.getAutomations(board.id)));
+      await this.uploadBoard(board);
       await firstValueFrom(this.api.addActivity(board.id, this.getActivity(board.id)));
     }
     for (const template of this.readCustomTemplates()) {
@@ -157,8 +209,11 @@ export class BoardService {
     }
   }
 
-  /** Adds a request to the queue. A failed request is logged and the queue carries on. */
-  private sendToServer(request: () => Observable<unknown>): void {
+  /**
+   * Adds a request to the queue. If it fails, the board is remembered as "unsaved"
+   * and sent again in full later, so the change isn't lost.
+   */
+  private sendToServer(boardId: string | null, request: () => Observable<unknown>): void {
     if (!this.isBrowser) return;
 
     this.writeQueue = this.writeQueue
@@ -166,6 +221,7 @@ export class BoardService {
       .then(() => { this.serverUnavailable = false; })
       .catch(error => {
         this.serverUnavailable = true;
+        if (boardId && error?.status !== 404) this.unsavedBoards.add(boardId);
         console.warn('Could not save the change to the server. It is saved in this browser.', error);
       });
   }
@@ -195,7 +251,7 @@ export class BoardService {
     boards.push(board);
 
     this.writeBoards(boards);
-    this.sendToServer(() => this.api.saveBoard(board));
+    this.sendToServer(board.id, () => this.api.saveBoard(board));
     const template = this.getTemplates().find(item => item.id === templateId);
     const columns = template
       ? this.columnsFromTemplate(board.id, template)
@@ -242,7 +298,7 @@ export class BoardService {
 
     this.writeBoards(boards);
     const renamed = boards[index];
-    this.sendToServer(() => this.api.saveBoard(renamed));
+    this.sendToServer(renamed.id, () => this.api.saveBoard(renamed));
 
     return true;
   }
@@ -258,9 +314,10 @@ export class BoardService {
 
     this.writeBoards(boards);
     this.cancelColumnSave(boardId);
+    this.unsavedBoards.delete(boardId);
     if (boardId !== 'default') {
       // The database deletes the board's columns, cards, sprints and history with it (CASCADE).
-      this.sendToServer(() => this.api.deleteBoard(boardId));
+      this.sendToServer(null, () => this.api.deleteBoard(boardId));
     }
     localStorage.removeItem(`drello-columns-${boardId}`);
     localStorage.removeItem(`drello-activity-${boardId}`);
@@ -281,7 +338,7 @@ export class BoardService {
 
     this.readStoredBoards().forEach(board => {
       this.cancelColumnSave(board.id);
-      this.sendToServer(() => this.api.deleteBoard(board.id));
+      this.sendToServer(null, () => this.api.deleteBoard(board.id));
     });
 
     // Remove each board's columns and any legacy column data.
@@ -387,7 +444,7 @@ export class BoardService {
     this.columnTimers.set(boardId, setTimeout(() => {
       this.columnTimers.delete(boardId);
       const latest = this.loadColumns(boardId);
-      this.sendToServer(() => this.api.saveColumns(boardId, latest));
+      this.sendToServer(boardId, () => this.api.saveColumns(boardId, latest));
     }, this.columnSaveDelay));
   }
 
@@ -421,7 +478,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-sprints-${boardId}`, JSON.stringify(sprints));
-    if (boardId !== 'default') this.sendToServer(() => this.api.saveSprints(boardId, sprints));
+    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveSprints(boardId, sprints));
   }
 
   // ----- Custom fields -----
@@ -443,7 +500,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-fields-${boardId}`, JSON.stringify(fields));
-    if (boardId !== 'default') this.sendToServer(() => this.api.saveCustomFields(boardId, fields));
+    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveCustomFields(boardId, fields));
   }
 
   // ----- Automations -----
@@ -465,7 +522,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-automations-${boardId}`, JSON.stringify(rules));
-    if (boardId !== 'default') this.sendToServer(() => this.api.saveAutomations(boardId, rules));
+    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveAutomations(boardId, rules));
   }
 
   // ----- Templates -----
@@ -491,7 +548,7 @@ export class BoardService {
     };
 
     this.writeCustomTemplates([...this.readCustomTemplates(), template]);
-    this.sendToServer(() => this.api.saveTemplate(template));
+    this.sendToServer(null, () => this.api.saveTemplate(template));
     return template;
   }
 
@@ -499,7 +556,7 @@ export class BoardService {
     this.writeCustomTemplates(
       this.readCustomTemplates().filter(template => template.id !== templateId)
     );
-    this.sendToServer(() => this.api.deleteTemplate(templateId));
+    this.sendToServer(null, () => this.api.deleteTemplate(templateId));
   }
 
   getActivity(boardId: string): BoardActivity[] {
@@ -524,7 +581,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.removeItem(`drello-activity-${boardId}`);
-    if (boardId !== 'default') this.sendToServer(() => this.api.clearActivity(boardId));
+    if (boardId !== 'default') this.sendToServer(null, () => this.api.clearActivity(boardId));
   }
 
   recordActivity(
@@ -552,7 +609,7 @@ export class BoardService {
         `drello-activity-${boardId}`,
         JSON.stringify([event, ...activity].slice(0, 200))
       );
-      if (boardId !== 'default') this.sendToServer(() => this.api.addActivity(boardId, [event]));
+      if (boardId !== 'default') this.sendToServer(null, () => this.api.addActivity(boardId, [event]));
     } catch (error) {
       console.error('Could not save board activity:', error);
     }

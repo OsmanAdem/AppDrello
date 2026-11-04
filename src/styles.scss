@@ -472,3 +472,7 @@ input::placeholder, textarea::placeholder { color: var(--text-subtle); opacity: 
 .auth-page .auth-forgot:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .auth-page .auth-switch a { color: var(--accent); font-weight: 700; text-decoration: none; }
 .auth-page .auth-switch a:hover { text-decoration: underline; }
+
+/* Warning on the board when changes couldn't reach the server */
+.sync-warning { margin: 0 0 14px; padding: 11px 14px; border: 1px solid var(--danger); border-radius: var(--radius-md); background: var(--danger-soft); color: var(--danger-strong); font-size: 13px; line-height: 1.5; }
+.sync-warning code { font-size: 12px; }
