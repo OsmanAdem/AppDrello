@@ -38,3 +38,61 @@ export function toCard(row: any) {
     customFields: row.custom_fields
   };
 }
+
+export function toSprint(row: any) {
+  return {
+    id: row.id,
+    boardId: row.board_id,
+    name: row.name,
+    goal: row.goal ?? undefined,
+    startDate: row.start_date ?? undefined,
+    endDate: row.end_date ?? undefined,
+    status: row.status,
+    createdAt: row.created_at
+  };
+}
+
+export function toField(row: any) {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    options: row.options ?? undefined
+  };
+}
+
+export function toAutomation(row: any) {
+  return {
+    id: row.id,
+    boardId: row.board_id,
+    enabled: row.enabled,
+    trigger: row.trigger_type,
+    triggerColumnId: row.trigger_column_id ?? undefined,
+    action: row.action_type,
+    actionValue: row.action_value,
+    createdAt: row.created_at
+  };
+}
+
+export function toActivity(row: any) {
+  return {
+    id: row.id,
+    boardId: row.board_id,
+    action: row.action,
+    description: row.description,
+    cardId: row.card_id ?? undefined,
+    issueKey: row.issue_key ?? undefined,
+    cardTitle: row.card_title ?? undefined,
+    createdAt: row.created_at
+  };
+}
+
+export function toTemplate(row: any) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    columns: row.columns,
+    fields: row.fields
+  };
+}

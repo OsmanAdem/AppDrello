@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -13,6 +15,7 @@ describe('ColumnComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [ColumnComponent],
       imports: [FormsModule, DragDropModule],
+      providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests
       schemas: [NO_ERRORS_SCHEMA] // ignore <app-card>; only the column is tested here
     }).compileComponents();
 

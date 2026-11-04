@@ -1,7 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Board, Card, Column } from './card/card.model';
+import {
+  AutomationRule,
+  Board,
+  BoardActivity,
+  BoardTemplate,
+  Card,
+  Column,
+  CustomFieldDefinition,
+  Sprint
+} from './card/card.model';
 
 /** The address of the backend in server/. Change this when the API is deployed. */
 export const API_URL = 'http://localhost:3000/api';
@@ -12,12 +21,20 @@ export type CardUpdate = Partial<Pick<Card,
   'startDate' | 'dueDate' | 'sprintId' | 'checklist' | 'customFields'
 >>;
 
+/** Everything the app needs to show one board, as GET /boards/:id/state returns it. */
+export interface BoardState {
+  board: Board;
+  columns: Column[];
+  sprints: Sprint[];
+  fields: CustomFieldDefinition[];
+  automations: AutomationRule[];
+  activity: BoardActivity[];
+}
+
 /**
  * Talks to the AppDrello API (server/). Every method matches one endpoint
  * and returns an Observable: nothing is sent until someone subscribes.
- *
- * Not used by the components yet. The next step of point 4 is to switch
- * BoardService from localStorage to these calls.
+ * BoardService uses the "sync" methods to keep the database up to date.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -81,5 +98,54 @@ export class ApiService {
 
   deleteCard(cardId: string): Observable<void> {
     return this.http.delete<void>(`${API_URL}/cards/${cardId}`);
+  }
+
+  // ----- Sync: save or load a whole board at once (used by BoardService) -----
+
+  /** Creates the board with this id, or updates its name if it already exists. */
+  saveBoard(board: Board): Observable<Board> {
+    return this.http.put<Board>(`${API_URL}/boards/${board.id}`, {
+      name: board.name,
+      backgroundColor: board.backgroundColor,
+      createdAt: board.createdAt
+    });
+  }
+
+  getBoardState(boardId: string): Observable<BoardState> {
+    return this.http.get<BoardState>(`${API_URL}/boards/${boardId}/state`);
+  }
+
+  saveColumns(boardId: string, columns: Column[]): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/columns`, { columns });
+  }
+
+  saveSprints(boardId: string, sprints: Sprint[]): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/sprints`, { sprints });
+  }
+
+  saveCustomFields(boardId: string, fields: CustomFieldDefinition[]): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/fields`, { fields });
+  }
+
+  saveAutomations(boardId: string, automations: AutomationRule[]): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/automations`, { automations });
+  }
+
+  addActivity(boardId: string, events: BoardActivity[]): Observable<void> {
+    return this.http.post<void>(`${API_URL}/boards/${boardId}/activity`, { events });
+  }
+
+  // ----- Templates the user saved -----
+
+  getTemplates(): Observable<BoardTemplate[]> {
+    return this.http.get<BoardTemplate[]>(`${API_URL}/templates`);
+  }
+
+  saveTemplate(template: BoardTemplate): Observable<BoardTemplate> {
+    return this.http.put<BoardTemplate>(`${API_URL}/templates/${template.id}`, template);
+  }
+
+  deleteTemplate(templateId: string): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/templates/${templateId}`);
   }
 }

@@ -77,3 +77,26 @@ CREATE TABLE IF NOT EXISTS activity (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS activity_board_idx ON activity(board_id, created_at DESC);
+
+-- Automation rules: "when <trigger> happens, do <action>".
+CREATE TABLE IF NOT EXISTS automations (
+  id                TEXT PRIMARY KEY,
+  board_id          TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+  enabled           BOOLEAN NOT NULL DEFAULT true,
+  trigger_type      TEXT NOT NULL CHECK (trigger_type IN ('card-created', 'card-moved', 'checklist-completed')),
+  trigger_column_id TEXT,
+  action_type       TEXT NOT NULL CHECK (action_type IN ('set-label', 'set-priority', 'set-assignee', 'move-to-column', 'set-due-in-days')),
+  action_value      TEXT NOT NULL DEFAULT '',
+  position          INTEGER NOT NULL DEFAULT 0,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Board templates the user saved themselves (the built-in ones live in the app).
+CREATE TABLE IF NOT EXISTS templates (
+  id          TEXT PRIMARY KEY,
+  name        TEXT NOT NULL CHECK (length(trim(name)) > 0),
+  description TEXT NOT NULL DEFAULT '',
+  columns     JSONB NOT NULL DEFAULT '[]',
+  fields      JSONB NOT NULL DEFAULT '[]',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

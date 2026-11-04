@@ -4,8 +4,10 @@ import express, { NextFunction, Request, Response } from 'express';
 import { pool } from './db';
 import { HttpError } from './http';
 import { boardsRouter } from './routes/boards';
+import { boardStateRouter } from './routes/board-state';
 import { cardsRouter } from './routes/cards';
 import { columnsRouter } from './routes/columns';
+import { templatesRouter } from './routes/templates';
 
 const app = express();
 const port = Number(process.env['PORT'] || 3000);
@@ -13,7 +15,7 @@ const port = Number(process.env['PORT'] || 3000);
 // Allow the Angular app (another origin, port 4200) to call this API from the browser.
 app.use(cors({ origin: process.env['CLIENT_ORIGIN'] || 'http://localhost:4200' }));
 // Read JSON request bodies into req.body.
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // Health check: open http://localhost:3000/api/health to see that the server and database work.
 app.get('/api/health', async (_req, res) => {
@@ -26,6 +28,8 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.use('/api/boards', boardsRouter);
+app.use('/api/boards', boardStateRouter);
+app.use('/api/templates', templatesRouter);
 app.use('/api/columns', columnsRouter);
 app.use('/api/cards', cardsRouter);
 

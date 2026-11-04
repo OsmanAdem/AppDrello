@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { BoardService } from './board.service';
 
 describe('BoardService', () => {
@@ -6,7 +8,7 @@ describe('BoardService', () => {
 
   beforeEach(() => {
     localStorage.clear(); // every test starts with an empty "database"
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests });
     service = TestBed.inject(BoardService);
   });
 

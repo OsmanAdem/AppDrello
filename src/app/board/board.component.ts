@@ -173,7 +173,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     this.routeSubscription = this.route.params.subscribe(params => {
       this.boardId = params['id'] || 'default';
-      this.loadBoard();
+      this.openBoard();
     });
     this.routeSubscription.add(this.route.queryParamMap.subscribe(params => {
       const view = params.get('view');
@@ -888,6 +888,23 @@ export class BoardComponent implements OnInit, OnDestroy {
     );
     this.lastSavedColumns = nextColumns;
     this.refreshActivity();
+  }
+
+  /**
+   * Shows the copy saved in this browser right away (if there is one),
+   * then reloads the board once the latest version has arrived from the server.
+   */
+  private openBoard(): void {
+    const boardId = this.boardId;
+    const savedLocally = boardId === 'default' ||
+      this.boardService.getBoards().some(board => board.id === boardId);
+
+    if (savedLocally) this.loadBoard();
+
+    this.boardService.syncBoard(boardId).then(() => {
+      // Ignore the answer if the user has already opened another board.
+      if (this.boardId === boardId) this.loadBoard();
+    });
   }
 
   private loadBoard(): void {

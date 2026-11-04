@@ -188,6 +188,8 @@ export class BoardGalleryComponent implements OnInit {
 
   ngOnInit(): void {
     this.refreshBoards();
+    // Show the copy in this browser right away, then the latest list from the server.
+    this.boardService.syncBoards().then(() => this.refreshBoards());
   }
 
   private refreshBoards(): void {

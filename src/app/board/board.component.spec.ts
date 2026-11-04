@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -15,6 +17,7 @@ describe('BoardComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [BoardComponent],
       imports: [FormsModule, RouterModule.forRoot([])],
+      providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
