@@ -519,6 +519,14 @@ export class BoardService {
     }
   }
 
+  /** Removes the board's whole activity history, in this browser and on the server. */
+  clearActivity(boardId: string): void {
+    if (!this.isBrowser) return;
+
+    localStorage.removeItem(`drello-activity-${boardId}`);
+    if (boardId !== 'default') this.sendToServer(() => this.api.clearActivity(boardId));
+  }
+
   recordActivity(
     boardId: string,
     action: string,

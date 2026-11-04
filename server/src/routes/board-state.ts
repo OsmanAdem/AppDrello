@@ -228,3 +228,9 @@ boardStateRouter.post('/:id/activity', asyncHandler(async (req, res) => {
 
   res.status(204).end();
 }));
+
+// DELETE /api/boards/:id/activity → clear the board's history
+boardStateRouter.delete('/:id/activity', asyncHandler(async (req, res) => {
+  await pool.query('DELETE FROM activity WHERE board_id = $1', [req.params['id']]);
+  res.status(204).end();
+}));

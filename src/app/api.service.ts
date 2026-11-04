@@ -131,6 +131,10 @@ export class ApiService {
     return this.http.put<void>(`${API_URL}/boards/${boardId}/automations`, { automations });
   }
 
+  clearActivity(boardId: string): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/boards/${boardId}/activity`);
+  }
+
   addActivity(boardId: string, events: BoardActivity[]): Observable<void> {
     return this.http.post<void>(`${API_URL}/boards/${boardId}/activity`, { events });
   }

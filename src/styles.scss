@@ -436,3 +436,9 @@ h1, h2, h3 { color: var(--text-strong); font-feature-settings: "cv11", "ss01"; }
 body { font-feature-settings: "cv11"; line-height: 1.5; }
 input::placeholder, textarea::placeholder { color: var(--text-subtle); opacity: 1; }
 :focus-visible { outline-color: var(--focus-ring); }
+
+/* Activity panel: footer with the "Clear history" button */
+.activity-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clear-activity { flex: 0 0 auto; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--danger-strong); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.clear-activity:hover { border-color: var(--danger); background: var(--danger-soft); }
+.clear-activity:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }

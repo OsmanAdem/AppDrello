@@ -631,6 +631,17 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.showActivityPanel = false;
   }
 
+  clearActivity(): void {
+    const confirmed = window.confirm(
+      `Clear the activity history for "${this.boardName}"? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    this.clearCardActivityTimers(); // don't let a pending "Card updated" entry reappear
+    this.boardService.clearActivity(this.boardId);
+    this.activity = [];
+  }
+
   openCalendarCard(card: Card): void {
     this.selectedCalendarCard = card;
   }

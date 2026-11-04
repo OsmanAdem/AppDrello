@@ -329,7 +329,10 @@
         </div>
       </li>
     </ol>
-    <footer class="activity-panel-footer">Showing the latest {{ activity.length }} of up to 200 updates</footer>
+    <footer class="activity-panel-footer">
+      <span>Showing the latest {{ activity.length }} of up to 200 updates</span>
+      <button type="button" class="clear-activity" *ngIf="activity.length" (click)="clearActivity()">Clear history</button>
+    </footer>
   </div>
 </div>
 
