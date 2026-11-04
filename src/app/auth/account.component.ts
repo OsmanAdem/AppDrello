@@ -87,7 +87,7 @@ export class AccountComponent {
   constructor(
     public auth: AuthService,
     private boards: BoardService,
-    private confirm: ConfirmService,
+    private confirmDialog: ConfirmService,
     private router: Router
   ) {}
 
@@ -98,7 +98,7 @@ export class AccountComponent {
       return;
     }
 
-    const confirmed = await this.confirm.ask({
+    const confirmed = await this.confirmDialog.ask({
       title: 'Delete your account?',
       message: `Your account (${this.auth.user?.email}) and all your boards will be deleted for good. This can't be undone.`,
       confirmLabel: 'Delete account',
