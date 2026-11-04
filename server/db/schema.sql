@@ -136,3 +136,9 @@ CREATE TABLE IF NOT EXISTS password_resets (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);
+
+-- ---------- Fix: custom field ids are unique per board ----------
+-- Boards made from the same template share field ids (e.g. "field-severity"),
+-- so the key must be (board_id, id), not id alone.
+ALTER TABLE custom_field_definitions DROP CONSTRAINT IF EXISTS custom_field_definitions_pkey;
+ALTER TABLE custom_field_definitions ADD PRIMARY KEY (board_id, id);

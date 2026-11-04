@@ -2,6 +2,15 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom, Observable } from 'rxjs';
 import { ApiService } from './api.service';
+
+/** One board and everything on it, kept while it couldn't be sent to the server. */
+interface BoardBundle {
+  board: Board;
+  columns: Column[];
+  sprints: Sprint[];
+  fields: CustomFieldDefinition[];
+  automations: AutomationRule[];
+}
 import {
   AutomationRule,
   BoardActivity,
@@ -104,6 +113,9 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     try {
+      // Changes kept from an earlier session (the server was unreachable at log out) go first.
+      await this.sendKeptChanges();
+
       // Never load from the server while our own latest changes are still on their way there.
       await this.flushPendingWrites();
       if (this.hasUnsavedChanges) return; // keep the local copy; it has changes the server doesn't
@@ -191,11 +203,93 @@ export class BoardService {
 
   /** Sends one board and everything on it to the server. */
   private async uploadBoard(board: Board): Promise<void> {
-    await firstValueFrom(this.api.saveBoard(board));
-    await firstValueFrom(this.api.saveCustomFields(board.id, this.getCustomFields(board.id)));
-    await firstValueFrom(this.api.saveSprints(board.id, this.getSprints(board.id)));
-    await firstValueFrom(this.api.saveColumns(board.id, this.loadColumns(board.id)));
-    await firstValueFrom(this.api.saveAutomations(board.id, this.getAutomations(board.id)));
+    await this.uploadBundle(this.bundleOf(board));
+  }
+
+  private bundleOf(board: Board): BoardBundle {
+    return {
+      board,
+      columns: this.loadColumns(board.id),
+      sprints: this.getSprints(board.id),
+      fields: this.getCustomFields(board.id),
+      automations: this.getAutomations(board.id)
+    };
+  }
+
+  private async uploadBundle(bundle: BoardBundle): Promise<void> {
+    const boardId = bundle.board.id;
+    await firstValueFrom(this.api.saveBoard(bundle.board));
+    await firstValueFrom(this.api.saveCustomFields(boardId, bundle.fields));
+    await firstValueFrom(this.api.saveSprints(boardId, bundle.sprints));
+    await firstValueFrom(this.api.saveColumns(boardId, bundle.columns));
+    await firstValueFrom(this.api.saveAutomations(boardId, bundle.automations));
+  }
+
+  // ----- Keeping changes safe across log out -----
+  //
+  // Logging out removes this browser's copy of the boards (so the next person can't see them).
+  // If some changes never reached the server, they are first set aside for that user only,
+  // and sent automatically the next time the same user logs in.
+
+  private keptKey(userId: string): string {
+    return `drello-kept-${userId}`;
+  }
+
+  /** Called when logging out: sets aside boards whose changes the server didn't get. */
+  keepUnsavedChangesFor(userId: string): void {
+    if (!this.isBrowser || !this.hasUnsavedChanges) return;
+
+    const kept = this.readKept(userId).filter(bundle => !this.unsavedBoards.has(bundle.board.id));
+    for (const boardId of this.unsavedBoards) {
+      const board = this.readStoredBoards().find(item => item.id === boardId);
+      if (board) kept.push(this.bundleOf(board));
+    }
+    this.writeLocal(this.keptKey(userId), kept);
+    this.unsavedBoards.clear();
+  }
+
+  /** Sends changes kept from an earlier session of the logged-in user. */
+  private async sendKeptChanges(): Promise<void> {
+    const userId = this.currentUserId();
+    if (!userId) return;
+
+    const kept = this.readKept(userId);
+    if (!kept.length) return;
+
+    const stillKept: BoardBundle[] = [];
+    for (const bundle of kept) {
+      try {
+        await this.uploadBundle(bundle);
+      } catch (error: any) {
+        if (error?.status !== 404) stillKept.push(bundle); // 404: the board was deleted meanwhile
+      }
+    }
+
+    if (stillKept.length) {
+      this.writeLocal(this.keptKey(userId), stillKept);
+    } else {
+      localStorage.removeItem(this.keptKey(userId));
+    }
+  }
+
+  private readKept(userId: string): BoardBundle[] {
+    try {
+      const stored = localStorage.getItem(this.keptKey(userId));
+      const parsed: unknown = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed as BoardBundle[] : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** The logged-in user's id, as AuthService saved it. */
+  private currentUserId(): string | null {
+    try {
+      const stored = localStorage.getItem('drello-user');
+      return stored ? JSON.parse(stored).id ?? null : null;
+    } catch {
+      return null;
+    }
   }
 
   /** Sends everything stored in this browser to the server (runs once, the first time). */

@@ -176,9 +176,8 @@ boardStateRouter.put('/:id/fields', asyncHandler(async (req, res) => {
       await client.query(
         `INSERT INTO custom_field_definitions (id, board_id, name, type, options, position)
          VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, type = EXCLUDED.type,
-           options = EXCLUDED.options, position = EXCLUDED.position
-         WHERE custom_field_definitions.board_id = EXCLUDED.board_id`,
+         ON CONFLICT (board_id, id) DO UPDATE SET name = EXCLUDED.name, type = EXCLUDED.type,
+           options = EXCLUDED.options, position = EXCLUDED.position`,
         [field.id, boardId, requireText(field.name, 'field name'), field.type,
          field.options ? JSON.stringify(field.options) : null, position]
       );

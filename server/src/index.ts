@@ -45,12 +45,13 @@ app.use((_req, res) => {
 });
 
 // Every error ends up here and becomes a JSON response.
-app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof HttpError) {
+    if (error.status !== 401) console.warn(`${req.method} ${req.originalUrl} → ${error.status} ${error.message}`);
     res.status(error.status).json({ error: error.message });
     return;
   }
-  console.error(error);
+  console.error(`${req.method} ${req.originalUrl} → 500`, error);
   res.status(500).json({ error: 'Something went wrong on the server.' });
 });
 

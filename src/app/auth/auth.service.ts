@@ -113,7 +113,8 @@ export class AuthService {
     const keys: string[] = [];
     for (let index = 0; index < localStorage.length; index++) {
       const key = localStorage.key(index);
-      if (key?.startsWith('drello-') && !keep.has(key)) keys.push(key);
+      // "drello-kept-<user>" holds that user's changes that never reached the server: keep them.
+      if (key?.startsWith('drello-') && !keep.has(key) && !key.startsWith('drello-kept-')) keys.push(key);
     }
     keys.forEach(key => localStorage.removeItem(key));
   }

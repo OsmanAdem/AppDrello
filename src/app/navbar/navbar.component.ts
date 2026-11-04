@@ -28,7 +28,7 @@ export class NavbarComponent {
 
   askToLogout(): void {
     this.showLogoutConfirm = true;
-    // Start saving anything still waiting, so the warning below is up to date.
+    // Start sending anything still waiting while the user reads the dialog.
     this.boards.flushPendingWrites();
     // Move keyboard focus into the dialog, so Enter confirms and screen readers announce it.
     setTimeout(() => this.confirmButton?.nativeElement.focus());
@@ -39,10 +39,15 @@ export class NavbarComponent {
     this.showLogoutConfirm = false;
   }
 
-  /** Waits until every change has reached the server, then logs out. */
+  /**
+   * Waits until every change has reached the server, then logs out.
+   * Anything the server couldn't take is kept for this user and sent at the next login.
+   */
   async logout(): Promise<void> {
     this.loggingOut = true;
     await this.boards.flushPendingWrites();
+    const userId = this.auth.user?.id;
+    if (userId) this.boards.keepUnsavedChangesFor(userId);
     this.loggingOut = false;
     this.showLogoutConfirm = false;
     this.auth.logout();
