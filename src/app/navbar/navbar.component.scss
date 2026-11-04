@@ -89,6 +89,7 @@
 .theme-toggle:hover { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-hover); }
 .theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-.navbar-user { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.navbar-logout { border: 0; background: none; font: inherit; cursor: pointer; }
+/* The name and Log out use the same .navbar-link style as Home, Boards and About. */
+.navbar-user-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar-logout { background: none; font-family: inherit; cursor: pointer; }
 @media (max-width: 600px) { .navbar-user { display: none; } }
