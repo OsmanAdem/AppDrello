@@ -476,3 +476,12 @@ input::placeholder, textarea::placeholder { color: var(--text-subtle); opacity: 
 /* Warning on the board when changes couldn't reach the server */
 .sync-warning { margin: 0 0 14px; padding: 11px 14px; border: 1px solid var(--danger); border-radius: var(--radius-md); background: var(--danger-soft); color: var(--danger-strong); font-size: 13px; line-height: 1.5; }
 .sync-warning code { font-size: 12px; }
+
+/* ---------- Show / Hide button inside password fields (RevealPasswordDirective) ---------- */
+.password-field { position: relative; display: block; }
+.password-field input { width: 100%; padding-right: 68px !important; }
+.password-toggle { position: absolute; top: 50%; right: 6px; height: 32px; padding: 0 10px; transform: translateY(-50%); border: 0; border-radius: 7px; background: transparent; color: var(--accent); font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: .01em; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.password-toggle:hover { background: var(--accent-soft); color: var(--accent-hover); }
+.password-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
+/* Hide the browser's own eye icon (Edge), so there's only one control */
+input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none; }

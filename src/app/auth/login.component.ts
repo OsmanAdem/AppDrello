@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
+import { RevealPasswordDirective } from '../shared/reveal-password.directive';
 
 /** One page for both logging in and creating an account. */
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="auth-title">
@@ -35,7 +36,7 @@ import { AuthService } from './auth.service';
             <span>Password</span>
             <input
               name="password"
-              type="password"
+              type="password" appRevealPassword
               [(ngModel)]="password"
               [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
               required>

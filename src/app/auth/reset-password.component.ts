@@ -5,12 +5,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { describeAuthError } from './auth-errors';
+import { RevealPasswordDirective } from '../shared/reveal-password.directive';
 
 /** Step 2 of "forgot password": the page the reset link opens. */
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="reset-title">
@@ -21,12 +22,12 @@ import { describeAuthError } from './auth-errors';
           <form (ngSubmit)="submit()" novalidate>
             <label>
               <span>New password</span>
-              <input name="password" type="password" [(ngModel)]="password" autocomplete="new-password" required>
+              <input name="password" type="password" appRevealPassword [(ngModel)]="password" autocomplete="new-password" required>
               <small>At least 8 characters.</small>
             </label>
             <label>
               <span>Repeat new password</span>
-              <input name="confirm" type="password" [(ngModel)]="confirm" autocomplete="new-password" required>
+              <input name="confirm" type="password" appRevealPassword [(ngModel)]="confirm" autocomplete="new-password" required>
             </label>
             <p class="auth-error" *ngIf="error" role="alert">{{ error }}</p>
             <button type="submit" class="auth-submit" [disabled]="loading">

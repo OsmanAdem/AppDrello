@@ -7,12 +7,13 @@ import { AuthService } from './auth.service';
 import { describeAuthError } from './auth-errors';
 import { BoardService } from '../board.service';
 import { ConfirmService } from '../shared/confirm.service';
+import { RevealPasswordDirective } from '../shared/reveal-password.directive';
 
 /** The logged-in user's account page: who you are, and changing your password. */
 @Component({
   selector: 'app-account',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RevealPasswordDirective],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="account-title">
@@ -23,16 +24,16 @@ import { ConfirmService } from '../shared/confirm.service';
           <h2>Change password</h2>
           <label>
             <span>Current password</span>
-            <input name="current" type="password" [(ngModel)]="currentPassword" autocomplete="current-password" required>
+            <input name="current" type="password" appRevealPassword [(ngModel)]="currentPassword" autocomplete="current-password" required>
           </label>
           <label>
             <span>New password</span>
-            <input name="new" type="password" [(ngModel)]="newPassword" autocomplete="new-password" required>
+            <input name="new" type="password" appRevealPassword [(ngModel)]="newPassword" autocomplete="new-password" required>
             <small>At least 8 characters. You'll be logged out on your other devices.</small>
           </label>
           <label>
             <span>Repeat new password</span>
-            <input name="confirm" type="password" [(ngModel)]="confirm" autocomplete="new-password" required>
+            <input name="confirm" type="password" appRevealPassword [(ngModel)]="confirm" autocomplete="new-password" required>
           </label>
 
           <p class="auth-error" *ngIf="error" role="alert">{{ error }}</p>
@@ -51,7 +52,7 @@ import { ConfirmService } from '../shared/confirm.service';
           </p>
           <label>
             <span>Type your password to confirm</span>
-            <input name="deletePassword" type="password" [(ngModel)]="deletePassword" autocomplete="current-password">
+            <input name="deletePassword" type="password" appRevealPassword [(ngModel)]="deletePassword" autocomplete="current-password">
           </label>
           <p class="auth-error" *ngIf="deleteError" role="alert">{{ deleteError }}</p>
           <button type="submit" class="danger-button" [disabled]="deleting">
