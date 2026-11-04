@@ -92,6 +92,17 @@ export class AuthService {
       .pipe(map(response => response.message));
   }
 
+  /** Permanently deletes the account and all its boards, then logs out. */
+  deleteAccount(password: string): Observable<void> {
+    const userId = this.user?.id;
+    return this.http.delete<void>(`${API_URL}/auth/account`, { body: { password } }).pipe(
+      tap(() => {
+        if (userId) localStorage.removeItem(`drello-kept-${userId}`); // nothing left to send later
+        this.logout();
+      })
+    );
+  }
+
   /** Logs out and removes this browser's copy of the boards, so the next person can't see them. */
   logout(): void {
     if (!this.isBrowser) return;

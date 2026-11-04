@@ -157,3 +157,20 @@ authRouter.post('/reset-password', asyncHandler(async (req, res) => {
 
   res.json({ message: 'Your password has been changed. You can log in now.' });
 }));
+
+// DELETE /api/auth/account { password } → deletes the account and everything that belongs to it
+authRouter.delete('/account', requireAuth, asyncHandler(async (req, res) => {
+  const userId = userIdOf(res);
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+  // Asking for the password again protects against someone using a laptop you left logged in.
+  if (!rows[0] || !(await bcrypt.compare(password, rows[0].password_hash))) {
+    throw new HttpError(400, 'Your password is wrong.');
+  }
+
+  // The database removes the user's boards (with their columns, cards, sprints and history),
+  // templates and reset links too, because they all reference the user with ON DELETE CASCADE.
+  await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+  res.status(204).end();
+}));

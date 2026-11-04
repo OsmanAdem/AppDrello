@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Board, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
+import { ConfirmService, quoted } from '../../shared/confirm.service';
 
 @Component({
   selector: 'app-board-gallery',
@@ -181,7 +182,8 @@ export class BoardGalleryComponent implements OnInit {
   constructor(
     @Inject(PLATFORM_ID) platformId: object,
     private router: Router,
-    private boardService: BoardService
+    private boardService: BoardService,
+    private confirm: ConfirmService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -211,11 +213,17 @@ export class BoardGalleryComponent implements OnInit {
     return template.fields.map(field => field.name).join(', ');
   }
 
-  deleteTemplate(template: BoardTemplate, event: MouseEvent): void {
+  async deleteTemplate(template: BoardTemplate, event: MouseEvent): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!window.confirm(`Delete the “${template.name}” template? Boards made from it are not affected.`)) return;
+    const confirmed = await this.confirm.ask({
+      title: `Delete template ${quoted(template.name)}?`,
+      message: "Boards you've already made from this template won't change. This can't be undone.",
+      confirmLabel: 'Delete template',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.boardService.deleteTemplate(template.id);
     this.templates = this.boardService.getTemplates();
@@ -285,7 +293,7 @@ export class BoardGalleryComponent implements OnInit {
     }
   }
 
-  deleteBoard(boardId: string, event: MouseEvent): void {
+  async deleteBoard(boardId: string, event: MouseEvent): Promise<void> {
     event.stopPropagation();
 
     if (!this.isBrowser) {
@@ -298,9 +306,12 @@ export class BoardGalleryComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete "\${board.name}" and all its columns and cards? This cannot be undone.`
-    );
+    const confirmed = await this.confirm.ask({
+      title: `Delete board ${quoted(board.name)}?`,
+      message: 'This permanently deletes the board with all its columns, cards, sprints and history. This can\'t be undone.',
+      confirmLabel: 'Delete board',
+      danger: true
+    });
 
     if (!confirmed) {
       return;
@@ -310,14 +321,18 @@ export class BoardGalleryComponent implements OnInit {
     this.refreshBoards();
   }
 
-  deleteAllBoards(): void {
+  async deleteAllBoards(): Promise<void> {
     if (!this.isBrowser || this.boards.length === 0) {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Delete ALL boards and their columns and cards? This cannot be undone.'
-    );
+    const count = this.boards.length;
+    const confirmed = await this.confirm.ask({
+      title: `Delete all ${count} board${count === 1 ? '' : 's'}?`,
+      message: 'This permanently deletes every board with all its columns, cards, sprints and history. This can\'t be undone.',
+      confirmLabel: 'Delete all boards',
+      danger: true
+    });
 
     if (!confirmed) {
       return;

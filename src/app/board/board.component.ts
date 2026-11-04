@@ -23,6 +23,7 @@ import {
   Sprint
 } from '../card/card.model';
 import { BoardService } from '../board.service';
+import { ConfirmService, quoted } from '../shared/confirm.service';
 import {
   addDays,
   daysBetween,
@@ -163,7 +164,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) platformId: object,
     private route: ActivatedRoute,
     private router: Router,
-    private boardService: BoardService
+    private boardService: BoardService,
+    private confirm: ConfirmService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -394,8 +396,14 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.fieldError = '';
   }
 
-  removeCustomField(field: CustomFieldDefinition): void {
-    if (!window.confirm(`Remove the “${field.name}” field? Its values on every card are deleted too.`)) return;
+  async removeCustomField(field: CustomFieldDefinition): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Delete field ${quoted(field.name)}?`,
+      message: 'The field is removed from every card on this board, together with the values filled in. This can\'t be undone.',
+      confirmLabel: 'Delete field',
+      danger: true
+    });
+    if (!confirmed) return;
 
     // Delete the stored values so cards don't keep data for a field that no longer exists.
     this.columns.forEach(column => column.cards.forEach(card => {
@@ -481,8 +489,14 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.boardService.saveAutomations(this.boardId, this.automations);
   }
 
-  removeAutomation(rule: AutomationRule): void {
-    if (!window.confirm('Delete this automation?')) return;
+  async removeAutomation(rule: AutomationRule): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: 'Delete automation?',
+      message: `“${this.describeRule(rule)}” will stop running. Changes it already made stay.`,
+      confirmLabel: 'Delete automation',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.automations = this.automations.filter(item => item.id !== rule.id);
     this.boardService.saveAutomations(this.boardId, this.automations);
@@ -636,10 +650,13 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.showActivityPanel = false;
   }
 
-  clearActivity(): void {
-    const confirmed = window.confirm(
-      `Clear the activity history for "${this.boardName}"? This can't be undone.`
-    );
+  async clearActivity(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Clear the history of ${quoted(this.boardName)}?`,
+      message: `All ${this.activity.length} activity entries are removed. Your cards and columns aren't affected. This can't be undone.`,
+      confirmLabel: 'Clear history',
+      danger: true
+    });
     if (!confirmed) return;
 
     this.clearCardActivityTimers(); // don't let a pending "Card updated" entry reappear
@@ -821,15 +838,21 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.saveColumns();
   }
 
-  removeColumn(index: number): void {
+  async removeColumn(index: number): Promise<void> {
     if (!this.isBrowser) return;
 
     const column = this.columns[index];
     if (!column) return;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${column.title}" and all its cards?`
-    );
+    const cardCount = column.cards.length;
+    const confirmed = await this.confirm.ask({
+      title: `Delete column ${quoted(column.title)}?`,
+      message: cardCount
+        ? `The column and its ${cardCount} card${cardCount === 1 ? '' : 's'} will be deleted. This can't be undone.`
+        : 'The column is empty. This can\'t be undone.',
+      confirmLabel: 'Delete column',
+      danger: true
+    });
 
     if (!confirmed) return;
 
@@ -855,12 +878,15 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.saveColumns();
   }
 
-  resetBoard(): void {
+  async resetBoard(): Promise<void> {
     if (!this.isBrowser) return;
 
-    const confirmed = window.confirm(
-      'Reset this board? All its cards will be removed and the default columns restored.'
-    );
+    const confirmed = await this.confirm.ask({
+      title: `Reset board ${quoted(this.boardName)}?`,
+      message: `All ${this.totalTaskCount} card${this.totalTaskCount === 1 ? '' : 's'} are deleted and the columns go back to To Do, In Progress and Done. This can't be undone.`,
+      confirmLabel: 'Reset board',
+      danger: true
+    });
 
     if (!confirmed) return;
     this.clearCardActivityTimers();
@@ -875,12 +901,15 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.recordActivity('Board reset', 'Restored the default columns and cleared the cards.');
   }
 
-  deleteCurrentBoard(): void {
+  async deleteCurrentBoard(): Promise<void> {
     if (!this.isBrowser || this.boardId === 'default') return;
 
-    const confirmed = window.confirm(
-      `Delete "${this.boardName}" and all its columns and cards? This cannot be undone.`
-    );
+    const confirmed = await this.confirm.ask({
+      title: `Delete board ${quoted(this.boardName)}?`,
+      message: 'This permanently deletes the board with all its columns, cards, sprints and history. This can\'t be undone.',
+      confirmLabel: 'Delete board',
+      danger: true
+    });
 
     if (!confirmed) return;
 

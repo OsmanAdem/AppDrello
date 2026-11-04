@@ -14,6 +14,7 @@ import { FooterComponent } from './footer/footer.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { BacklogComponent } from './backlog/backlog.component';
+import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { BacklogComponent } from './backlog/backlog.component';
     BrowserModule,
     FormsModule,
     DragDropModule,
+    ConfirmDialogComponent,
     AppRoutingModule
   ],
   providers: [provideHttpClient(withFetch(), withInterceptors([authInterceptor]))],

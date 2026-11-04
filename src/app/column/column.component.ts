@@ -6,6 +6,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { Card, Column, CustomFieldDefinition } from '../card/card.model';
 import { BoardService } from '../board.service';
+import { ConfirmService, quoted } from '../shared/confirm.service';
 import { toDateKey } from '../shared/date-utils';
 
 @Component({
@@ -14,7 +15,10 @@ import { toDateKey } from '../shared/date-utils';
   styleUrls: ['./column.component.scss']
 })
 export class ColumnComponent {
-  constructor(private boardService: BoardService) {}
+  constructor(
+    private boardService: BoardService,
+    private confirm: ConfirmService
+  ) {}
   @Input() column!: Column;
   @Input() dropListId = '';
   @Input() connectedDropLists: string[] = [];
@@ -94,8 +98,18 @@ export class ColumnComponent {
     return card.dueDate < toDateKey(new Date());
   }
 
-  removeCard(cardId: string): void {
-    if (!window.confirm('Delete this card?')) return;
+  async removeCard(cardId: string): Promise<void> {
+    const card = this.column.cards.find(item => item.id === cardId);
+    if (!card) return;
+
+    const label = card.issueKey ? `${card.issueKey} ${quoted(card.title, 'Untitled card')}` : quoted(card.title, 'Untitled card');
+    const confirmed = await this.confirm.ask({
+      title: `Delete card ${label}?`,
+      message: 'The card and its description, checklist and fields will be deleted. This can\'t be undone.',
+      confirmLabel: 'Delete card',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.column.cards = this.column.cards.filter(
       card => card.id !== cardId

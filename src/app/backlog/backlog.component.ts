@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Card, Column, Sprint } from '../card/card.model';
 import { BoardService } from '../board.service';
+import { ConfirmService, quoted } from '../shared/confirm.service';
 import { addDays, toDateKey } from '../shared/date-utils';
 
 /**
@@ -35,7 +36,10 @@ export class BacklogComponent implements OnChanges {
   newSprint = { name: '', goal: '', startDate: '', endDate: '' };
   formError = '';
 
-  constructor(private boardService: BoardService) {}
+  constructor(
+    private boardService: BoardService,
+    private confirm: ConfirmService
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['boardId']) {
@@ -150,13 +154,16 @@ export class BacklogComponent implements OnChanges {
     this.boardService.recordActivity(this.boardId, 'Sprint started', `Started “${sprint.name}”.`);
   }
 
-  completeSprint(sprint: Sprint): void {
+  async completeSprint(sprint: Sprint): Promise<void> {
     const unfinished = this.cardsInSprint(sprint).filter(card => !this.isDone(card));
-    const message = unfinished.length
-      ? `Complete “${sprint.name}”? ${unfinished.length} unfinished task(s) will go back to the backlog.`
-      : `Complete “${sprint.name}”?`;
-
-    if (!window.confirm(message)) return;
+    const confirmed = await this.confirm.ask({
+      title: `Complete sprint ${quoted(sprint.name)}?`,
+      message: unfinished.length
+        ? `${unfinished.length} unfinished task${unfinished.length === 1 ? '' : 's'} will go back to the backlog.`
+        : 'Every task in this sprint is done. Nice work!',
+      confirmLabel: 'Complete sprint'
+    });
+    if (!confirmed) return;
 
     // Unfinished work returns to the backlog so it can be planned again.
     unfinished.forEach(card => delete card.sprintId);
@@ -166,8 +173,14 @@ export class BacklogComponent implements OnChanges {
     this.cardsChanged.emit();
   }
 
-  deleteSprint(sprint: Sprint): void {
-    if (!window.confirm(`Delete “${sprint.name}”? Its tasks go back to the backlog.`)) return;
+  async deleteSprint(sprint: Sprint): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Delete sprint ${quoted(sprint.name)}?`,
+      message: 'The sprint is deleted. Its tasks are kept and go back to the backlog.',
+      confirmLabel: 'Delete sprint',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.cardsInSprint(sprint).forEach(card => delete card.sprintId);
     this.sprints = this.sprints.filter(item => item.id !== sprint.id);
@@ -177,13 +190,19 @@ export class BacklogComponent implements OnChanges {
   }
 
   /** Removes completed sprints from the history. The tasks themselves are kept. */
-  clearCompletedSprints(sprintToRemove?: Sprint): void {
+  async clearCompletedSprints(sprintToRemove?: Sprint): Promise<void> {
     const toRemove = sprintToRemove ? [sprintToRemove] : this.completedSprints;
-    const message = sprintToRemove
-      ? `Remove “${sprintToRemove.name}” from the history? Its tasks are kept.`
-      : `Remove all ${toRemove.length} completed sprint(s) from the history? The tasks are kept.`;
+    if (!toRemove.length) return;
 
-    if (!toRemove.length || !window.confirm(message)) return;
+    const confirmed = await this.confirm.ask({
+      title: sprintToRemove
+        ? `Remove sprint ${quoted(sprintToRemove.name)} from the history?`
+        : `Remove all ${toRemove.length} completed sprint${toRemove.length === 1 ? '' : 's'}?`,
+      message: 'Only the sprint history is removed. The tasks are kept on the board.',
+      confirmLabel: sprintToRemove ? 'Remove sprint' : 'Remove all',
+      danger: true
+    });
+    if (!confirmed) return;
 
     const removedIds = new Set(toRemove.map(sprint => sprint.id));
 
