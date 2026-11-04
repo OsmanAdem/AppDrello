@@ -93,3 +93,19 @@
 .navbar-user-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .navbar-logout { background: none; font-family: inherit; cursor: pointer; }
 @media (max-width: 600px) { .navbar-user { display: none; } }
+
+/* ---------- "Log out?" confirmation ---------- */
+.logout-backdrop { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; padding: 20px; background: rgba(12, 16, 27, .45); backdrop-filter: blur(4px); animation: logout-fade .14s ease; }
+.logout-dialog { width: min(100%, 380px); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-lg); animation: logout-lift .18s ease-out; }
+.logout-dialog h2 { margin: 0 0 8px; color: var(--text-strong); font-size: 19px; letter-spacing: -.02em; }
+.logout-dialog p { margin: 0 0 22px; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+.logout-actions { display: flex; justify-content: flex-end; gap: 9px; }
+.logout-cancel, .logout-confirm { min-height: 40px; padding: 0 16px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.logout-cancel { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.logout-cancel:hover { background: var(--surface-sunken); }
+.logout-confirm { border: 1px solid var(--accent); background: var(--accent); color: #ffffff; }
+.logout-confirm:hover { border-color: var(--accent-pressed); background: var(--accent-pressed); }
+.logout-cancel:focus-visible, .logout-confirm:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+@keyframes logout-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes logout-lift { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .logout-backdrop, .logout-dialog { animation: none; } }

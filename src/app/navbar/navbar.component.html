@@ -11,7 +11,7 @@
       <a class="navbar-link" routerLink="/about" routerLinkActive="is-active">About</a>
       <ng-container *ngIf="auth.isLoggedIn; else loggedOut">
         <a class="navbar-link navbar-user" routerLink="/account" routerLinkActive="is-active" [title]="'Your account (' + (auth.user?.email || '') + ')'"><span class="navbar-user-name">{{ auth.user?.name }}</span></a>
-        <button type="button" class="navbar-link navbar-logout" (click)="logout()">Log out</button>
+        <button type="button" class="navbar-link navbar-logout" (click)="askToLogout()">Log out</button>
       </ng-container>
       <ng-template #loggedOut>
         <a class="navbar-link" routerLink="/login" routerLinkActive="is-active">Log in</a>
@@ -27,3 +27,21 @@
     </div>
   </nav>
 </header>
+
+<!-- "Are you sure?" before logging out -->
+<div class="logout-backdrop" *ngIf="showLogoutConfirm" (click)="cancelLogout()">
+  <section
+    class="logout-dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="logout-title"
+    aria-describedby="logout-text"
+    (click)="$event.stopPropagation()">
+    <h2 id="logout-title">Log out?</h2>
+    <p id="logout-text">You'll need to log in again to see your boards.</p>
+    <div class="logout-actions">
+      <button type="button" class="logout-cancel" (click)="cancelLogout()">Cancel</button>
+      <button type="button" class="logout-confirm" (click)="logout()" #confirmButton>Log out</button>
+    </div>
+  </section>
+</div>
