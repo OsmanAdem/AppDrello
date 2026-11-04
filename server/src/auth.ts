@@ -24,19 +24,38 @@ export function createToken(userId: string): string {
 /**
  * Middleware for every protected route: reads "Authorization: Bearer <token>",
  * checks it, and stores the user's id in res.locals.userId. Without a valid token → 401.
+ * A token created before the user's last password change is rejected too.
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
 
+  let userId: string;
+  let issuedAt: number;
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    if (typeof payload !== 'object' || typeof payload.sub !== 'string') throw new Error('Bad token');
-    res.locals['userId'] = payload.sub;
-    next();
+    if (typeof payload !== 'object' || typeof payload.sub !== 'string' || typeof payload.iat !== 'number') {
+      throw new Error('Bad token');
+    }
+    userId = payload.sub;
+    issuedAt = payload.iat; // seconds since 1970
   } catch {
     next(new HttpError(401, 'Please log in.'));
+    return;
   }
+
+  pool.query('SELECT password_changed_at FROM users WHERE id = $1', [userId])
+    .then(({ rows }) => {
+      const user = rows[0];
+      const changedAt = user?.password_changed_at ? Math.floor(new Date(user.password_changed_at).getTime() / 1000) : 0;
+      if (!user || issuedAt < changedAt) {
+        next(new HttpError(401, 'Please log in.'));
+        return;
+      }
+      res.locals['userId'] = userId;
+      next();
+    })
+    .catch(next);
 }
 
 /** The logged-in user's id (set by requireAuth). */

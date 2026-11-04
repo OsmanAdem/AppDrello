@@ -71,6 +71,27 @@ export class AuthService {
       .pipe(tap(response => this.startSession(response)), map(response => response.user));
   }
 
+  /** Changes the password. The server answers with a new token, because older ones stop working. */
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<AuthResponse>(`${API_URL}/auth/change-password`, { currentPassword, newPassword })
+      .pipe(
+        tap(response => localStorage.setItem(this.tokenKey, response.token)),
+        map(() => undefined)
+      );
+  }
+
+  /** Asks the server to send a reset link. The answer is the same whether or not the email exists. */
+  requestPasswordReset(email: string): Observable<string> {
+    return this.http.post<{ message: string }>(`${API_URL}/auth/forgot-password`, { email })
+      .pipe(map(response => response.message));
+  }
+
+  /** Sets a new password using the secret from a reset link. */
+  resetPassword(token: string, password: string): Observable<string> {
+    return this.http.post<{ message: string }>(`${API_URL}/auth/reset-password`, { token, password })
+      .pipe(map(response => response.message));
+  }
+
   /** Logs out and removes this browser's copy of the boards, so the next person can't see them. */
   logout(): void {
     if (!this.isBrowser) return;

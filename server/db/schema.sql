@@ -118,3 +118,21 @@ ALTER TABLE boards    ADD COLUMN IF NOT EXISTS owner_id TEXT REFERENCES users(id
 ALTER TABLE templates ADD COLUMN IF NOT EXISTS owner_id TEXT REFERENCES users(id) ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS boards_owner_idx ON boards(owner_id);
 CREATE INDEX IF NOT EXISTS templates_owner_idx ON templates(owner_id);
+
+-- ---------- Changing and resetting passwords ----------
+
+-- When the password last changed. Login tokens created before this are no longer accepted,
+-- so changing your password logs you out on every other device.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+
+-- "Forgot password" links. Only a hash of the secret is stored (like a password),
+-- each link works once and expires after an hour.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);

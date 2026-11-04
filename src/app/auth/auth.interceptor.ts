@@ -22,8 +22,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(withToken).pipe(
     catchError((error: HttpErrorResponse) => {
-      const isLoginRequest = request.url.startsWith(`${API_URL}/auth/`);
-      if (isApiRequest && error.status === 401 && !isLoginRequest) {
+      // A wrong password on the login page is a normal 401, not an expired login.
+      const isAccountRequest = request.url.startsWith(`${API_URL}/auth/`);
+      if (isApiRequest && error.status === 401 && !isAccountRequest) {
         auth.logout();
         router.navigate(['/login'], { queryParams: { expired: 'true' } });
       }

@@ -10,7 +10,7 @@
       <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">Boards</a>
       <a class="navbar-link" routerLink="/about" routerLinkActive="is-active">About</a>
       <ng-container *ngIf="auth.isLoggedIn; else loggedOut">
-        <span class="navbar-user" [title]="auth.user?.email || ''">{{ auth.user?.name }}</span>
+        <a class="navbar-link navbar-user" routerLink="/account" routerLinkActive="is-active" [title]="'Your account (' + (auth.user?.email || '') + ')'">{{ auth.user?.name }}</a>
         <button type="button" class="navbar-link navbar-logout" (click)="logout()">Log out</button>
       </ng-container>
       <ng-template #loggedOut>

@@ -2,14 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 
 /** One page for both logging in and creating an account. */
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="auth-title">
@@ -20,6 +20,7 @@ import { AuthService } from './auth.service';
         </p>
 
         <p class="auth-notice" *ngIf="expired" role="status">Your login expired. Please log in again.</p>
+        <p class="auth-success" *ngIf="passwordReset && mode === 'login'" role="status">Your password has been changed. Log in with the new one.</p>
 
         <form (ngSubmit)="submit()" novalidate>
           <label *ngIf="mode === 'register'">
@@ -40,6 +41,7 @@ import { AuthService } from './auth.service';
               required>
             <small *ngIf="mode === 'register'">At least 8 characters.</small>
           </label>
+          <a *ngIf="mode === 'login'" class="auth-forgot" routerLink="/forgot-password">Forgot password?</a>
 
           <p class="auth-error" *ngIf="error" role="alert">{{ error }}</p>
 
@@ -55,30 +57,6 @@ import { AuthService } from './auth.service';
       </section>
     </main>
   `,
-  styles: [`
-    .auth-page { display: grid; min-height: calc(100vh - 160px); place-items: center; padding: 40px 16px; }
-    .auth-card { width: min(100%, 420px); padding: 32px 28px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-md); }
-    .auth-mark { display: grid; grid-template-columns: repeat(2, 8px); gap: 3px; place-content: center; width: 44px; height: 44px; margin-bottom: 18px; border-radius: 12px; background: var(--accent-soft); }
-    .auth-mark span { height: 8px; border-radius: 2px; background: var(--accent); }
-    .auth-mark span:nth-child(2), .auth-mark span:nth-child(3) { opacity: .55; }
-    h1 { margin: 0 0 6px; color: var(--text-strong); font-size: 24px; letter-spacing: -.03em; }
-    .auth-subtitle { margin: 0 0 22px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
-    .auth-notice { margin: 0 0 16px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--warning-soft); color: var(--text); font-size: 13px; }
-    form { display: flex; flex-direction: column; gap: 14px; }
-    label { display: flex; flex-direction: column; gap: 6px; }
-    label span { color: var(--text-muted); font-size: 12px; font-weight: 700; }
-    label small { color: var(--text-subtle); font-size: 12px; }
-    input { height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text-strong); font: inherit; font-size: 14px; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
-    input:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .auth-error { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger-strong); font-size: 13px; font-weight: 600; }
-    .auth-submit { height: 44px; margin-top: 4px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: #ffffff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s ease; }
-    .auth-submit:hover:not(:disabled) { border-color: var(--accent-pressed); background: var(--accent-pressed); }
-    .auth-submit:disabled { opacity: .6; cursor: progress; }
-    .auth-submit:focus-visible, .auth-switch button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-    .auth-switch { margin: 20px 0 0; color: var(--text-muted); font-size: 13px; text-align: center; }
-    .auth-switch button { padding: 2px 4px; border: 0; border-radius: 4px; background: none; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
-    .auth-switch button:hover { text-decoration: underline; }
-  `]
 })
 export class LoginComponent implements OnInit {
   mode: 'login' | 'register' = 'login';
@@ -88,6 +66,7 @@ export class LoginComponent implements OnInit {
   error = '';
   loading = false;
   expired = false;
+  passwordReset = false;
 
   constructor(
     private auth: AuthService,
@@ -97,6 +76,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.expired = this.route.snapshot.queryParamMap.get('expired') === 'true';
+    this.passwordReset = this.route.snapshot.queryParamMap.get('reset') === 'done';
     if (this.auth.isLoggedIn) this.goToBoards();
   }
 

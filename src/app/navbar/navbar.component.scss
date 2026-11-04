@@ -89,6 +89,6 @@
 .theme-toggle:hover { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-hover); }
 .theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-.navbar-user { max-width: 140px; margin-left: 6px; overflow: hidden; color: var(--text-muted); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.navbar-user { display: inline-block; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .navbar-logout { border: 0; background: none; font: inherit; cursor: pointer; }
 @media (max-width: 600px) { .navbar-user { display: none; } }
