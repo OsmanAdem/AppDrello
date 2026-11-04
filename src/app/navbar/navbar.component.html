@@ -9,6 +9,13 @@
       <a class="navbar-link" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
       <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">Boards</a>
       <a class="navbar-link" routerLink="/about" routerLinkActive="is-active">About</a>
+      <ng-container *ngIf="auth.isLoggedIn; else loggedOut">
+        <span class="navbar-user" [title]="auth.user?.email || ''">{{ auth.user?.name }}</span>
+        <button type="button" class="navbar-link navbar-logout" (click)="logout()">Log out</button>
+      </ng-container>
+      <ng-template #loggedOut>
+        <a class="navbar-link" routerLink="/login" routerLinkActive="is-active">Log in</a>
+      </ng-template>
       <button
         type="button"
         class="theme-toggle"

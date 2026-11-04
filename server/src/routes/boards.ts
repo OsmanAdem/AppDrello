@@ -1,15 +1,21 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '../db';
 import { asyncHandler, HttpError, requireText } from '../http';
+import { assertBoardAccess, userIdOf } from '../auth';
 import { toBoard, toCard, toColumn } from '../mappers';
 
 export const boardsRouter = Router();
+
+// Every route below with :id first checks that the board belongs to the logged-in user.
+boardsRouter.param('id', (req, res, next, id) => {
+  assertBoardAccess(String(id), userIdOf(res)).then(() => next(), next);
+});
 
 const DEFAULT_COLUMNS = ['To Do', 'In Progress', 'Done'];
 
 // GET /api/boards → all boards
 boardsRouter.get('/', asyncHandler(async (_req, res) => {
-  const { rows } = await pool.query('SELECT * FROM boards ORDER BY created_at');
+  const { rows } = await pool.query('SELECT * FROM boards WHERE owner_id = $1 ORDER BY created_at', [userIdOf(res)]);
   res.json(rows.map(toBoard));
 }));
 
@@ -23,8 +29,8 @@ boardsRouter.post('/', asyncHandler(async (req, res) => {
   // A transaction: if creating a column fails, the board isn't saved either.
   const board = await withTransaction(async client => {
     const { rows } = await client.query(
-      'INSERT INTO boards (name) VALUES ($1) RETURNING *',
-      [name]
+      'INSERT INTO boards (name, owner_id) VALUES ($1, $2) RETURNING *',
+      [name, userIdOf(res)]
     );
     const created = rows[0];
 

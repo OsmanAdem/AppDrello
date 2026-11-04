@@ -100,3 +100,21 @@ CREATE TABLE IF NOT EXISTS templates (
   fields      JSONB NOT NULL DEFAULT '[]',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ---------- Users and login (step 3) ----------
+
+-- One row per account. The password is never stored, only a bcrypt hash of it.
+CREATE TABLE IF NOT EXISTS users (
+  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name          TEXT NOT NULL CHECK (length(trim(name)) > 0),
+  email         TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Every board and saved template belongs to a user. Boards made before accounts existed
+-- have no owner yet; the first account that signs up gets them.
+ALTER TABLE boards    ADD COLUMN IF NOT EXISTS owner_id TEXT REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE templates ADD COLUMN IF NOT EXISTS owner_id TEXT REFERENCES users(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS boards_owner_idx ON boards(owner_id);
+CREATE INDEX IF NOT EXISTS templates_owner_idx ON templates(owner_id);

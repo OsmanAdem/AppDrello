@@ -1,9 +1,18 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '../db';
 import { asyncHandler, HttpError } from '../http';
+import { userIdOf } from '../auth';
 import { toCard } from '../mappers';
 
 export const cardsRouter = Router();
+
+// Only continue if the card is on a board the logged-in user owns.
+cardsRouter.param('id', (req, res, next, id) => {
+  pool.query(
+    'SELECT cards.id FROM cards JOIN boards ON boards.id = cards.board_id WHERE cards.id = $1 AND boards.owner_id = $2',
+    [String(id), userIdOf(res)]
+  ).then(({ rows }) => next(rows[0] ? undefined : new HttpError(404, 'Card not found.')), next);
+});
 
 // Which fields the app may change, and which database column each one maps to.
 const EDITABLE_FIELDS: Record<string, string> = {

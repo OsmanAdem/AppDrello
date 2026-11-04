@@ -3,6 +3,8 @@ import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { pool } from './db';
 import { HttpError } from './http';
+import { requireAuth } from './auth';
+import { authRouter } from './routes/auth';
 import { boardsRouter } from './routes/boards';
 import { boardStateRouter } from './routes/board-state';
 import { cardsRouter } from './routes/cards';
@@ -27,11 +29,15 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
-app.use('/api/boards', boardsRouter);
-app.use('/api/boards', boardStateRouter);
-app.use('/api/templates', templatesRouter);
-app.use('/api/columns', columnsRouter);
-app.use('/api/cards', cardsRouter);
+// Open to everyone: sign up and log in.
+app.use('/api/auth', authRouter);
+
+// Everything else needs a valid login token.
+app.use('/api/boards', requireAuth, boardsRouter);
+app.use('/api/boards', requireAuth, boardStateRouter);
+app.use('/api/templates', requireAuth, templatesRouter);
+app.use('/api/columns', requireAuth, columnsRouter);
+app.use('/api/cards', requireAuth, cardsRouter);
 
 // Unknown address → 404
 app.use((_req, res) => {

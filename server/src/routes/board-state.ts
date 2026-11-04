@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PoolClient } from 'pg';
 import { pool, withTransaction } from '../db';
 import { asyncHandler, HttpError, requireText } from '../http';
+import { assertBoardAccess, userIdOf } from '../auth';
 import { toActivity, toAutomation, toBoard, toCard, toColumn, toField, toSprint } from '../mappers';
 
 /**
@@ -24,9 +25,12 @@ function asArray(value: unknown, fieldName: string): any[] {
   return value;
 }
 
-/** Locks the board row so two saves of the same board happen one after the other. */
-async function lockBoard(client: PoolClient, boardId: string): Promise<void> {
-  const { rows } = await client.query('SELECT id FROM boards WHERE id = $1 FOR UPDATE', [boardId]);
+/**
+ * Locks the board row so two saves of the same board happen one after the other,
+ * and makes sure the logged-in user owns it.
+ */
+async function lockBoard(client: PoolClient, boardId: string, userId: string): Promise<void> {
+  const { rows } = await client.query('SELECT id FROM boards WHERE id = $1 AND owner_id = $2 FOR UPDATE', [boardId, userId]);
   if (!rows[0]) throw new HttpError(404, 'Board not found.');
 }
 
@@ -34,19 +38,22 @@ async function lockBoard(client: PoolClient, boardId: string): Promise<void> {
 boardStateRouter.put('/:id', asyncHandler(async (req, res) => {
   const name = requireText(req.body.name, 'name');
   const { rows } = await pool.query(
-    `INSERT INTO boards (id, name, background_color, created_at, updated_at)
-     VALUES ($1, $2, $3, COALESCE($4::timestamptz, now()), now())
+    `INSERT INTO boards (id, name, background_color, created_at, updated_at, owner_id)
+     VALUES ($1, $2, $3, COALESCE($4::timestamptz, now()), now(), $5)
      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, background_color = EXCLUDED.background_color, updated_at = now()
+     WHERE boards.owner_id = EXCLUDED.owner_id
      RETURNING *`,
-    [req.params['id'], name, orNull(req.body.backgroundColor), orNull(req.body.createdAt)]
+    [req.params['id'], name, orNull(req.body.backgroundColor), orNull(req.body.createdAt), userIdOf(res)]
   );
+  // No row back means the id belongs to someone else's board.
+  if (!rows[0]) throw new HttpError(404, 'Board not found.');
   res.json(toBoard(rows[0]));
 }));
 
 // GET /api/boards/:id/state → everything the app needs to show one board
 boardStateRouter.get('/:id/state', asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
-  const board = await pool.query('SELECT * FROM boards WHERE id = $1', [boardId]);
+  const board = await pool.query('SELECT * FROM boards WHERE id = $1 AND owner_id = $2', [boardId, userIdOf(res)]);
   if (!board.rows[0]) throw new HttpError(404, 'Board not found.');
 
   const [columns, cards, sprints, fields, automations, activity] = await Promise.all([
@@ -77,7 +84,7 @@ boardStateRouter.put('/:id/columns', asyncHandler(async (req, res) => {
   const columns = asArray(req.body.columns, 'columns');
 
   await withTransaction(async client => {
-    await lockBoard(client, boardId);
+    await lockBoard(client, boardId, userIdOf(res));
 
     const columnIds = columns.map(column => String(column.id));
     const cards = columns.flatMap(column =>
@@ -135,7 +142,7 @@ boardStateRouter.put('/:id/sprints', asyncHandler(async (req, res) => {
   const sprints = asArray(req.body.sprints, 'sprints');
 
   await withTransaction(async client => {
-    await lockBoard(client, boardId);
+    await lockBoard(client, boardId, userIdOf(res));
     await client.query('DELETE FROM sprints WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
       [boardId, sprints.map(sprint => String(sprint.id))]);
 
@@ -161,7 +168,7 @@ boardStateRouter.put('/:id/fields', asyncHandler(async (req, res) => {
   const fields = asArray(req.body.fields, 'fields');
 
   await withTransaction(async client => {
-    await lockBoard(client, boardId);
+    await lockBoard(client, boardId, userIdOf(res));
     await client.query('DELETE FROM custom_field_definitions WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
       [boardId, fields.map(field => String(field.id))]);
 
@@ -187,7 +194,7 @@ boardStateRouter.put('/:id/automations', asyncHandler(async (req, res) => {
   const rules = asArray(req.body.automations, 'automations');
 
   await withTransaction(async client => {
-    await lockBoard(client, boardId);
+    await lockBoard(client, boardId, userIdOf(res));
     await client.query('DELETE FROM automations WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
       [boardId, rules.map(rule => String(rule.id))]);
 
@@ -214,7 +221,7 @@ boardStateRouter.post('/:id/activity', asyncHandler(async (req, res) => {
   const events = asArray(req.body.events, 'events');
 
   await withTransaction(async client => {
-    await lockBoard(client, boardId);
+    await lockBoard(client, boardId, userIdOf(res));
     for (const event of events) {
       await client.query(
         `INSERT INTO activity (id, board_id, action, description, card_id, issue_key, card_title, created_at)
@@ -231,6 +238,7 @@ boardStateRouter.post('/:id/activity', asyncHandler(async (req, res) => {
 
 // DELETE /api/boards/:id/activity → clear the board's history
 boardStateRouter.delete('/:id/activity', asyncHandler(async (req, res) => {
+  await assertBoardAccess(req.params['id'], userIdOf(res));
   await pool.query('DELETE FROM activity WHERE board_id = $1', [req.params['id']]);
   res.status(204).end();
 }));

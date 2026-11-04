@@ -1,9 +1,18 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '../db';
 import { asyncHandler, HttpError, requireText } from '../http';
+import { userIdOf } from '../auth';
 import { toCard, toColumn } from '../mappers';
 
 export const columnsRouter = Router();
+
+// Only continue if the column is on a board the logged-in user owns.
+columnsRouter.param('id', (req, res, next, id) => {
+  pool.query(
+    'SELECT columns.id FROM columns JOIN boards ON boards.id = columns.board_id WHERE columns.id = $1 AND boards.owner_id = $2',
+    [String(id), userIdOf(res)]
+  ).then(({ rows }) => next(rows[0] ? undefined : new HttpError(404, 'Column not found.')), next);
+});
 
 // PATCH /api/columns/:id { title } → rename a column
 columnsRouter.patch('/:id', asyncHandler(async (req, res) => {
