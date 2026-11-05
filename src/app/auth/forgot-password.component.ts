@@ -1,4 +1,4 @@
-import { Component, OnDestroy, isDevMode } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -43,12 +43,6 @@ import { describeAuthError } from './auth-errors';
           </p>
           <p class="auth-success" *ngIf="resent" role="status">We've sent a new link.</p>
           <p class="auth-error" *ngIf="error" role="alert">{{ error }}</p>
-
-          <!-- Only while developing (npm start), never in the published app -->
-          <p class="dev-note" *ngIf="devMode">
-            <strong>Developer note:</strong> if the server has no email settings in <code>server/.env</code>,
-            the link is printed in the server terminal instead of being emailed.
-          </p>
         </ng-template>
 
         <p class="auth-switch">Remembered it? <a routerLink="/login">Back to log in</a></p>
@@ -60,12 +54,9 @@ import { describeAuthError } from './auth-errors';
     .inline-link:hover:not(:disabled) { text-decoration: underline; }
     .inline-link:disabled { color: var(--text-subtle); cursor: default; }
     .inline-link:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 3px; }
-    .dev-note { margin: 18px 0 0; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius-sm); color: var(--text-subtle); font-size: 12px; line-height: 1.5; }
-    code { font-size: 12px; }
   `]
 })
 export class ForgotPasswordComponent implements OnDestroy {
-  readonly devMode = isDevMode();
   email = '';
   sentTo = '';
   error = '';
