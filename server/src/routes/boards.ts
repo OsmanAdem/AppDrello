@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '../db';
 import { asyncHandler, HttpError, requireText } from '../http';
-import { assertBoardAccess, userIdOf } from '../auth';
+import { assertBoardAccess, assertBoardOwner, canAccessBoard, userIdOf } from '../auth';
 import { toBoard, toCard, toColumn } from '../mappers';
 
 export const boardsRouter = Router();
 
-// Every route below with :id first checks that the board belongs to the logged-in user.
+// Every route below with :id first checks that the user owns the board or is a member of it.
 boardsRouter.param('id', (req, res, next, id) => {
   assertBoardAccess(String(id), userIdOf(res)).then(() => next(), next);
 });
@@ -15,7 +15,16 @@ const DEFAULT_COLUMNS = ['To Do', 'In Progress', 'Done'];
 
 // GET /api/boards → all boards
 boardsRouter.get('/', asyncHandler(async (_req, res) => {
-  const { rows } = await pool.query('SELECT * FROM boards WHERE owner_id = $1 ORDER BY created_at', [userIdOf(res)]);
+  // Your own boards and boards shared with you, with your role and the owner's name.
+  const { rows } = await pool.query(
+    `SELECT boards.*, owners.name AS owner_name,
+            CASE WHEN boards.owner_id = $1 THEN 'owner' ELSE 'member' END AS role
+     FROM boards
+     LEFT JOIN users owners ON owners.id = boards.owner_id
+     WHERE ${canAccessBoard('$1')}
+     ORDER BY boards.created_at`,
+    [userIdOf(res)]
+  );
   res.json(rows.map(toBoard));
 }));
 
@@ -55,6 +64,7 @@ boardsRouter.get('/:id', asyncHandler(async (req, res) => {
 
 // PATCH /api/boards/:id { name } → rename a board
 boardsRouter.patch('/:id', asyncHandler(async (req, res) => {
+  await assertBoardOwner(req.params['id'], userIdOf(res), 'rename it');
   const name = requireText(req.body.name, 'name');
   const { rows } = await pool.query(
     'UPDATE boards SET name = $1, updated_at = now() WHERE id = $2 RETURNING *',
@@ -66,6 +76,7 @@ boardsRouter.patch('/:id', asyncHandler(async (req, res) => {
 
 // DELETE /api/boards/:id → deletes the board; the database deletes its columns and cards (CASCADE)
 boardsRouter.delete('/:id', asyncHandler(async (req, res) => {
+  await assertBoardOwner(req.params['id'], userIdOf(res), 'delete it');
   const result = await pool.query('DELETE FROM boards WHERE id = $1', [req.params['id']]);
   if (result.rowCount === 0) throw new HttpError(404, 'Board not found.');
   res.status(204).end();

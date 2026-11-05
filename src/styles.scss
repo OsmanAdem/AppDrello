@@ -488,3 +488,23 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 
 /* Activity panel: the footer with "Clear history" stays at the bottom while the list scrolls */
 .activity-panel .activity-panel-footer { position: sticky; bottom: 0; z-index: 1; margin-top: auto; background: var(--surface); }
+
+/* ---------- Sharing ---------- */
+.shared-by { color: var(--accent) !important; font-weight: 650; }
+.share-hint { margin: -4px 0 0; color: var(--text-subtle); font-size: 12px; line-height: 1.5; }
+.share-success { margin: 0; color: var(--success-strong); font-size: 13px; font-weight: 600; }
+.share-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--text-strong); font-size: 14px; }
+.share-heading span { padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-hover); font-size: 11px; }
+.share-panel .fields-list li { gap: 10px; }
+.member { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; }
+.member > span:last-child { min-width: 0; }
+.member strong, .member small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-avatar { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent-hover); font-size: 12px; font-weight: 800; }
+.member-you { color: var(--text-subtle); font-weight: 600; }
+.member-role { flex: 0 0 auto; padding: 3px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-size: 11px; font-weight: 750; }
+.member-role.is-owner { background: var(--accent-soft); color: var(--accent-hover); }
+.share-leave { padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.share-leave p { margin: 0 0 12px; color: var(--text-muted); font-size: 13px; }
+.share-leave-button { height: 36px; padding: 0 14px; border: 1px solid var(--danger); border-radius: 9px; background: var(--surface); color: var(--danger-strong); font-family: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
+.share-leave-button:hover { background: var(--danger); color: #ffffff; }
+.share-leave-button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }

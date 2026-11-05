@@ -7,7 +7,9 @@ export function toBoard(row: any) {
     name: row.name,
     backgroundColor: row.background_color ?? undefined,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    role: row.role ?? undefined,
+    ownerName: row.owner_name ?? undefined
   };
 }
 

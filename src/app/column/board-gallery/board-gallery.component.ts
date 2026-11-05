@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Board, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
+import { AuthService } from '../../auth/auth.service';
 import { ConfirmService, quoted } from '../../shared/confirm.service';
 
 @Component({
@@ -31,8 +32,9 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
         </div>
       </header>
 
-      <section class="boards-grid" *ngIf="boards.length > 0" aria-label="Your boards">
-        <article *ngFor="let board of boards" class="board-card">
+      <h2 class="section-title" *ngIf="sharedBoards.length && ownBoards.length">Your boards</h2>
+      <section class="boards-grid" *ngIf="ownBoards.length > 0" aria-label="Your boards">
+        <article *ngFor="let board of ownBoards" class="board-card">
           <button type="button" class="board-open" (click)="goToBoard(board.id)" [attr.aria-label]="'Open ' + board.name">
             <span class="preview-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
             <span class="board-info">
@@ -46,6 +48,24 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
           </div>
         </article>
       </section>
+
+      <ng-container *ngIf="sharedBoards.length">
+        <h2 class="section-title">Shared with you</h2>
+        <section class="boards-grid" aria-label="Boards shared with you">
+          <article *ngFor="let board of sharedBoards" class="board-card is-shared">
+            <button type="button" class="board-open" (click)="goToBoard(board.id)" [attr.aria-label]="'Open ' + board.name">
+              <span class="preview-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+              <span class="board-info">
+                <span class="board-name">{{ board.name }}</span>
+                <span class="board-meta">Shared by {{ board.ownerName || 'another user' }}</span>
+              </span>
+            </button>
+            <div class="board-actions" aria-label="Board actions">
+              <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Leave ' + board.name" title="Leave board" (click)="leaveBoard(board, $event)">⇥</button>
+            </div>
+          </article>
+        </section>
+      </ng-container>
 
       <section class="empty-state" *ngIf="boards.length === 0">
         <div class="empty-illustration" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -100,6 +120,8 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
     .title-section h1 { margin: 0; color: var(--text-strong); font-size: clamp(30px, 4vw, 38px); font-weight: 760; letter-spacing: -.055em; line-height: 1.12; }
     .title-section > p:last-child { margin: 9px 0 0; color: var(--text-muted); font-size: 14px; }
     .header-actions { display: flex; align-items: center; gap: 16px; }
+    .section-title { margin: 28px 0 12px; color: var(--text-strong); font-size: 15px; font-weight: 750; letter-spacing: -.01em; }
+    .section-title:first-of-type { margin-top: 0; }
     .board-total { color: var(--text-muted); font-size: 12px; font-weight: 650; }
     .create-board-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--accent); border-radius: 11px; background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(81,70,216,.18); transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
     .create-board-btn:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(81,70,216,.24); }
@@ -183,7 +205,8 @@ export class BoardGalleryComponent implements OnInit {
     @Inject(PLATFORM_ID) platformId: object,
     private router: Router,
     private boardService: BoardService,
-    private confirm: ConfirmService
+    private confirm: ConfirmService,
+    private auth: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -253,6 +276,35 @@ export class BoardGalleryComponent implements OnInit {
     } catch (error) {
       console.error('Could not create board:', error);
       this.confirm.notify({ title: "Couldn't create the board", message: 'Please try again.' });
+    }
+  }
+
+  /** Boards you own (and old boards from before sharing existed). */
+  get ownBoards(): Board[] {
+    return this.boards.filter(board => board.role !== 'member');
+  }
+
+  /** Boards other people shared with you. */
+  get sharedBoards(): Board[] {
+    return this.boards.filter(board => board.role === 'member');
+  }
+
+  async leaveBoard(board: Board, event: MouseEvent): Promise<void> {
+    event.stopPropagation();
+
+    const confirmed = await this.confirm.ask({
+      title: `Leave ${quoted(board.name)}?`,
+      message: `You won't be able to open this board anymore, unless ${board.ownerName || 'the owner'} invites you again. Your changes stay on the board.`,
+      confirmLabel: 'Leave board',
+      danger: true
+    });
+    if (!confirmed) return;
+
+    try {
+      await this.boardService.leaveBoard(board.id, this.auth.user?.id ?? '');
+      this.refreshBoards();
+    } catch {
+      await this.confirm.notify({ title: "Couldn't leave the board", message: 'Check that the server is running and try again.' });
     }
   }
 

@@ -3,7 +3,8 @@
     <div class="board-title-block">
       <p class="board-eyebrow">PROJECT BOARD</p>
       <h1 class="board-title">{{ boardName }}</h1>
-      <p class="board-subtitle">Keep the team aligned and the next step clear.</p>
+      <p class="board-subtitle" *ngIf="isOwner">Keep the team aligned and the next step clear.</p>
+      <p class="board-subtitle shared-by" *ngIf="!isOwner">Shared with you by {{ ownerName || 'the owner' }}</p>
     </div>
 
     <div class="board-header-actions">
@@ -14,6 +15,9 @@
       <button type="button" class="activity-button" (click)="openActivityPanel()" aria-label="Open activity history">
         <span aria-hidden="true">◷</span> Activity
         <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
+      </button>
+      <button type="button" class="activity-button share-button" (click)="openSharePanel()" *ngIf="boardId !== 'default'">
+        <span aria-hidden="true">⇪</span> Share
       </button>
       <div class="settings-menu">
         <button
@@ -38,16 +42,20 @@
             <span class="menu-icon" aria-hidden="true">⧉</span>
             <span><strong>Save as template</strong><small>Reuse these columns and fields</small></span>
           </button>
-          <button type="button" role="menuitem" (click)="renameBoard()" *ngIf="boardId !== 'default'">
+          <button type="button" role="menuitem" (click)="renameBoard()" *ngIf="boardId !== 'default' && isOwner">
             <span class="menu-icon" aria-hidden="true">✎</span>
             <span><strong>Rename board</strong></span>
           </button>
           <div class="menu-divider" role="separator"></div>
-          <button type="button" role="menuitem" class="is-danger" (click)="resetBoard()">
+          <button type="button" role="menuitem" class="is-danger" (click)="leaveBoard()" *ngIf="!isOwner">
+            <span class="menu-icon" aria-hidden="true">⇥</span>
+            <span><strong>Leave board</strong><small>Shared by {{ ownerName || 'the owner' }}</small></span>
+          </button>
+          <button type="button" role="menuitem" class="is-danger" (click)="resetBoard()" *ngIf="isOwner">
             <span class="menu-icon" aria-hidden="true">↻</span>
             <span><strong>Reset board</strong><small>Remove all cards</small></span>
           </button>
-          <button type="button" role="menuitem" class="is-danger" (click)="deleteCurrentBoard()" *ngIf="boardId !== 'default'">
+          <button type="button" role="menuitem" class="is-danger" (click)="deleteCurrentBoard()" *ngIf="boardId !== 'default' && isOwner">
             <span class="menu-icon" aria-hidden="true">🗑</span>
             <span><strong>Delete board</strong></span>
           </button>
@@ -337,7 +345,7 @@
     </ol>
     <footer class="activity-panel-footer">
       <span>Showing the latest {{ activity.length }} of up to 200 updates</span>
-      <button type="button" class="clear-activity" *ngIf="activity.length" (click)="clearActivity()">Clear history</button>
+      <button type="button" class="clear-activity" *ngIf="activity.length && isOwner" (click)="clearActivity()">Clear history</button>
     </footer>
   </div>
 </div>
@@ -491,6 +499,60 @@
         <p class="fields-error" *ngIf="ruleError" role="alert">{{ ruleError }}</p>
         <button type="submit" class="fields-add">Add automation</button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Share: who can open this board, and inviting people (owner only) -->
+<div class="panel-backdrop" *ngIf="showSharePanel" (click)="closeSharePanel()">
+  <div class="side-panel fields-panel share-panel" role="dialog" aria-modal="true" aria-labelledby="share-title" (click)="$event.stopPropagation()">
+    <header class="side-panel-header">
+      <div><p class="panel-eyebrow">SHARING</p><h2 id="share-title">Share “{{ boardName }}”</h2><p>Everyone here can open the board and work on its cards.</p></div>
+      <button type="button" class="panel-close" aria-label="Close sharing" (click)="closeSharePanel()">×</button>
+    </header>
+
+    <div class="fields-body">
+      <form class="fields-form" *ngIf="isOwner" (ngSubmit)="invite()" novalidate>
+        <h3>Invite someone</h3>
+        <label>
+          <span>Their email</span>
+          <input name="inviteEmail" type="email" [(ngModel)]="inviteEmail" (ngModelChange)="inviteError = ''" placeholder="name@example.com" autocomplete="off">
+        </label>
+        <p class="share-hint">They need a Drello account with this email. We'll send them a link to the board.</p>
+        <p class="fields-error" *ngIf="inviteError" role="alert">{{ inviteError }}</p>
+        <p class="share-success" *ngIf="inviteSuccess" role="status">{{ inviteSuccess }}</p>
+        <button type="submit" class="fields-add" [disabled]="inviting">{{ inviting ? 'Inviting…' : 'Invite' }}</button>
+      </form>
+
+      <p class="fields-error" *ngIf="!isOwner && inviteError" role="alert">{{ inviteError }}</p>
+
+      <section aria-labelledby="people-title">
+        <h3 id="people-title" class="share-heading">People with access <span *ngIf="members.length">{{ members.length }}</span></h3>
+        <p class="fields-empty" *ngIf="membersLoading">Loading…</p>
+        <ul class="fields-list" *ngIf="!membersLoading && members.length">
+          <li *ngFor="let member of members">
+            <div class="member">
+              <span class="member-avatar" aria-hidden="true">{{ initials(member.name) }}</span>
+              <span>
+                <strong>{{ member.name }}<span class="member-you" *ngIf="member.id === myUserId"> (you)</span></strong>
+                <small>{{ member.email }}</small>
+              </span>
+            </div>
+            <span class="member-role" [class.is-owner]="member.role === 'owner'">{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+            <button
+              type="button"
+              class="fields-remove"
+              *ngIf="isOwner && member.role !== 'owner'"
+              (click)="removeMember(member)"
+              [attr.aria-label]="'Remove ' + member.name">×</button>
+          </li>
+        </ul>
+      </section>
+
+      <div class="share-leave" *ngIf="!isOwner">
+        <p>Only {{ ownerName || 'the owner' }} can invite or remove people.</p>
+        <button type="button" class="share-leave-button" (click)="closeSharePanel(); leaveBoard()">Leave board</button>
+      </div>
     </div>
   </div>
 </div>

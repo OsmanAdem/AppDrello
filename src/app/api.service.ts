@@ -5,6 +5,7 @@ import {
   AutomationRule,
   Board,
   BoardActivity,
+  BoardMember,
   BoardTemplate,
   Card,
   Column,
@@ -115,8 +116,17 @@ export class ApiService {
     return this.http.get<BoardState>(`${API_URL}/boards/${boardId}/state`);
   }
 
-  saveColumns(boardId: string, columns: Column[]): Observable<void> {
-    return this.http.put<void>(`${API_URL}/boards/${boardId}/columns`, { columns });
+  /** Saves columns and cards. Only the ids in `removed` are deleted on the server. */
+  saveColumns(
+    boardId: string,
+    columns: Column[],
+    removed: { columnIds: string[]; cardIds: string[] } = { columnIds: [], cardIds: [] }
+  ): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/columns`, {
+      columns,
+      removedColumnIds: removed.columnIds,
+      removedCardIds: removed.cardIds
+    });
   }
 
   saveSprints(boardId: string, sprints: Sprint[]): Observable<void> {
@@ -137,6 +147,22 @@ export class ApiService {
 
   addActivity(boardId: string, events: BoardActivity[]): Observable<void> {
     return this.http.post<void>(`${API_URL}/boards/${boardId}/activity`, { events });
+  }
+
+  // ----- Sharing a board -----
+
+  getMembers(boardId: string): Observable<BoardMember[]> {
+    return this.http.get<BoardMember[]>(`${API_URL}/boards/${boardId}/members`);
+  }
+
+  /** Shares the board with the person who has this email (owner only). Returns the new member list. */
+  addMember(boardId: string, email: string): Observable<BoardMember[]> {
+    return this.http.post<BoardMember[]>(`${API_URL}/boards/${boardId}/members`, { email });
+  }
+
+  /** Removes someone from the board, or leaves it when userId is your own id. */
+  removeMember(boardId: string, userId: string): Observable<BoardMember[]> {
+    return this.http.delete<BoardMember[]>(`${API_URL}/boards/${boardId}/members/${userId}`);
   }
 
   // ----- Templates the user saved -----

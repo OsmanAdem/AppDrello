@@ -14,6 +14,7 @@ import {
   AutomationRule,
   AutomationTrigger,
   BoardActivity,
+  BoardMember,
   Card,
   CardLabel,
   CardPriority,
@@ -23,6 +24,8 @@ import {
   Sprint
 } from '../card/card.model';
 import { BoardService } from '../board.service';
+import { AuthService } from '../auth/auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ConfirmService, quoted } from '../shared/confirm.service';
 import {
   addDays,
@@ -97,6 +100,16 @@ export class BoardComponent implements OnInit, OnDestroy {
   calendarAnchor = new Date();
   showActivityPanel = false;
   showSettingsMenu = false;
+  // Sharing
+  showSharePanel = false;
+  members: BoardMember[] = [];
+  membersLoading = false;
+  inviteEmail = '';
+  inviteError = '';
+  inviteSuccess = '';
+  inviting = false;
+  /** The owner's name, shown on boards shared with you. */
+  ownerName = '';
   sprints: Sprint[] = [];
   showActiveSprintOnly = false;
   customFields: CustomFieldDefinition[] = [];
@@ -165,7 +178,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private boardService: BoardService,
-    private confirm: ConfirmService
+    private confirm: ConfirmService,
+    private auth: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -192,6 +206,103 @@ export class BoardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
     this.clearCardActivityTimers();
+  }
+
+  // ----- Sharing -----
+
+  /** Owners can rename, delete, reset and share the board. Members work on its contents. */
+  get isOwner(): boolean {
+    return this.boardService.getRole(this.boardId) === 'owner';
+  }
+
+  get myUserId(): string {
+    return this.auth.user?.id ?? '';
+  }
+
+  async openSharePanel(): Promise<void> {
+    this.showSharePanel = true;
+    this.inviteEmail = '';
+    this.inviteError = '';
+    this.inviteSuccess = '';
+    this.membersLoading = true;
+    try {
+      this.members = await this.boardService.getMembers(this.boardId);
+    } catch (error) {
+      this.inviteError = this.describeError(error);
+    } finally {
+      this.membersLoading = false;
+    }
+  }
+
+  closeSharePanel(): void {
+    this.showSharePanel = false;
+  }
+
+  async invite(): Promise<void> {
+    this.inviteError = '';
+    this.inviteSuccess = '';
+    const email = this.inviteEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.inviteError = 'Enter the email address of the person you want to invite.';
+      return;
+    }
+
+    this.inviting = true;
+    try {
+      this.members = await this.boardService.inviteMember(this.boardId, email);
+      const added = this.members.find(member => member.email === email.toLowerCase());
+      this.inviteSuccess = `${added?.name ?? email} can now open this board. We've sent them an email.`;
+      this.recordActivity('Member added', `Shared the board with ${added?.name ?? email}.`);
+      this.inviteEmail = '';
+    } catch (error) {
+      this.inviteError = this.describeError(error);
+    } finally {
+      this.inviting = false;
+    }
+  }
+
+  async removeMember(member: BoardMember): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Remove ${member.name} from ${quoted(this.boardName)}?`,
+      message: `${member.name} won't be able to open this board anymore. Their cards and changes stay on the board.`,
+      confirmLabel: 'Remove',
+      danger: true
+    });
+    if (!confirmed) return;
+
+    try {
+      this.members = await this.boardService.removeMember(this.boardId, member.id);
+      this.recordActivity('Member removed', `Removed ${member.name} from the board.`);
+    } catch (error) {
+      this.inviteError = this.describeError(error);
+    }
+  }
+
+  async leaveBoard(): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Leave ${quoted(this.boardName)}?`,
+      message: `You won't be able to open this board anymore, unless ${this.ownerName || 'the owner'} invites you again. Your changes stay on the board.`,
+      confirmLabel: 'Leave board',
+      danger: true
+    });
+    if (!confirmed) return;
+
+    try {
+      await this.boardService.leaveBoard(this.boardId, this.myUserId);
+      this.router.navigate(['/boards']);
+    } catch (error) {
+      await this.confirm.notify({ title: "Couldn't leave the board", message: this.describeError(error) });
+    }
+  }
+
+  initials(name: string): string {
+    return name.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('');
+  }
+
+  private describeError(error: unknown): string {
+    const http = error as HttpErrorResponse;
+    if (http?.status === 0) return "Can't reach the server. Is it running? (npm run dev in the server folder)";
+    return http?.error?.error || 'Something went wrong. Please try again.';
   }
 
   /** True when some changes are only saved in this browser (the server didn't get them). */
@@ -966,6 +1077,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
 
     this.boardName = board?.name || 'Default Board';
+    this.ownerName = board?.ownerName ?? '';
     this.columns = this.boardService.loadColumns(this.boardId);
     this.lastSavedColumns = this.cloneColumns(this.columns);
     this.sprints = this.boardService.getSprints(this.boardId);

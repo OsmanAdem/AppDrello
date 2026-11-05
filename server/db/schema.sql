@@ -142,3 +142,16 @@ CREATE INDEX IF NOT EXISTS password_resets_user_idx ON password_resets(user_id);
 -- so the key must be (board_id, id), not id alone.
 ALTER TABLE custom_field_definitions DROP CONSTRAINT IF EXISTS custom_field_definitions_pkey;
 ALTER TABLE custom_field_definitions ADD PRIMARY KEY (board_id, id);
+
+-- ---------- Sharing boards (step 4) ----------
+-- Who else can work on a board. The owner is boards.owner_id; everyone here is a "member".
+-- Members can work on columns, cards, sprints, fields and automations.
+-- Only the owner can rename or delete the board and invite or remove people.
+CREATE TABLE IF NOT EXISTS board_members (
+  board_id TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+  user_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role     TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('member')),
+  added_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (board_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS board_members_user_idx ON board_members(user_id);

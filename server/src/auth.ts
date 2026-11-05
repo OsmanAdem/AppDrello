@@ -64,10 +64,33 @@ export function userIdOf(res: Response): string {
 }
 
 /**
- * Throws 404 unless the board exists and the user may use it.
- * 404 instead of 403, so nobody can find out which board ids exist.
+ * SQL condition: "the user owns this board or is a member of it".
+ * `userParam` is the query parameter that holds the user's id, e.g. '$2'.
+ * Used everywhere a board is read or changed, so sharing works the same in every route.
  */
-export async function assertBoardAccess(boardId: string, userId: string): Promise<void> {
-  const { rows } = await pool.query('SELECT id FROM boards WHERE id = $1 AND owner_id = $2', [boardId, userId]);
+export function canAccessBoard(userParam: string): string {
+  return `(boards.owner_id = ${userParam} OR EXISTS (
+    SELECT 1 FROM board_members m WHERE m.board_id = boards.id AND m.user_id = ${userParam}))`;
+}
+
+export type BoardRole = 'owner' | 'member';
+
+/**
+ * Throws 404 unless the board exists and the user is its owner or a member.
+ * 404 instead of 403, so nobody can find out which board ids exist.
+ * Returns the user's role on the board.
+ */
+export async function assertBoardAccess(boardId: string, userId: string): Promise<BoardRole> {
+  const { rows } = await pool.query(
+    `SELECT boards.owner_id FROM boards WHERE boards.id = $1 AND ${canAccessBoard('$2')}`,
+    [boardId, userId]
+  );
   if (!rows[0]) throw new HttpError(404, 'Board not found.');
+  return rows[0].owner_id === userId ? 'owner' : 'member';
+}
+
+/** Like assertBoardAccess, but only the owner may continue (403 for members). */
+export async function assertBoardOwner(boardId: string, userId: string, action: string): Promise<void> {
+  const role = await assertBoardAccess(boardId, userId);
+  if (role !== 'owner') throw new HttpError(403, `Only the board's owner can ${action}.`);
 }

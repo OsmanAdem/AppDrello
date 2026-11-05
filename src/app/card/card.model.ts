@@ -86,12 +86,27 @@ export interface Sprint {
   createdAt: string;
 }
 
+export type BoardRole = 'owner' | 'member';
+
 export interface Board {
   id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
   backgroundColor?: string;
+  /** Your role on the board: the owner, or a member it was shared with. */
+  role?: BoardRole;
+  /** Who owns the board (shown on boards shared with you). */
+  ownerName?: string;
+}
+
+/** Someone who has access to a board. */
+export interface BoardMember {
+  id: string;
+  name: string;
+  email: string;
+  role: BoardRole;
+  addedAt?: string;
 }
 
 export interface BoardActivity {

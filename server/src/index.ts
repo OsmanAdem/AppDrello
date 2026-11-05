@@ -10,6 +10,7 @@ import { boardStateRouter } from './routes/board-state';
 import { cardsRouter } from './routes/cards';
 import { columnsRouter } from './routes/columns';
 import { templatesRouter } from './routes/templates';
+import { membersRouter } from './routes/members';
 
 const app = express();
 const port = Number(process.env['PORT'] || 3000);
@@ -35,6 +36,7 @@ app.use('/api/auth', authRouter);
 // Everything else needs a valid login token.
 app.use('/api/boards', requireAuth, boardsRouter);
 app.use('/api/boards', requireAuth, boardStateRouter);
+app.use('/api/boards', requireAuth, membersRouter);
 app.use('/api/templates', requireAuth, templatesRouter);
 app.use('/api/columns', requireAuth, columnsRouter);
 app.use('/api/cards', requireAuth, cardsRouter);

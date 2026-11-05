@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
 
 /** One board and everything on it, kept while it couldn't be sent to the server. */
@@ -14,6 +14,7 @@ interface BoardBundle {
 import {
   AutomationRule,
   BoardActivity,
+  BoardMember,
   BoardTemplate,
   Card,
   Column,
@@ -87,6 +88,13 @@ export class BoardService {
 
   /** True when the last request to the server failed (e.g. the server isn't running). */
   serverUnavailable = false;
+  /**
+   * The column and card ids the server has for each board (from the last load or save).
+   * Comparing with the board now tells us exactly what the user deleted, so a save never
+   * deletes cards someone else just added to a shared board.
+   */
+  private serverIds = new Map<string, { columnIds: Set<string>; cardIds: Set<string> }>();
+
   /** Boards with changes that failed to reach the server. They are sent again before the next sync. */
   private unsavedBoards = new Set<string>();
 
@@ -153,6 +161,7 @@ export class BoardService {
       const boards = this.readStoredBoards().filter(board => board.id !== boardId);
       this.writeBoards([...boards, state.board]);
       this.writeLocalColumns(boardId, state.columns);
+      this.rememberServerIds(boardId, state.columns);
       this.writeLocal(`drello-sprints-${boardId}`, state.sprints);
       this.writeLocal(`drello-fields-${boardId}`, state.fields);
       this.writeLocal(`drello-automations-${boardId}`, state.automations);
@@ -179,8 +188,7 @@ export class BoardService {
     for (const [boardId, timer] of this.columnTimers) {
       clearTimeout(timer);
       this.columnTimers.delete(boardId);
-      const latest = this.loadColumns(boardId);
-      this.sendToServer(boardId, () => this.api.saveColumns(boardId, latest));
+      this.sendColumns(boardId);
     }
     await this.writeQueue;
 
@@ -221,7 +229,8 @@ export class BoardService {
     await firstValueFrom(this.api.saveBoard(bundle.board));
     await firstValueFrom(this.api.saveCustomFields(boardId, bundle.fields));
     await firstValueFrom(this.api.saveSprints(boardId, bundle.sprints));
-    await firstValueFrom(this.api.saveColumns(boardId, bundle.columns));
+    await firstValueFrom(this.api.saveColumns(boardId, bundle.columns, this.removedSince(boardId, bundle.columns)));
+    this.rememberServerIds(boardId, bundle.columns);
     await firstValueFrom(this.api.saveAutomations(boardId, bundle.automations));
   }
 
@@ -290,6 +299,42 @@ export class BoardService {
     } catch {
       return null;
     }
+  }
+
+  // ----- Sharing -----
+
+  /** Your role on a board. Boards made before sharing existed are yours. */
+  getRole(boardId: string): 'owner' | 'member' {
+    return this.readStoredBoards().find(board => board.id === boardId)?.role ?? 'owner';
+  }
+
+  getMembers(boardId: string): Promise<BoardMember[]> {
+    return firstValueFrom(this.api.getMembers(boardId));
+  }
+
+  inviteMember(boardId: string, email: string): Promise<BoardMember[]> {
+    return firstValueFrom(this.api.addMember(boardId, email.trim()));
+  }
+
+  removeMember(boardId: string, userId: string): Promise<BoardMember[]> {
+    return firstValueFrom(this.api.removeMember(boardId, userId));
+  }
+
+  /** Leaves a board someone shared with you, and removes it from this browser. */
+  async leaveBoard(boardId: string, myUserId: string): Promise<void> {
+    await this.flushPendingWrites();
+    await firstValueFrom(this.api.removeMember(boardId, myUserId));
+    this.forgetBoardLocally(boardId);
+  }
+
+  /** Removes a board and everything on it from this browser only (not from the server). */
+  private forgetBoardLocally(boardId: string): void {
+    this.cancelColumnSave(boardId);
+    this.unsavedBoards.delete(boardId);
+    this.writeBoards(this.readStoredBoards().filter(board => board.id !== boardId));
+    ['columns', 'activity', 'sprints', 'fields', 'automations'].forEach(part =>
+      localStorage.removeItem(`drello-${part}-${boardId}`)
+    );
   }
 
   /** Sends everything stored in this browser to the server (runs once, the first time). */
@@ -432,7 +477,8 @@ export class BoardService {
 
     this.readStoredBoards().forEach(board => {
       this.cancelColumnSave(board.id);
-      this.sendToServer(null, () => this.api.deleteBoard(board.id));
+      // Only your own boards are deleted on the server; boards shared with you are left alone.
+      if (board.role !== 'member') this.sendToServer(null, () => this.api.deleteBoard(board.id));
     });
 
     // Remove each board's columns and any legacy column data.
@@ -537,9 +583,38 @@ export class BoardService {
     this.cancelColumnSave(boardId);
     this.columnTimers.set(boardId, setTimeout(() => {
       this.columnTimers.delete(boardId);
-      const latest = this.loadColumns(boardId);
-      this.sendToServer(boardId, () => this.api.saveColumns(boardId, latest));
+      this.sendColumns(boardId);
     }, this.columnSaveDelay));
+  }
+
+  /** Sends the board's latest columns, plus the ids the user removed since the last save. */
+  private sendColumns(boardId: string): void {
+    const latest = this.loadColumns(boardId);
+    const removed = this.removedSince(boardId, latest);
+    // Remember what the server has only once it has answered. Until then, later saves send
+    // the same removals again, which is harmless (deleting twice changes nothing).
+    this.sendToServer(boardId, () => this.api.saveColumns(boardId, latest, removed).pipe(
+      tap(() => this.rememberServerIds(boardId, latest))
+    ));
+  }
+
+  private removedSince(boardId: string, columns: Column[]): { columnIds: string[]; cardIds: string[] } {
+    const known = this.serverIds.get(boardId);
+    if (!known) return { columnIds: [], cardIds: [] };
+
+    const columnIds = new Set(columns.map(column => column.id));
+    const cardIds = new Set(columns.flatMap(column => column.cards).map(card => card.id));
+    return {
+      columnIds: [...known.columnIds].filter(id => !columnIds.has(id)),
+      cardIds: [...known.cardIds].filter(id => !cardIds.has(id))
+    };
+  }
+
+  private rememberServerIds(boardId: string, columns: Column[]): void {
+    this.serverIds.set(boardId, {
+      columnIds: new Set(columns.map(column => column.id)),
+      cardIds: new Set(columns.flatMap(column => column.cards).map(card => card.id))
+    });
   }
 
   private cancelColumnSave(boardId: string): void {
@@ -814,7 +889,8 @@ export class BoardService {
       id: `board-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       name,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      role: 'owner'
     };
   }
 
