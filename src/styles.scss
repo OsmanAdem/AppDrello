@@ -485,3 +485,6 @@ input::placeholder, textarea::placeholder { color: var(--text-subtle); opacity: 
 .password-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
 /* Hide the browser's own eye icon (Edge), so there's only one control */
 input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none; }
+
+/* Activity panel: the footer with "Clear history" stays at the bottom while the list scrolls */
+.activity-panel .activity-panel-footer { position: sticky; bottom: 0; z-index: 1; margin-top: auto; background: var(--surface); }

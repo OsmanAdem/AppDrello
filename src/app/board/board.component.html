@@ -317,7 +317,7 @@
 <div class="panel-backdrop" *ngIf="showActivityPanel" (click)="closeActivityPanel()">
   <div class="side-panel activity-panel" role="dialog" aria-modal="true" aria-labelledby="activity-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
-      <div><p class="panel-eyebrow">BOARD UPDATES</p><h2 id="activity-title">Activity history</h2><p>Recent changes on {{ boardName }}.</p></div>
+      <div><p class="panel-eyebrow">BOARD UPDATES</p><h2 id="activity-title">Activity history</h2><p>Recent changes on “{{ boardName }}”.</p></div>
       <button type="button" class="panel-close" aria-label="Close activity history" (click)="closeActivityPanel()">×</button>
     </header>
     <div class="activity-empty" *ngIf="activity.length === 0">

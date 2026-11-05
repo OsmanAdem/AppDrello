@@ -5,6 +5,7 @@ import { pool, withTransaction } from '../db';
 import { createToken, requireAuth, userIdOf } from '../auth';
 import { asyncHandler, HttpError, requireText } from '../http';
 import { sendEmail } from '../email';
+import { byEmail, byIp, rateLimit } from '../rate-limit';
 
 export const authRouter = Router();
 
@@ -35,7 +36,10 @@ function readEmail(value: unknown): string {
 }
 
 // POST /api/auth/register { name, email, password } → creates an account and logs in
-authRouter.post('/register', asyncHandler(async (req, res) => {
+// At most 10 new accounts per IP address per hour.
+const registerLimit = rateLimit({ max: 10, windowMinutes: 60, key: req => 'register:' + byIp(req), message: 'Too many new accounts from this network. Please try again later.' });
+
+authRouter.post('/register', registerLimit, asyncHandler(async (req, res) => {
   const name = requireText(req.body.name, 'name');
   const email = readEmail(req.body.email);
   const password = readNewPassword(req.body.password);
@@ -62,7 +66,13 @@ authRouter.post('/register', asyncHandler(async (req, res) => {
 }));
 
 // POST /api/auth/login { email, password } → a token if the password is right
-authRouter.post('/login', asyncHandler(async (req, res) => {
+// Slows down password guessing: 10 tries per email and 30 per IP address every 15 minutes.
+const loginLimit = [
+  rateLimit({ max: 10, windowMinutes: 15, key: req => 'login:' + byEmail(req), message: 'Too many login attempts. Please wait 15 minutes and try again.' }),
+  rateLimit({ max: 30, windowMinutes: 15, key: req => 'login-ip:' + byIp(req), message: 'Too many login attempts. Please wait 15 minutes and try again.' })
+];
+
+authRouter.post('/login', ...loginLimit, asyncHandler(async (req, res) => {
   const email = readEmail(req.body.email);
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
@@ -105,7 +115,13 @@ authRouter.post('/change-password', requireAuth, asyncHandler(async (req, res) =
 }));
 
 // POST /api/auth/forgot-password { email } → emails a reset link if the account exists
-authRouter.post('/forgot-password', asyncHandler(async (req, res) => {
+// At most 3 reset emails per address and 10 per IP address every 15 minutes.
+const resetEmailLimit = [
+  rateLimit({ max: 3, windowMinutes: 15, key: req => 'reset:' + byEmail(req), message: "You've asked for several reset links. Please wait 15 minutes before asking again." }),
+  rateLimit({ max: 10, windowMinutes: 15, key: req => 'reset-ip:' + byIp(req), message: 'Too many requests. Please wait 15 minutes and try again.' })
+];
+
+authRouter.post('/forgot-password', ...resetEmailLimit, asyncHandler(async (req, res) => {
   const email = readEmail(req.body.email);
   const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
   const user = rows[0];

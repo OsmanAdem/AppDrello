@@ -141,9 +141,12 @@ export class BacklogComponent implements OnChanges {
 
   // ----- Sprint lifecycle: planned → active → completed -----
 
-  startSprint(sprint: Sprint): void {
+  async startSprint(sprint: Sprint): Promise<void> {
     if (this.activeSprint) {
-      window.alert(`Complete “${this.activeSprint.name}” before starting another sprint.`);
+      await this.confirm.notify({
+        title: 'Another sprint is running',
+        message: `Complete ${quoted(this.activeSprint.name)} before starting ${quoted(sprint.name)}. Only one sprint can be active at a time.`
+      });
       return;
     }
 

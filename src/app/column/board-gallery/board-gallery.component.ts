@@ -252,7 +252,7 @@ export class BoardGalleryComponent implements OnInit {
       this.refreshBoards();
     } catch (error) {
       console.error('Could not create board:', error);
-      window.alert('Could not create the board.');
+      this.confirm.notify({ title: "Couldn't create the board", message: 'Please try again.' });
     }
   }
 
@@ -260,36 +260,27 @@ export class BoardGalleryComponent implements OnInit {
     this.router.navigate(['/boards', boardId]);
   }
 
-  renameBoard(board: Board, event: MouseEvent): void {
+  async renameBoard(board: Board, event: MouseEvent): Promise<void> {
     event.stopPropagation();
 
     if (!this.isBrowser) {
       return;
     }
 
-    const newName = window.prompt(
-      'Enter the new board name:',
-      board.name
-    );
+    const newName = await this.confirm.prompt({
+      title: `Rename board ${quoted(board.name)}`,
+      label: 'Board name',
+      value: board.name,
+      confirmLabel: 'Rename',
+      maxLength: 80,
+      emptyError: 'The board needs a name.'
+    });
+    if (newName === null || newName === board.name) return;
 
-    if (newName === null) {
-      return;
-    }
-
-    if (!newName.trim()) {
-      window.alert('Board name cannot be empty.');
-      return;
-    }
-
-    const success = this.boardService.renameBoard(
-      board.id,
-      newName.trim()
-    );
-
-    if (success) {
+    if (this.boardService.renameBoard(board.id, newName)) {
       this.refreshBoards();
     } else {
-      window.alert('Could not rename the board.');
+      await this.confirm.notify({ title: "Couldn't rename the board", message: 'Please try again.' });
     }
   }
 

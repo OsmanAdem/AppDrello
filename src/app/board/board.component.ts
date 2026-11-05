@@ -592,23 +592,25 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   // ----- Templates -----
 
-  saveAsTemplate(): void {
+  async saveAsTemplate(): Promise<void> {
     if (!this.isBrowser) return;
 
-    const name = window.prompt(
-      'Name the template. It saves this board\'s columns and custom fields (not the cards):',
-      `${this.boardName} template`
-    );
-
+    const name = await this.confirm.prompt({
+      title: 'Save as template',
+      message: "The template keeps this board's columns and custom fields, but not its cards.",
+      label: 'Template name',
+      value: `${this.boardName} template`,
+      confirmLabel: 'Save template',
+      maxLength: 60,
+      emptyError: 'Give the template a name.'
+    });
     if (name === null) return;
 
-    if (!name.trim()) {
-      window.alert('Template name cannot be empty.');
-      return;
-    }
-
     this.boardService.saveBoardAsTemplate(this.boardId, name);
-    window.alert(`Saved “${name.trim()}”. Pick it the next time you create a board.`);
+    await this.confirm.notify({
+      title: `Template ${quoted(name)} saved`,
+      message: 'Pick it under "Template" the next time you create a board.'
+    });
   }
 
   // ----- Sprints -----
@@ -786,51 +788,51 @@ export class BoardComponent implements OnInit, OnDestroy {
     return status === 'done' || status === 'completed' || card.label === 'Completed';
   }
 
-  renameBoard(): void {
+  async renameBoard(): Promise<void> {
     if (!this.isBrowser || this.boardId === 'default') return;
 
     const board = this.boardService
       .getBoards()
       .find(item => item.id === this.boardId);
+    if (!board) return;
 
-    if (!board) {
-      window.alert('Board not found.');
-      return;
-    }
-
-    const newName = window.prompt(
-      'Enter the new board name:',
-      board.name
-    );
-
-    if (newName === null) return;
-
-    if (!newName.trim()) {
-      window.alert('Board name cannot be empty.');
-      return;
-    }
+    const newName = await this.confirm.prompt({
+      title: `Rename board ${quoted(board.name)}`,
+      label: 'Board name',
+      value: board.name,
+      confirmLabel: 'Rename',
+      maxLength: 80,
+      emptyError: 'The board needs a name.'
+    });
+    if (newName === null || newName === board.name) return;
 
     if (this.boardService.renameBoard(this.boardId, newName)) {
-      this.boardName = newName.trim();
+      this.boardName = newName;
       this.recordActivity('Board renamed', `Renamed the board to “${this.boardName}”.`);
     } else {
-      window.alert('Could not rename the board.');
+      await this.confirm.notify({ title: "Couldn't rename the board", message: 'Please try again.' });
     }
   }
 
-  addColumn(): void {
+  async addColumn(): Promise<void> {
     if (!this.isBrowser) return;
 
-    const title = window.prompt('Enter column name:');
-
-    if (title === null || title.trim() === '') return;
+    const title = await this.confirm.prompt({
+      title: 'Add a column',
+      label: 'Column name',
+      placeholder: 'e.g. Review',
+      confirmLabel: 'Add column',
+      maxLength: 60,
+      emptyError: 'Give the column a name.'
+    });
+    if (title === null) return;
 
     this.columns = [
       ...this.columns,
       {
         id: `col-${Date.now()}`,
         boardId: this.boardId,
-        title: title.trim(),
+        title,
         cards: []
       }
     ];
