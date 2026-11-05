@@ -100,14 +100,19 @@ export class ConfirmDialogComponent implements AfterViewChecked {
     }
     if (dialog === this.focusedDialog) return;
 
-    const target = dialog.kind === 'prompt' ? this.promptInput
-      : dialog.kind === 'notice' ? this.okButton
-      : this.cancelButton;
-    if (!target) return;
+    if (dialog.kind === 'prompt') {
+      const input = this.promptInput?.nativeElement;
+      if (!input) return;
+      this.focusedDialog = dialog;
+      input.focus();
+      input.select(); // so typing replaces the old name right away
+      return;
+    }
 
+    const button = dialog.kind === 'notice' ? this.okButton : this.cancelButton;
+    if (!button) return;
     this.focusedDialog = dialog;
-    target.nativeElement.focus();
-    if (target === this.promptInput) target.nativeElement.select();
+    button.nativeElement.focus();
   }
 
   @HostListener('document:keydown.escape')
