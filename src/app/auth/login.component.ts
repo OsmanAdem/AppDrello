@@ -16,9 +16,9 @@ import { RevealPasswordDirective } from '../shared/reveal-password.directive';
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="auth-title">
         <div class="auth-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-        <h1 id="auth-title">{{ mode === 'login' ? 'Welcome back' : 'Create your account' }}</h1>
+        <h1 id="auth-title">{{ mode === 'login' ? 'Log in to Drello' : 'Create your Drello account' }}</h1>
         <p class="auth-subtitle">
-          {{ mode === 'login' ? 'Log in to see your boards.' : 'Your boards are saved to your account, on every device.' }}
+          {{ mode === 'login' ? 'Welcome back! Enter your email and password to see your boards.' : 'Your boards are saved to your account, on every device.' }}
         </p>
 
         <p class="auth-notice" *ngIf="expired" role="status">Your login expired. Please log in again.</p>
