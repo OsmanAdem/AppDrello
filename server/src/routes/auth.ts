@@ -5,6 +5,7 @@ import { pool, withTransaction } from '../db';
 import { createToken, requireAuth, userIdOf } from '../auth';
 import { asyncHandler, HttpError, requireText } from '../http';
 import { sendEmail } from '../email';
+import { APP_URL } from '../app-url';
 import { byEmail, byIp, rateLimit } from '../rate-limit';
 
 export const authRouter = Router();
@@ -134,12 +135,11 @@ authRouter.post('/forgot-password', ...resetEmailLimit, asyncHandler(async (req,
       [user.id, hashResetToken(token), RESET_LINK_LIFETIME_MINUTES]
     );
 
-    const appUrl = process.env['CLIENT_ORIGIN'] || 'http://localhost:4200';
     try {
       await sendEmail(
         user.email,
         'Reset your Drello password',
-        `Hi ${user.name},\n\nOpen this link to choose a new password:\n${appUrl}/reset-password?token=${token}\n\n` +
+        `Hi ${user.name},\n\nOpen this link to choose a new password:\n${APP_URL}/reset-password?token=${token}\n\n` +
         `The link works once and expires in ${RESET_LINK_LIFETIME_MINUTES} minutes. ` +
         "If you didn't ask for this, you can ignore this email."
       );

@@ -3,6 +3,7 @@ import { pool } from '../db';
 import { assertBoardAccess, assertBoardOwner, userIdOf } from '../auth';
 import { asyncHandler, HttpError, requireText } from '../http';
 import { sendEmail } from '../email';
+import { APP_URL } from '../app-url';
 import { rateLimit } from '../rate-limit';
 
 /** Who has access to a board, and inviting or removing people. */
@@ -66,13 +67,12 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
     [boardId]
   );
   const { board_name: boardName, owner_name: ownerName } = details.rows[0];
-  const appUrl = process.env['CLIENT_ORIGIN'] || 'http://localhost:4200';
   try {
     await sendEmail(
       invitee.email,
       `${ownerName} shared "${boardName}" with you`,
       `Hi ${invitee.name},\n\n${ownerName} shared the board "${boardName}" with you on Drello.\n\n` +
-      `Open it here: ${appUrl}/boards/${boardId}\n\nYou'll also find it under "Shared with you" on your Boards page.`
+      `Open it here: ${APP_URL}/boards/${boardId}\n\nYou'll also find it under "Shared with you" on your Boards page.`
     );
   } catch (error: any) {
     console.error('Could not send the invitation email:', error?.message ?? error);
