@@ -8,7 +8,8 @@ describe('BoardService', () => {
 
   beforeEach(() => {
     localStorage.clear(); // every test starts with an empty "database"
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests });
+    // provideHttpClientTesting: no real requests are sent during tests
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(BoardService);
   });
 
