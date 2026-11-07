@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:setup": "tsx src/setup-db.ts",
-    "db:setup:prod": "node dist/setup-db.js"
+    "db:setup:prod": "node dist/setup-db.js",
+    "test": "tsx --test \"test/**/*.test.ts\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
