@@ -26,8 +26,13 @@ Plan work on boards with columns and cards, schedule it on a calendar and a time
 - Sign up and log in, with each user only seeing their own boards
 - Change password, forgot password with a single-use reset link, and delete account
 
+**Teamwork**
+- **Share boards** by email, with owner and member roles
+- **Live updates**: when someone else changes a shared board, it updates on your screen (Server-Sent Events)
+
 **Design**
 - A design system with color tokens, light and **dark mode**
+- SVG line icons that follow the theme
 - Accessible: keyboard focus styles, WCAG AA contrast, ARIA labels, reduced-motion support
 - App-styled dialogs that name what you're deleting
 
@@ -119,6 +124,4 @@ server/
 
 ## Roadmap
 
-- Share boards with other users, with owner and member roles
-- Live updates when someone else changes a board
 - Deploy online

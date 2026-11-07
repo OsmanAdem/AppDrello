@@ -10,6 +10,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { IconName } from '../shared/icon.component';
+import { LiveBoardService } from '../shared/live-board.service';
 import {
   AutomationAction,
   AutomationRule,
@@ -180,7 +181,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     private router: Router,
     private boardService: BoardService,
     private confirm: ConfirmService,
-    private auth: AuthService
+    private auth: AuthService,
+    private live: LiveBoardService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -207,6 +209,53 @@ export class BoardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
     this.clearCardActivityTimers();
+    this.stopLiveUpdates();
+  }
+
+  // ----- Live updates -----
+  //
+  // While a board is open, the server tells us when someone else saved a change to it.
+  // We then fetch the board again, but never while the user is in the middle of something
+  // (typing, dragging, a dialog or panel open), so nothing they are doing jumps or disappears.
+
+  private stopWatching?: () => void;
+  private liveRefreshTimer?: ReturnType<typeof setTimeout>;
+
+  private startLiveUpdates(boardId: string): void {
+    this.stopLiveUpdates();
+    this.stopWatching = this.live.watch(boardId, () => this.scheduleLiveRefresh(boardId, 300));
+  }
+
+  private stopLiveUpdates(): void {
+    this.stopWatching?.();
+    this.stopWatching = undefined;
+    clearTimeout(this.liveRefreshTimer);
+  }
+
+  /** Waits a moment (several saves often arrive together), then refreshes once. */
+  private scheduleLiveRefresh(boardId: string, delay: number): void {
+    clearTimeout(this.liveRefreshTimer);
+    this.liveRefreshTimer = setTimeout(() => {
+      if (this.boardId !== boardId) return;
+      if (this.isUserBusy()) {
+        this.scheduleLiveRefresh(boardId, 1500); // try again when they're done
+        return;
+      }
+      this.boardService.syncBoard(boardId).then(() => {
+        if (this.boardId === boardId && !this.isUserBusy()) this.loadBoard();
+        else if (this.boardId === boardId) this.scheduleLiveRefresh(boardId, 1500);
+      });
+    }, delay);
+  }
+
+  /** True while the user is typing, dragging a card, or has a dialog or panel open. */
+  private isUserBusy(): boolean {
+    const active = document.activeElement as HTMLElement | null;
+    const typing = !!active && (/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) || active.isContentEditable)
+      && !active.closest('.board-search');
+    const dragging = !!document.querySelector('.cdk-drag-preview');
+    const dialogOpen = !!document.querySelector('[aria-modal="true"]') || this.showSettingsMenu;
+    return typing || dragging || dialogOpen;
   }
 
   // ----- Sharing -----
@@ -1059,6 +1108,7 @@ export class BoardComponent implements OnInit, OnDestroy {
       this.boardService.getBoards().some(board => board.id === boardId);
 
     if (savedLocally) this.loadBoard();
+    this.startLiveUpdates(boardId);
 
     this.boardService.syncBoard(boardId).then(() => {
       // Ignore the answer if the user has already opened another board.

@@ -11,6 +11,7 @@ import { cardsRouter } from './routes/cards';
 import { columnsRouter } from './routes/columns';
 import { templatesRouter } from './routes/templates';
 import { membersRouter } from './routes/members';
+import { announceBoardChanges, liveRouter } from './live';
 
 const app = express();
 const port = Number(process.env['PORT'] || 3000);
@@ -43,6 +44,9 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/auth', authRouter);
 
 // Everything else needs a valid login token.
+// Live updates: open boards are told when someone else saves a change.
+app.use('/api/boards', requireAuth, liveRouter);
+app.use('/api/boards', announceBoardChanges);
 app.use('/api/boards', requireAuth, boardsRouter);
 app.use('/api/boards', requireAuth, boardStateRouter);
 app.use('/api/boards', requireAuth, membersRouter);
