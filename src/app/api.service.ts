@@ -13,8 +13,13 @@ import {
   Sprint
 } from './card/card.model';
 
-/** The address of the backend in server/. Change this when the API is deployed. */
-export const API_URL = 'http://localhost:3000/api';
+import { environment } from '../environments/environment';
+
+/**
+ * The address of the server (server/). It comes from the environment files:
+ * localhost while developing, the deployed server's address in the live app.
+ */
+export const API_URL = environment.apiUrl;
 
 /** The card fields the API lets you change with PATCH /cards/:id. */
 export type CardUpdate = Partial<Pick<Card,

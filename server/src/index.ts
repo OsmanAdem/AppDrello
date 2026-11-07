@@ -15,8 +15,17 @@ import { membersRouter } from './routes/members';
 const app = express();
 const port = Number(process.env['PORT'] || 3000);
 
-// Allow the Angular app (another origin, port 4200) to call this API from the browser.
-app.use(cors({ origin: process.env['CLIENT_ORIGIN'] || 'http://localhost:4200' }));
+// On a hosting service, requests pass through its proxy first. This makes req.ip the
+// visitor's real address, which the rate limits rely on.
+app.set('trust proxy', 1);
+
+// Allow the Angular app to call this API from the browser. CLIENT_ORIGIN can hold several
+// addresses separated by commas, e.g. the live site and localhost.
+const allowedOrigins = (process.env['CLIENT_ORIGIN'] || 'http://localhost:4200')
+  .split(',')
+  .map(origin => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+app.use(cors({ origin: allowedOrigins }));
 // Read JSON request bodies into req.body.
 app.use(express.json({ limit: '5mb' }));
 

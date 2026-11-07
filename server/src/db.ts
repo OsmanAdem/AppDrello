@@ -10,7 +10,11 @@ if (!process.env['DATABASE_URL']) {
 }
 
 /** A pool keeps a few database connections open and reuses them between requests. */
-export const pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
+export const pool = new Pool({
+  connectionString: process.env['DATABASE_URL'],
+  // Hosted databases usually require an encrypted (SSL) connection. Set DATABASE_SSL=true for them.
+  ssl: process.env['DATABASE_SSL'] === 'true' ? { rejectUnauthorized: false } : undefined
+});
 
 /**
  * Runs several queries as one transaction: either all of them succeed,
