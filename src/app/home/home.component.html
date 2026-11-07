@@ -17,7 +17,7 @@
         <div class="hero-actions">
           <button type="button" class="primary-button" (click)="openBoards()">
             Explore your boards
-            <span aria-hidden="true">→</span>
+            <app-icon name="arrow-right" />
           </button>
   
           <button type="button" class="secondary-button" (click)="openAbout()">
@@ -38,7 +38,7 @@
             <h2>Project overview</h2>
           </div>
   
-          <span class="visual-icon">▦</span>
+          <span class="visual-icon"><app-icon name="board" /></span>
         </div>
   
         <div class="progress-section">
@@ -58,7 +58,7 @@
   
         <div class="visual-footer">
           <span>Small steps. Real progress.</span>
-          <span aria-hidden="true">✦</span>
+          <app-icon name="sparkle" [size]="14" />
         </div>
       </div>
     </section>
@@ -72,7 +72,7 @@
   
       <div class="features-grid">
         <article class="feature-card">
-          <div class="feature-icon">▦</div>
+          <div class="feature-icon"><app-icon name="board" [size]="22" /></div>
           <h3>Stay organized</h3>
           <p>
             Keep your tasks organized on boards and columns
@@ -81,7 +81,7 @@
         </article>
   
         <article class="feature-card">
-          <div class="feature-icon">↗</div>
+          <div class="feature-icon"><app-icon name="trending-up" [size]="22" /></div>
           <h3>Track progress</h3>
           <p>
             Move tasks through your workflow and see
@@ -90,7 +90,7 @@
         </article>
   
         <article class="feature-card">
-          <div class="feature-icon">◎</div>
+          <div class="feature-icon"><app-icon name="target" [size]="22" /></div>
           <h3>Focus on priorities</h3>
           <p>
             Use priorities and labels to make important
@@ -108,7 +108,7 @@
   
       <button type="button" class="primary-button closing-button" (click)="openBoards()">
         Open your boards
-        <span aria-hidden="true">→</span>
+        <app-icon name="arrow-right" />
       </button>
     </section>
   </div>

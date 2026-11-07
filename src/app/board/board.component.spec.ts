@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BoardComponent } from './board.component';
 import { BoardService } from '../board.service';
+import { IconComponent } from '../shared/icon.component';
 
 describe('BoardComponent', () => {
   let fixture: ComponentFixture<BoardComponent>;
@@ -16,7 +17,7 @@ describe('BoardComponent', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       declarations: [BoardComponent],
-      imports: [FormsModule, RouterModule.forRoot([])],
+      imports: [FormsModule, RouterModule.forRoot([]), IconComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();

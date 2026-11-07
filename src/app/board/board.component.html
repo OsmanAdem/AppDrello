@@ -9,15 +9,15 @@
 
     <div class="board-header-actions">
       <div class="board-stat">
-        <span class="stat-icon total-icon" aria-hidden="true">▦</span>
+        <span class="stat-icon total-icon" aria-hidden="true"><app-icon name="board" /></span>
         <span><strong>{{ totalTaskCount }}</strong><small>Total tasks</small></span>
       </div>
       <button type="button" class="activity-button" (click)="openActivityPanel()" aria-label="Open activity history">
-        <span aria-hidden="true">◷</span> Activity
+        <app-icon name="clock" /> Activity
         <span class="activity-count" *ngIf="activity.length">{{ activity.length }}</span>
       </button>
       <button type="button" class="activity-button share-button" (click)="openSharePanel()" *ngIf="boardId !== 'default'">
-        <span aria-hidden="true">⇪</span> Share
+        <app-icon name="share" /> Share
       </button>
       <div class="settings-menu">
         <button
@@ -26,37 +26,37 @@
           (click)="showSettingsMenu = !showSettingsMenu"
           [attr.aria-expanded]="showSettingsMenu"
           aria-haspopup="menu">
-          <span aria-hidden="true">⚙</span> Board settings <span class="menu-caret" aria-hidden="true">▾</span>
+          <app-icon name="settings" /> Board settings <span class="menu-caret"><app-icon name="chevron-down" [size]="14" /></span>
         </button>
         <div class="menu-dismiss" *ngIf="showSettingsMenu" (click)="showSettingsMenu = false"></div>
         <div class="settings-dropdown" role="menu" *ngIf="showSettingsMenu" (click)="showSettingsMenu = false">
           <button type="button" role="menuitem" (click)="openAutomationsPanel()">
-            <span class="menu-icon" aria-hidden="true">⚡</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="zap" /></span>
             <span><strong>Automations</strong><small>{{ automations.length ? automations.length + ' active rule(s)' : 'Automate repetitive steps' }}</small></span>
           </button>
           <button type="button" role="menuitem" (click)="openFieldsPanel()">
-            <span class="menu-icon" aria-hidden="true">⊞</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="fields" /></span>
             <span><strong>Custom fields</strong><small>{{ customFields.length ? customFields.length + ' field(s)' : 'Add your own card fields' }}</small></span>
           </button>
           <button type="button" role="menuitem" (click)="saveAsTemplate()" *ngIf="boardId !== 'default'">
-            <span class="menu-icon" aria-hidden="true">⧉</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="copy" /></span>
             <span><strong>Save as template</strong><small>Reuse these columns and fields</small></span>
           </button>
           <button type="button" role="menuitem" (click)="renameBoard()" *ngIf="boardId !== 'default' && isOwner">
-            <span class="menu-icon" aria-hidden="true">✎</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="pencil" /></span>
             <span><strong>Rename board</strong></span>
           </button>
           <div class="menu-divider" role="separator"></div>
           <button type="button" role="menuitem" class="is-danger" (click)="leaveBoard()" *ngIf="!isOwner">
-            <span class="menu-icon" aria-hidden="true">⇥</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="log-out" /></span>
             <span><strong>Leave board</strong><small>Shared by {{ ownerName || 'the owner' }}</small></span>
           </button>
           <button type="button" role="menuitem" class="is-danger" (click)="resetBoard()" *ngIf="isOwner">
-            <span class="menu-icon" aria-hidden="true">↻</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="reset" /></span>
             <span><strong>Reset board</strong><small>Remove all cards</small></span>
           </button>
           <button type="button" role="menuitem" class="is-danger" (click)="deleteCurrentBoard()" *ngIf="boardId !== 'default' && isOwner">
-            <span class="menu-icon" aria-hidden="true">🗑</span>
+            <span class="menu-icon" aria-hidden="true"><app-icon name="trash" /></span>
             <span><strong>Delete board</strong></span>
           </button>
         </div>
@@ -73,16 +73,16 @@
   <section class="board-toolbar" aria-label="Task views">
     <div class="board-view-switch" role="group" aria-label="Board view">
       <button type="button" [class.is-active]="activeView === 'board'" [attr.aria-pressed]="activeView === 'board'" (click)="setActiveView('board')">
-        <span aria-hidden="true">▦</span> Board
+        <app-icon name="board" /> Board
       </button>
       <button type="button" [class.is-active]="activeView === 'calendar'" [attr.aria-pressed]="activeView === 'calendar'" (click)="setActiveView('calendar')">
-        <span aria-hidden="true">▣</span> Calendar
+        <app-icon name="calendar" /> Calendar
       </button>
       <button type="button" [class.is-active]="activeView === 'timeline'" [attr.aria-pressed]="activeView === 'timeline'" (click)="setActiveView('timeline')">
-        <span aria-hidden="true">≡</span> Timeline
+        <app-icon name="timeline" /> Timeline
       </button>
       <button type="button" [class.is-active]="activeView === 'backlog'" [attr.aria-pressed]="activeView === 'backlog'" (click)="setActiveView('backlog')">
-        <span aria-hidden="true">☰</span> Backlog
+        <app-icon name="list" /> Backlog
       </button>
     </div>
     <button
@@ -92,10 +92,10 @@
       [class.is-active]="showActiveSprintOnly"
       [attr.aria-pressed]="showActiveSprintOnly"
       (click)="toggleActiveSprintFilter()">
-      ⚑ Only {{ activeSprint.name }}
+      <app-icon name="flag" [size]="14" /> Only {{ activeSprint.name }}
     </button>
     <label class="board-search">
-      <span aria-hidden="true">⌕</span>
+      <app-icon name="search" />
       <input
         type="search"
         [(ngModel)]="taskSearch"
@@ -106,7 +106,7 @@
         *ngIf="taskSearch"
         class="clear-search"
         aria-label="Clear task search"
-        (click)="taskSearch = ''">×</button>
+        (click)="taskSearch = ''"><app-icon name="x" [size]="14" /></button>
     </label>
     <span class="toolbar-label">Quick views</span>
     <button type="button" class="view-button" [class.is-active]="taskView === 'all'" (click)="setTaskView('all')" [attr.aria-pressed]="taskView === 'all'">
@@ -136,7 +136,7 @@
       Choose All tasks to move cards between columns.
     </span>
     <span class="scroll-hint">
-      Scroll sideways to see more columns <span aria-hidden="true">→</span>
+      Scroll sideways to see more columns <app-icon name="arrow-right" [size]="14" />
     </span>
   </div>
 
@@ -160,7 +160,7 @@
           type="button"
           class="add-column-button"
           (click)="addColumn()">
-          <span class="add-icon">+</span>
+          <span class="add-icon"><app-icon name="plus" /></span>
           <span>Add column</span>
         </button>
       </div>
@@ -177,15 +177,15 @@
       <div class="calendar-controls">
         <button type="button" class="calendar-today-button" (click)="goToCurrentMonth()">Today</button>
         <div class="calendar-month-controls" aria-label="Change month">
-          <button type="button" (click)="moveCalendarMonth(-1)" aria-label="Previous month">‹</button>
-          <button type="button" (click)="moveCalendarMonth(1)" aria-label="Next month">›</button>
+          <button type="button" (click)="moveCalendarMonth(-1)" aria-label="Previous month"><app-icon name="chevron-left" /></button>
+          <button type="button" (click)="moveCalendarMonth(1)" aria-label="Next month"><app-icon name="chevron-right" /></button>
         </div>
       </div>
     </header>
 
     <div class="calendar-insights">
       <div class="calendar-insight">
-        <span class="insight-icon scheduled-icon" aria-hidden="true">▣</span>
+        <span class="insight-icon scheduled-icon" aria-hidden="true"><app-icon name="calendar" /></span>
         <span><strong>{{ calendarScheduledTaskCount }}</strong><small>Scheduled tasks</small></span>
       </div>
       <div class="calendar-insight">
@@ -193,7 +193,7 @@
         <span><strong>{{ overdueCalendarTaskCount }}</strong><small>Overdue</small></span>
       </div>
       <div class="calendar-insight">
-        <span class="insight-icon unscheduled-icon" aria-hidden="true">＋</span>
+        <span class="insight-icon unscheduled-icon" aria-hidden="true"><app-icon name="plus" /></span>
         <span><strong>{{ unscheduledTaskCount }}</strong><small>Unscheduled</small></span>
       </div>
     </div>
@@ -259,8 +259,8 @@
       <div class="calendar-controls">
         <button type="button" class="calendar-today-button" (click)="goToCurrentWeek()">Today</button>
         <div class="calendar-month-controls" aria-label="Move timeline">
-          <button type="button" (click)="moveTimeline(-1)" aria-label="Previous week">‹</button>
-          <button type="button" (click)="moveTimeline(1)" aria-label="Next week">›</button>
+          <button type="button" (click)="moveTimeline(-1)" aria-label="Previous week"><app-icon name="chevron-left" /></button>
+          <button type="button" (click)="moveTimeline(1)" aria-label="Next week"><app-icon name="chevron-right" /></button>
         </div>
       </div>
     </header>
@@ -326,16 +326,16 @@
   <div class="side-panel activity-panel" role="dialog" aria-modal="true" aria-labelledby="activity-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD UPDATES</p><h2 id="activity-title">Activity history</h2><p>Recent changes on “{{ boardName }}”.</p></div>
-      <button type="button" class="panel-close" aria-label="Close activity history" (click)="closeActivityPanel()">×</button>
+      <button type="button" class="panel-close" aria-label="Close activity history" (click)="closeActivityPanel()"><app-icon name="x" [size]="18" /></button>
     </header>
     <div class="activity-empty" *ngIf="activity.length === 0">
-      <span class="activity-empty-icon" aria-hidden="true">◷</span>
+      <span class="activity-empty-icon" aria-hidden="true"><app-icon name="clock" [size]="22" /></span>
       <h3>No activity yet</h3>
       <p>Changes to cards and columns will appear here.</p>
     </div>
     <ol class="activity-list" *ngIf="activity.length">
       <li class="activity-item" *ngFor="let event of activity">
-        <span class="activity-marker" [class.is-delete]="event.action.toLowerCase().includes('deleted')" [class.is-create]="event.action.toLowerCase().includes('created') || event.action.toLowerCase().includes('added')">{{ getActivityIcon(event.action) }}</span>
+        <span class="activity-marker" [class.is-delete]="event.action.toLowerCase().includes('deleted')" [class.is-create]="event.action.toLowerCase().includes('created') || event.action.toLowerCase().includes('added')"><app-icon [name]="getActivityIcon(event.action)" [size]="13" [strokeWidth]="2.5" /></span>
         <div class="activity-copy">
           <div class="activity-line"><strong>{{ event.action }}</strong><span>{{ event.createdAt | date:'MMM d, h:mm a' }}</span></div>
           <p>{{ event.description }}</p>
@@ -354,7 +354,7 @@
   <div class="side-panel calendar-card-panel" role="dialog" aria-modal="true" aria-labelledby="calendar-card-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">{{ selectedCalendarCard.issueKey }}</p><h2 id="calendar-card-title">Task details</h2></div>
-      <button type="button" class="panel-close" aria-label="Close task details" (click)="closeCalendarCard()">×</button>
+      <button type="button" class="panel-close" aria-label="Close task details" (click)="closeCalendarCard()"><app-icon name="x" [size]="18" /></button>
     </header>
     <div class="calendar-card-content">
       <span class="calendar-card-column">{{ getCardColumnTitle(selectedCalendarCard) }}</span>
@@ -374,7 +374,7 @@
       </div>
     </div>
     <footer class="calendar-card-footer">
-      <button type="button" class="calendar-open-board" (click)="showCardOnBoard()">Open in board <span aria-hidden="true">→</span></button>
+      <button type="button" class="calendar-open-board" (click)="showCardOnBoard()">Open in board <app-icon name="arrow-right" [size]="14" /></button>
     </footer>
   </div>
 </div>
@@ -384,7 +384,7 @@
   <div class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="fields-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="fields-title">Custom fields</h2><p>Extra fields shown in every card's details on {{ boardName }}.</p></div>
-      <button type="button" class="panel-close" aria-label="Close custom fields" (click)="closeFieldsPanel()">×</button>
+      <button type="button" class="panel-close" aria-label="Close custom fields" (click)="closeFieldsPanel()"><app-icon name="x" [size]="18" /></button>
     </header>
 
     <div class="fields-body">
@@ -396,7 +396,7 @@
             <strong>{{ field.name }}</strong>
             <small>{{ fieldTypeLabel(field.type) }}<span *ngIf="fieldOptionsText(field)"> · {{ fieldOptionsText(field) }}</span></small>
           </div>
-          <button type="button" class="fields-remove" (click)="removeCustomField(field)" [attr.aria-label]="'Remove ' + field.name">×</button>
+          <button type="button" class="fields-remove" (click)="removeCustomField(field)" [attr.aria-label]="'Remove ' + field.name"><app-icon name="x" [size]="14" /></button>
         </li>
       </ul>
 
@@ -428,7 +428,7 @@
   <div class="side-panel fields-panel" role="dialog" aria-modal="true" aria-labelledby="automations-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">BOARD SETTINGS</p><h2 id="automations-title">Automations</h2><p>Let {{ boardName }} handle repetitive steps for you.</p></div>
-      <button type="button" class="panel-close" aria-label="Close automations" (click)="closeAutomationsPanel()">×</button>
+      <button type="button" class="panel-close" aria-label="Close automations" (click)="closeAutomationsPanel()"><app-icon name="x" [size]="18" /></button>
     </header>
 
     <div class="fields-body">
@@ -440,7 +440,7 @@
             <input type="checkbox" [checked]="rule.enabled" (change)="toggleAutomation(rule)" [attr.aria-label]="(rule.enabled ? 'Turn off: ' : 'Turn on: ') + describeRule(rule)">
             <span>{{ describeRule(rule) }}</span>
           </label>
-          <button type="button" class="fields-remove" (click)="removeAutomation(rule)" aria-label="Delete automation">×</button>
+          <button type="button" class="fields-remove" (click)="removeAutomation(rule)" aria-label="Delete automation"><app-icon name="x" [size]="14" /></button>
         </li>
       </ul>
 
@@ -508,7 +508,7 @@
   <div class="side-panel fields-panel share-panel" role="dialog" aria-modal="true" aria-labelledby="share-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
       <div><p class="panel-eyebrow">SHARING</p><h2 id="share-title">Share “{{ boardName }}”</h2><p>Everyone here can open the board and work on its cards.</p></div>
-      <button type="button" class="panel-close" aria-label="Close sharing" (click)="closeSharePanel()">×</button>
+      <button type="button" class="panel-close" aria-label="Close sharing" (click)="closeSharePanel()"><app-icon name="x" [size]="18" /></button>
     </header>
 
     <div class="fields-body">
@@ -544,7 +544,7 @@
               class="fields-remove"
               *ngIf="isOwner && member.role !== 'owner'"
               (click)="removeMember(member)"
-              [attr.aria-label]="'Remove ' + member.name">×</button>
+              [attr.aria-label]="'Remove ' + member.name"><app-icon name="x" [size]="14" /></button>
           </li>
         </ul>
       </section>

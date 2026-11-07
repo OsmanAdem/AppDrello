@@ -15,6 +15,7 @@ import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { BacklogComponent } from './backlog/backlog.component';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
+import { IconComponent } from './shared/icon.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
     FormsModule,
     DragDropModule,
     ConfirmDialogComponent,
+    IconComponent,
     AppRoutingModule
   ],
   providers: [provideHttpClient(withFetch(), withInterceptors([authInterceptor]))],

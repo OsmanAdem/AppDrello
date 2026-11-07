@@ -11,7 +11,7 @@
       aria-label="Open task details"
       (pointerdown)="$event.stopPropagation()"
       (click)="openDetails(); $event.stopPropagation()">
-      ↗
+      <app-icon name="expand" [size]="14" />
     </button>
     <button
       type="button"
@@ -20,7 +20,7 @@
       aria-label="Delete card"
       (pointerdown)="$event.stopPropagation()"
       (click)="deleteCard(); $event.stopPropagation()">
-      ×
+      <app-icon name="x" [size]="14" />
     </button>
   </div>
 
@@ -41,7 +41,7 @@
   <div class="card-footer">
     <div class="card-summary-meta" *ngIf="card.dueDate || card.assignee || checklistTotal">
       <span class="due-date" *ngIf="card.dueDate" [class.is-overdue]="isOverdue">
-        <span aria-hidden="true">◷</span>
+        <app-icon name="clock" [size]="13" />
         {{ card.dueDate | date:'MMM d' }}
       </span>
       <span class="assignee" *ngIf="card.assignee" [title]="card.assignee">
@@ -49,7 +49,7 @@
         <span class="assignee-name">{{ card.assignee }}</span>
       </span>
       <span class="checklist-summary" *ngIf="checklistTotal" [attr.aria-label]="completedChecklistCount + ' of ' + checklistTotal + ' checklist items complete'">
-        <span aria-hidden="true">☑</span>
+        <app-icon name="checklist" [size]="13" />
         {{ completedChecklistCount }}/{{ checklistTotal }}
       </span>
     </div>
@@ -105,7 +105,7 @@
         type="button"
         class="details-close"
         aria-label="Close task details"
-        (click)="closeDetails()">×</button>
+        (click)="closeDetails()"><app-icon name="x" [size]="18" /></button>
     </header>
 
     <div class="details-content">
@@ -241,7 +241,7 @@
                 [attr.aria-label]="item.text">
               <span>{{ item.text }}</span>
             </label>
-            <button type="button" class="remove-checklist-item" (click)="removeChecklistItem(item)" [attr.aria-label]="'Remove ' + item.text">×</button>
+            <button type="button" class="remove-checklist-item" (click)="removeChecklistItem(item)" [attr.aria-label]="'Remove ' + item.text"><app-icon name="x" [size]="14" /></button>
           </li>
         </ul>
         <p class="checklist-empty" *ngIf="!card.checklist?.length">Add a few steps to track progress on this task.</p>

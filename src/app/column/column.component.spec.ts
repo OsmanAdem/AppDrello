@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ColumnComponent } from './column.component';
+import { IconComponent } from '../shared/icon.component';
 
 describe('ColumnComponent', () => {
   let fixture: ComponentFixture<ColumnComponent>;
@@ -14,7 +15,7 @@ describe('ColumnComponent', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       declarations: [ColumnComponent],
-      imports: [FormsModule, DragDropModule],
+      imports: [FormsModule, DragDropModule, IconComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests
       schemas: [NO_ERRORS_SCHEMA] // ignore <app-card>; only the column is tested here
     }).compileComponents();

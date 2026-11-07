@@ -51,7 +51,7 @@
         <button type="button" class="backlog-secondary" *ngIf="sprint.status === 'planned'" (click)="deleteSprint(sprint)" [attr.aria-label]="'Delete ' + sprint.name">Delete</button>
       </div>
     </header>
-    <p class="sprint-goal" *ngIf="sprint.goal">🎯 {{ sprint.goal }}</p>
+    <p class="sprint-goal" *ngIf="sprint.goal"><app-icon name="target" [size]="14" /> {{ sprint.goal }}</p>
     <div class="sprint-progress" *ngIf="cardsInSprint(sprint).length">
       <div class="sprint-progress-track"><span [style.width.%]="progress(sprint)"></span></div>
       <small>{{ doneCount(sprint) }} of {{ cardsInSprint(sprint).length }} done</small>
@@ -78,7 +78,7 @@
       class="completed-toggle"
       (click)="showCompleted = !showCompleted"
       [attr.aria-expanded]="showCompleted">
-      <span aria-hidden="true">{{ showCompleted ? '▾' : '▸' }}</span>
+      <app-icon [name]="showCompleted ? 'chevron-down' : 'chevron-right'" />
       Completed sprints ({{ completedSprints.length }})
     </button>
     <button type="button" class="backlog-secondary clear-completed" *ngIf="showCompleted" (click)="clearCompletedSprints()">
@@ -100,7 +100,7 @@
             <button type="button" class="backlog-secondary" (click)="clearCompletedSprints(sprint)" [attr.aria-label]="'Remove ' + sprint.name + ' from history'">Remove</button>
           </div>
         </header>
-        <p class="sprint-goal" *ngIf="sprint.goal">🎯 {{ sprint.goal }}</p>
+        <p class="sprint-goal" *ngIf="sprint.goal"><app-icon name="target" [size]="14" /> {{ sprint.goal }}</p>
 
         <p class="backlog-empty" *ngIf="cardsInSprint(sprint).length === 0">No tasks were finished in this sprint.</p>
         <ul class="backlog-list" *ngIf="cardsInSprint(sprint).length">

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from './navbar.component';
+import { IconComponent } from '../shared/icon.component';
 
 describe('NavbarComponent', () => {
   let fixture: ComponentFixture<NavbarComponent>;
@@ -11,7 +12,7 @@ describe('NavbarComponent', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       declarations: [NavbarComponent],
-      imports: [RouterModule.forRoot([])],
+      imports: [RouterModule.forRoot([]), IconComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
 

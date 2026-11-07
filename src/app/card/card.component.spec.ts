@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { CardComponent } from './card.component';
+import { IconComponent } from '../shared/icon.component';
 
 describe('CardComponent', () => {
   let fixture: ComponentFixture<CardComponent>;
@@ -9,7 +10,7 @@ describe('CardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [CardComponent],
-      imports: [FormsModule]
+      imports: [FormsModule, IconComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(CardComponent);

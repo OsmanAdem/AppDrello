@@ -7,6 +7,7 @@ import {
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../../shared/icon.component';
 import { Board, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
 import { AuthService } from '../../auth/auth.service';
@@ -15,7 +16,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
 @Component({
   selector: 'app-board-gallery',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   template: `
     <main class="gallery-container">
       <header class="gallery-header">
@@ -27,7 +28,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
         <div class="header-actions">
           <span class="board-total">{{ boards.length }} {{ boards.length === 1 ? 'board' : 'boards' }}</span>
           <button type="button" class="create-board-btn" (click)="openModal()">
-            <span class="plus-icon" aria-hidden="true">+</span> Create board
+            <span class="plus-icon"><app-icon name="plus" /></span> Create board
           </button>
         </div>
       </header>
@@ -43,8 +44,8 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
             </span>
           </button>
           <div class="board-actions" aria-label="Board actions">
-            <button type="button" class="action-btn" [attr.aria-label]="'Rename ' + board.name" title="Rename board" (click)="renameBoard(board, $event)">✎</button>
-            <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Delete ' + board.name" title="Delete board" (click)="deleteBoard(board.id, $event)">×</button>
+            <button type="button" class="action-btn" [attr.aria-label]="'Rename ' + board.name" title="Rename board" (click)="renameBoard(board, $event)"><app-icon name="pencil" [size]="14" /></button>
+            <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Delete ' + board.name" title="Delete board" (click)="deleteBoard(board.id, $event)"><app-icon name="trash" [size]="14" /></button>
           </div>
         </article>
       </section>
@@ -61,7 +62,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
               </span>
             </button>
             <div class="board-actions" aria-label="Board actions">
-              <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Leave ' + board.name" title="Leave board" (click)="leaveBoard(board, $event)">⇥</button>
+              <button type="button" class="action-btn delete-btn" [attr.aria-label]="'Leave ' + board.name" title="Leave board" (click)="leaveBoard(board, $event)"><app-icon name="log-out" [size]="14" /></button>
             </div>
           </article>
         </section>
@@ -72,12 +73,12 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
         <p class="eyebrow">A FRESH START</p>
         <h2>Your workspace is ready.</h2>
         <p>Create a board to bring your next project into focus.</p>
-        <button type="button" class="create-board-btn" (click)="openModal()"><span class="plus-icon" aria-hidden="true">+</span> Create your first board</button>
+        <button type="button" class="create-board-btn" (click)="openModal()"><span class="plus-icon"><app-icon name="plus" /></span> Create your first board</button>
       </section>
 
       <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()" (keydown.escape)="closeModal()">
         <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="create-board-title" (click)="$event.stopPropagation()">
-          <div class="modal-mark" aria-hidden="true">＋</div>
+          <div class="modal-mark"><app-icon name="plus" [size]="22" /></div>
           <h2 id="create-board-title">Create a board</h2>
           <p>Give your workspace a name and pick a template to start from. You can change both later.</p>
           <div class="input-group">
@@ -95,7 +96,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
                   class="template-delete"
                   *ngIf="!template.builtIn"
                   (click)="deleteTemplate(template, $event)"
-                  [attr.aria-label]="'Delete template ' + template.name">×</button>
+                  [attr.aria-label]="'Delete template ' + template.name"><app-icon name="x" [size]="14" /></button>
               </span>
               <span class="template-description">{{ template.description }}</span>
               <span class="template-columns">{{ template.columns.join(' → ') }}</span>
@@ -106,7 +107,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
           </fieldset>
           <div class="modal-footer">
             <button type="button" class="cancel-btn" (click)="closeModal()">Cancel</button>
-            <button type="button" class="confirm-btn" (click)="createBoard()" [disabled]="!newBoardName.trim()">Create board <span aria-hidden="true">→</span></button>
+            <button type="button" class="confirm-btn" (click)="createBoard()" [disabled]="!newBoardName.trim()">Create board <app-icon name="arrow-right" /></button>
           </div>
         </section>
       </div>

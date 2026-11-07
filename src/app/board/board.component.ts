@@ -9,6 +9,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { IconName } from '../shared/icon.component';
 import {
   AutomationAction,
   AutomationRule,
@@ -817,13 +818,13 @@ export class BoardComponent implements OnInit, OnDestroy {
     return card.checklist?.filter(item => item.completed).length || 0;
   }
 
-  getActivityIcon(action: string): string {
+  getActivityIcon(action: string): IconName {
     const value = action.toLowerCase();
-    if (value.includes('created') || value.includes('added')) return '+';
-    if (value.includes('deleted') || value.includes('removed')) return '×';
-    if (value.includes('moved')) return '→';
-    if (value.includes('renamed') || value.includes('updated')) return '✎';
-    return '•';
+    if (value.includes('created') || value.includes('added')) return 'plus';
+    if (value.includes('deleted') || value.includes('removed')) return 'x';
+    if (value.includes('moved')) return 'arrow-right';
+    if (value.includes('renamed') || value.includes('updated')) return 'pencil';
+    return 'dot';
   }
 
   getDropListIds(): string[] {

@@ -16,7 +16,7 @@
 
   <section class="mission-section">
     <div class="mission-mark">
-      <span>✦</span>
+      <app-icon name="sparkle" [size]="14" />
     </div>
 
     <div class="mission-content">
@@ -44,7 +44,7 @@
 
     <div class="about-grid">
       <article class="about-card">
-        <div class="about-icon">▦</div>
+        <div class="about-icon"><app-icon name="board" [size]="22" /></div>
         <h3>Organize with boards</h3>
         <p>
           Group your work into boards and columns
@@ -53,7 +53,7 @@
       </article>
 
       <article class="about-card">
-        <div class="about-icon">↗</div>
+        <div class="about-icon"><app-icon name="trending-up" [size]="22" /></div>
         <h3>Move work forward</h3>
         <p>
           Move cards between columns as tasks
@@ -62,7 +62,7 @@
       </article>
 
       <article class="about-card">
-        <div class="about-icon">◎</div>
+        <div class="about-icon"><app-icon name="target" [size]="22" /></div>
         <h3>Set your priorities</h3>
         <p>
           Assign priorities and labels to make
@@ -111,7 +111,7 @@
 
     <button type="button" class="about-button" (click)="openBoards()">
       Explore your boards
-      <span aria-hidden="true">→</span>
+      <app-icon name="arrow-right" />
     </button>
   </section>
 </div>
