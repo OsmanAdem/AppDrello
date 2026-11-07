@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -59,7 +60,7 @@ import { RevealPasswordDirective } from '../shared/reveal-password.directive';
     </main>
   `,
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   mode: 'login' | 'register' = 'login';
   name = '';
   email = '';
@@ -68,6 +69,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   expired = false;
   passwordReset = false;
+  private subscription?: Subscription;
 
   constructor(
     private auth: AuthService,
@@ -76,14 +78,29 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.expired = this.route.snapshot.queryParamMap.get('expired') === 'true';
-    this.passwordReset = this.route.snapshot.queryParamMap.get('reset') === 'done';
+    // /login and /signup both show this page. The route says which form to show, so the
+    // navbar's "Log in" link always opens the login form, even from the sign-up form.
+    this.subscription = this.route.data.subscribe(data => {
+      this.mode = data['mode'] === 'register' ? 'register' : 'login';
+      this.error = '';
+    });
+    this.subscription.add(this.route.queryParamMap.subscribe(params => {
+      this.expired = params.get('expired') === 'true';
+      this.passwordReset = params.get('reset') === 'done';
+    }));
     if (this.auth.isLoggedIn) this.goToBoards();
   }
 
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
+  /** Goes to the other form, and keeps "where to go after logging in" (returnUrl). */
   switchMode(): void {
-    this.mode = this.mode === 'login' ? 'register' : 'login';
-    this.error = '';
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigate([this.mode === 'login' ? '/signup' : '/login'], {
+      queryParams: returnUrl ? { returnUrl } : {}
+    });
   }
 
   submit(): void {
