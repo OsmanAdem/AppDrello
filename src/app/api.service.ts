@@ -134,16 +134,18 @@ export class ApiService {
     });
   }
 
-  saveSprints(boardId: string, sprints: Sprint[]): Observable<void> {
-    return this.http.put<void>(`${API_URL}/boards/${boardId}/sprints`, { sprints });
+  // For sprints, fields and automations, only the ids in `removedIds` are deleted on the server.
+
+  saveSprints(boardId: string, sprints: Sprint[], removedIds: string[] = []): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/sprints`, { sprints, removedIds });
   }
 
-  saveCustomFields(boardId: string, fields: CustomFieldDefinition[]): Observable<void> {
-    return this.http.put<void>(`${API_URL}/boards/${boardId}/fields`, { fields });
+  saveCustomFields(boardId: string, fields: CustomFieldDefinition[], removedIds: string[] = []): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/fields`, { fields, removedIds });
   }
 
-  saveAutomations(boardId: string, automations: AutomationRule[]): Observable<void> {
-    return this.http.put<void>(`${API_URL}/boards/${boardId}/automations`, { automations });
+  saveAutomations(boardId: string, automations: AutomationRule[], removedIds: string[] = []): Observable<void> {
+    return this.http.put<void>(`${API_URL}/boards/${boardId}/automations`, { automations, removedIds });
   }
 
   clearActivity(boardId: string): Observable<void> {

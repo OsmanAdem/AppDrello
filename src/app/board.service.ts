@@ -94,6 +94,8 @@ export class BoardService {
    * deletes cards someone else just added to a shared board.
    */
   private serverIds = new Map<string, { columnIds: Set<string>; cardIds: Set<string> }>();
+  /** The same idea for sprints, fields and automations: "<boardId>:<part>" → ids the server has. */
+  private serverListIds = new Map<string, Set<string>>();
 
   /** Boards with changes that failed to reach the server. They are sent again before the next sync. */
   private unsavedBoards = new Set<string>();
@@ -162,6 +164,9 @@ export class BoardService {
       this.writeBoards([...boards, state.board]);
       this.writeLocalColumns(boardId, state.columns);
       this.rememberServerIds(boardId, state.columns);
+      this.rememberListIds(boardId, 'sprints', state.sprints);
+      this.rememberListIds(boardId, 'fields', state.fields);
+      this.rememberListIds(boardId, 'automations', state.automations);
       this.writeLocal(`drello-sprints-${boardId}`, state.sprints);
       this.writeLocal(`drello-fields-${boardId}`, state.fields);
       this.writeLocal(`drello-automations-${boardId}`, state.automations);
@@ -227,11 +232,14 @@ export class BoardService {
   private async uploadBundle(bundle: BoardBundle): Promise<void> {
     const boardId = bundle.board.id;
     await firstValueFrom(this.api.saveBoard(bundle.board));
-    await firstValueFrom(this.api.saveCustomFields(boardId, bundle.fields));
-    await firstValueFrom(this.api.saveSprints(boardId, bundle.sprints));
+    await firstValueFrom(this.api.saveCustomFields(boardId, bundle.fields, this.removedFromList(boardId, 'fields', bundle.fields)));
+    this.rememberListIds(boardId, 'fields', bundle.fields);
+    await firstValueFrom(this.api.saveSprints(boardId, bundle.sprints, this.removedFromList(boardId, 'sprints', bundle.sprints)));
+    this.rememberListIds(boardId, 'sprints', bundle.sprints);
     await firstValueFrom(this.api.saveColumns(boardId, bundle.columns, this.removedSince(boardId, bundle.columns)));
     this.rememberServerIds(boardId, bundle.columns);
-    await firstValueFrom(this.api.saveAutomations(boardId, bundle.automations));
+    await firstValueFrom(this.api.saveAutomations(boardId, bundle.automations, this.removedFromList(boardId, 'automations', bundle.automations)));
+    this.rememberListIds(boardId, 'automations', bundle.automations);
   }
 
   // ----- Keeping changes safe across log out -----
@@ -610,6 +618,33 @@ export class BoardService {
     };
   }
 
+  /**
+   * Saves a list (sprints, fields or automations) and tells the server which items were
+   * removed since the last confirmed save. Remembered only after the server answers.
+   */
+  private sendList(
+    boardId: string,
+    part: 'sprints' | 'fields' | 'automations',
+    items: { id: string }[],
+    request: (removedIds: string[]) => Observable<void>
+  ): void {
+    const removed = this.removedFromList(boardId, part, items);
+    this.sendToServer(boardId, () => request(removed).pipe(
+      tap(() => this.rememberListIds(boardId, part, items))
+    ));
+  }
+
+  private removedFromList(boardId: string, part: string, items: { id: string }[]): string[] {
+    const known = this.serverListIds.get(`${boardId}:${part}`);
+    if (!known) return [];
+    const current = new Set(items.map(item => item.id));
+    return [...known].filter(id => !current.has(id));
+  }
+
+  private rememberListIds(boardId: string, part: string, items: { id: string }[]): void {
+    this.serverListIds.set(`${boardId}:${part}`, new Set(items.map(item => item.id)));
+  }
+
   private rememberServerIds(boardId: string, columns: Column[]): void {
     this.serverIds.set(boardId, {
       columnIds: new Set(columns.map(column => column.id)),
@@ -647,7 +682,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-sprints-${boardId}`, JSON.stringify(sprints));
-    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveSprints(boardId, sprints));
+    if (boardId !== 'default') this.sendList(boardId, 'sprints', sprints, removed => this.api.saveSprints(boardId, sprints, removed));
   }
 
   // ----- Custom fields -----
@@ -669,7 +704,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-fields-${boardId}`, JSON.stringify(fields));
-    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveCustomFields(boardId, fields));
+    if (boardId !== 'default') this.sendList(boardId, 'fields', fields, removed => this.api.saveCustomFields(boardId, fields, removed));
   }
 
   // ----- Automations -----
@@ -691,7 +726,7 @@ export class BoardService {
     if (!this.isBrowser) return;
 
     localStorage.setItem(`drello-automations-${boardId}`, JSON.stringify(rules));
-    if (boardId !== 'default') this.sendToServer(boardId, () => this.api.saveAutomations(boardId, rules));
+    if (boardId !== 'default') this.sendList(boardId, 'automations', rules, removed => this.api.saveAutomations(boardId, rules, removed));
   }
 
   // ----- Templates -----

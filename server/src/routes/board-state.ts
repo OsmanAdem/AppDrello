@@ -7,8 +7,9 @@ import { toActivity, toAutomation, toBoard, toCard, toColumn, toField, toSprint 
 
 /**
  * The endpoints the Angular app uses to keep a whole board in sync.
- * Each PUT replaces one part of a board with the list the app sends:
- * rows in the list are inserted or updated, rows missing from it are deleted.
+ * Each PUT saves one part of a board: rows in the list are inserted or updated, and
+ * only the rows the app lists as removed are deleted. Rows that are simply missing stay,
+ * because on a shared board someone else may have just added them.
  * Everything runs in a transaction, so a board is never left half-saved.
  */
 export const boardStateRouter = Router();
@@ -18,6 +19,12 @@ const PRIORITIES = new Set(['', 'Low', 'Medium', 'High']);
 /** Empty strings and missing values become NULL in the database. */
 function orNull(value: unknown): unknown {
   return value === undefined || value === '' ? null : value;
+}
+
+/** The ids the app says the user removed. Only these are deleted, so on a shared board
+ *  a save never deletes what someone else just added. */
+function removedIds(body: any): string[] {
+  return Array.isArray(body?.removedIds) ? body.removedIds.map(String) : [];
 }
 
 function asArray(value: unknown, fieldName: string): any[] {
@@ -164,15 +171,15 @@ boardStateRouter.put('/:id/columns', asyncHandler(async (req, res) => {
   res.status(204).end();
 }));
 
-// PUT /api/boards/:id/sprints { sprints: [...] }
+// PUT /api/boards/:id/sprints { sprints: [...], removedIds?: [...] }
 boardStateRouter.put('/:id/sprints', asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
   const sprints = asArray(req.body.sprints, 'sprints');
 
   await withTransaction(async client => {
     await lockBoard(client, boardId, userIdOf(res));
-    await client.query('DELETE FROM sprints WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
-      [boardId, sprints.map(sprint => String(sprint.id))]);
+    await client.query('DELETE FROM sprints WHERE board_id = $1 AND id = ANY($2::text[])',
+      [boardId, removedIds(req.body)]);
 
     for (const sprint of sprints) {
       await client.query(
@@ -190,15 +197,15 @@ boardStateRouter.put('/:id/sprints', asyncHandler(async (req, res) => {
   res.status(204).end();
 }));
 
-// PUT /api/boards/:id/fields { fields: [...] }
+// PUT /api/boards/:id/fields { fields: [...], removedIds?: [...] }
 boardStateRouter.put('/:id/fields', asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
   const fields = asArray(req.body.fields, 'fields');
 
   await withTransaction(async client => {
     await lockBoard(client, boardId, userIdOf(res));
-    await client.query('DELETE FROM custom_field_definitions WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
-      [boardId, fields.map(field => String(field.id))]);
+    await client.query('DELETE FROM custom_field_definitions WHERE board_id = $1 AND id = ANY($2::text[])',
+      [boardId, removedIds(req.body)]);
 
     for (const [position, field] of fields.entries()) {
       await client.query(
@@ -215,15 +222,15 @@ boardStateRouter.put('/:id/fields', asyncHandler(async (req, res) => {
   res.status(204).end();
 }));
 
-// PUT /api/boards/:id/automations { automations: [...] }
+// PUT /api/boards/:id/automations { automations: [...], removedIds?: [...] }
 boardStateRouter.put('/:id/automations', asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
   const rules = asArray(req.body.automations, 'automations');
 
   await withTransaction(async client => {
     await lockBoard(client, boardId, userIdOf(res));
-    await client.query('DELETE FROM automations WHERE board_id = $1 AND NOT (id = ANY($2::text[]))',
-      [boardId, rules.map(rule => String(rule.id))]);
+    await client.query('DELETE FROM automations WHERE board_id = $1 AND id = ANY($2::text[])',
+      [boardId, removedIds(req.body)]);
 
     for (const [position, rule] of rules.entries()) {
       await client.query(
