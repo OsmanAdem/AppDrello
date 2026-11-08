@@ -99,6 +99,7 @@
       <input
         type="search"
         [(ngModel)]="taskSearch"
+        (ngModelChange)="saveFilters()"
         placeholder="Search tasks"
         aria-label="Search tasks">
       <button
@@ -106,7 +107,7 @@
         *ngIf="taskSearch"
         class="clear-search"
         aria-label="Clear task search"
-        (click)="taskSearch = ''"><app-icon name="x" [size]="14" /></button>
+        (click)="taskSearch = ''; saveFilters()"><app-icon name="x" [size]="14" /></button>
     </label>
     <app-filter-menu name="Priority" [options]="priorityMenuOptions" [selected]="priorityFilters" (selectedChange)="setPriorityFilters($event)" />
     <app-filter-menu name="Label" [options]="labelMenuOptions" [selected]="labelFilters" (selectedChange)="setLabelFilters($event)" />

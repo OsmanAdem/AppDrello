@@ -803,6 +803,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   toggleActiveSprintFilter(): void {
     this.showActiveSprintOnly = !this.showActiveSprintOnly;
+    this.saveFilters();
   }
 
   getSprintName(card: Card): string {
@@ -901,14 +902,14 @@ export class BoardComponent implements OnInit, OnDestroy {
     for (const priority of this.priorityFilterOptions.filter(option => this.priorityFilters.includes(option.value))) {
       chips.push({
         label: priority.value === 'none' ? 'No priority' : `${priority.label} priority`,
-        clear: () => (this.priorityFilters = this.priorityFilters.filter(value => value !== priority.value))
+        clear: () => this.setPriorityFilters(this.priorityFilters.filter(value => value !== priority.value))
       });
     }
     for (const label of this.labelFilterOptions.filter(option => this.labelFilters.includes(option.value))) {
-      chips.push({ label: label.label, clear: () => (this.labelFilters = this.labelFilters.filter(value => value !== label.value)) });
+      chips.push({ label: label.label, clear: () => this.setLabelFilters(this.labelFilters.filter(value => value !== label.value)) });
     }
-    if (this.showActiveSprintOnly && this.activeSprint) chips.push({ label: this.activeSprint.name, clear: () => (this.showActiveSprintOnly = false) });
-    if (this.taskSearch.trim()) chips.push({ label: `“${this.taskSearch.trim()}”`, clear: () => (this.taskSearch = '') });
+    if (this.showActiveSprintOnly && this.activeSprint) chips.push({ label: this.activeSprint.name, clear: () => this.toggleActiveSprintFilter() });
+    if (this.taskSearch.trim()) chips.push({ label: `“${this.taskSearch.trim()}”`, clear: () => { this.taskSearch = ''; this.saveFilters(); } });
     return chips;
   }
 
@@ -935,10 +936,12 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   setPriorityFilters(values: string[]): void {
     this.priorityFilters = values as PriorityFilter[];
+    this.saveFilters();
   }
 
   setLabelFilters(values: string[]): void {
     this.labelFilters = values as LabelFilter[];
+    this.saveFilters();
   }
 
   /** How many cards have this priority (shown in the Priority menu). */
@@ -974,6 +977,53 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.labelFilters = [];
     this.taskSearch = '';
     this.showActiveSprintOnly = false;
+    this.saveFilters();
+  }
+
+  // ----- Remembering the filters -----
+  //
+  // The filters are saved per board in this browser, so they are still on after a reload.
+  // They are cleared when someone logs out (like all board data in the browser).
+
+  private get filtersKey(): string {
+    return `drello-filters-${this.boardId}`;
+  }
+
+  saveFilters(): void {
+    if (!this.isBrowser) return;
+    try {
+      const filters = {
+        priority: this.priorityFilters,
+        label: this.labelFilters,
+        sprintOnly: this.showActiveSprintOnly,
+        search: this.taskSearch
+      };
+      const empty = !filters.priority.length && !filters.label.length && !filters.sprintOnly && !filters.search.trim();
+      if (empty) localStorage.removeItem(this.filtersKey);
+      else localStorage.setItem(this.filtersKey, JSON.stringify(filters));
+    } catch {
+      // Storage can be blocked (private mode). The filters then just reset on reload.
+    }
+  }
+
+  private restoreFilters(): void {
+    this.priorityFilters = [];
+    this.labelFilters = [];
+    this.taskSearch = '';
+    this.showActiveSprintOnly = false;
+    if (!this.isBrowser) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.filtersKey) ?? 'null');
+      if (!saved) return;
+      const priorities = this.priorityFilterOptions.map(option => option.value);
+      const labels = this.labelFilterOptions.map(option => option.value);
+      this.priorityFilters = (Array.isArray(saved.priority) ? saved.priority : []).filter((value: PriorityFilter) => priorities.includes(value));
+      this.labelFilters = (Array.isArray(saved.label) ? saved.label : []).filter((value: LabelFilter) => labels.includes(value));
+      this.showActiveSprintOnly = saved.sprintOnly === true;
+      this.taskSearch = typeof saved.search === 'string' ? saved.search : '';
+    } catch {
+      // Unreadable or blocked storage: start without filters.
+    }
   }
 
   private matchesPriority(card: Card, filter: PriorityFilter): boolean {
@@ -1150,6 +1200,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     const savedLocally = boardId === 'default' ||
       this.boardService.getBoards().some(board => board.id === boardId);
 
+    this.restoreFilters();
     if (savedLocally) this.loadBoard();
     this.startLiveUpdates(boardId);
 
@@ -1175,7 +1226,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.columns = this.boardService.loadColumns(this.boardId);
     this.lastSavedColumns = this.cloneColumns(this.columns);
     this.sprints = this.boardService.getSprints(this.boardId);
-    this.showActiveSprintOnly = false;
+    if (!this.activeSprint) this.showActiveSprintOnly = false;
     this.customFields = this.boardService.getCustomFields(this.boardId);
     this.automations = this.boardService.getAutomations(this.boardId);
     this.activity = this.boardService.getActivity(this.boardId);

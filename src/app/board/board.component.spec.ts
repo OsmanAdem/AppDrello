@@ -89,6 +89,22 @@ describe('BoardComponent', () => {
     expect(component.countLabel('Bug')).toBe(2);
   });
 
+  it('remembers the filters for this board after a reload', () => {
+    component.setPriorityFilters(['High', 'Low']);
+    component.setLabelFilters(['Bug']);
+
+    // A reload starts a fresh component, which reads the saved filters back.
+    const reloaded = TestBed.createComponent(BoardComponent).componentInstance;
+    reloaded.boardId = component.boardId;
+    (reloaded as unknown as { restoreFilters(): void }).restoreFilters();
+
+    expect(reloaded.priorityFilters).toEqual(['High', 'Low']);
+    expect(reloaded.labelFilters).toEqual(['Bug']);
+
+    reloaded.clearFilters();
+    expect(localStorage.getItem(`drello-filters-${component.boardId}`)).toBeNull();
+  });
+
   it('runs an automation when a card is moved into a column', () => {
     const [todo, , done] = component.columns;
     todo.cards.push({ id: 'c1', boardId: component.boardId, columnId: todo.id, title: 'Ship it' });
