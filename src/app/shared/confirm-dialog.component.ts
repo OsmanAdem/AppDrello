@@ -47,7 +47,7 @@ import { ConfirmService, OpenDialog } from './confirm.service';
     </div>
   `,
   styles: [`
-    .confirm-backdrop { position: fixed; inset: 0; z-index: 1400; display: grid; place-items: center; padding: 20px; background: rgba(12, 16, 27, .45); backdrop-filter: blur(4px); animation: confirm-fade .14s ease; }
+    .confirm-backdrop { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; padding: 20px; background: rgba(12, 16, 27, .45); backdrop-filter: blur(4px); animation: confirm-fade .14s ease; }
     .confirm-dialog { width: min(100%, 420px); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-lg); animation: confirm-lift .18s ease-out; }
     .confirm-icon { display: grid; width: 40px; height: 40px; margin-bottom: 14px; place-items: center; border-radius: 12px; background: var(--accent-soft); color: var(--accent); font-size: 20px; font-weight: 800; }
     .confirm-icon.is-danger { background: var(--danger-soft); color: var(--danger-strong); }
