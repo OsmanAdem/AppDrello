@@ -65,7 +65,12 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     expect(page.querySelector('.user-dropdown')).not.toBeNull();
 
-    document.body.click();
+    // A card that stops clicks from bubbling must still close the menu.
+    const card = document.createElement('div');
+    card.addEventListener('pointerdown', event => event.stopPropagation());
+    document.body.appendChild(card);
+    card.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    card.remove();
     fixture.detectChanges();
 
     expect(page.querySelector('.user-dropdown')).toBeNull();

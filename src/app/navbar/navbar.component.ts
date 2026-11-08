@@ -1,4 +1,5 @@
-import { Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Inject, NgZone, OnDestroy, OnInit, Output, PLATFORM_ID, ViewChild } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { InvitationService } from '../shared/invitation.service';
@@ -22,7 +23,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     public auth: AuthService,
     public boards: BoardService,
     public invitations: InvitationService,
-    private router: Router
+    private router: Router,
+    private zone: NgZone,
+    @Inject(PLATFORM_ID) private platformId: object
   ) {}
 
   showUserMenu = false;
@@ -35,6 +38,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private navigationSubscription?: Subscription;
 
   ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      document.addEventListener('pointerdown', this.closeOnOutsidePointer, true);
+    }
     // Logging in or out always changes the page, so that's when we check whose invitations to show.
     this.invitations.followLoggedInUser();
     this.navigationSubscription = this.router.events
@@ -46,6 +52,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      document.removeEventListener('pointerdown', this.closeOnOutsidePointer, true);
+    }
     this.navigationSubscription?.unsubscribe();
   }
 
@@ -76,13 +85,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   @ViewChild('userMenu') userMenu?: ElementRef<HTMLElement>;
 
-  /** A click anywhere outside the user menu closes it (like any native menu). */
-  @HostListener('document:click', ['$event'])
-  closeUserMenuOnOutsideClick(event: MouseEvent): void {
+  /**
+   * A click or tap anywhere outside the user menu closes it, like any native menu.
+   * It listens in the "capture" phase, before the page handles the click, because cards,
+   * columns and panels stop clicks from travelling further (stopPropagation).
+   */
+  private readonly closeOnOutsidePointer = (event: Event): void => {
     if (this.showUserMenu && !this.userMenu?.nativeElement.contains(event.target as Node)) {
-      this.showUserMenu = false;
+      this.zone.run(() => (this.showUserMenu = false));
     }
-  }
+  };
 
   @HostListener('document:keydown.escape')
   cancelLogout(): void {
