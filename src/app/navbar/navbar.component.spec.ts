@@ -37,8 +37,14 @@ describe('NavbarComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('shows "Log in" when nobody is logged in', () => {
+  it('shows "Log in" and hides "Boards" when nobody is logged in', () => {
     expect(fixture.nativeElement.textContent).toContain('Log in');
+    expect(fixture.nativeElement.textContent).not.toContain('Boards');
+  });
+
+  it('shows "Boards" once logged in', () => {
+    loginAs('Osman Adem');
+    expect(fixture.nativeElement.textContent).toContain('Boards');
   });
 
   it('shows the logged-in user as initials and first name, with a menu', () => {

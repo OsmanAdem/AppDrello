@@ -7,11 +7,11 @@
 
     <div class="navbar-menu">
       <a class="navbar-link" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-      <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">
+      <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active" *ngIf="auth.isLoggedIn">
         Boards
         <span
           class="nav-badge"
-          *ngIf="auth.isLoggedIn && invitations.count"
+          *ngIf="invitations.count"
           [attr.aria-label]="invitations.count + (invitations.count === 1 ? ' invitation' : ' invitations')"
           [title]="invitations.count + (invitations.count === 1 ? ' invitation waiting' : ' invitations waiting')">{{ invitations.count }}</span>
       </a>
