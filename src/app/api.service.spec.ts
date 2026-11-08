@@ -33,21 +33,4 @@ describe('ApiService', () => {
     expect(request.request.body).toEqual({ name: 'New', columns: ['A', 'B'] });
     request.flush({});
   });
-
-  it('sends only the changed fields with PATCH /cards/:id', () => {
-    service.updateCard('c1', { priority: 'High' }).subscribe();
-
-    const request = http.expectOne(`${API_URL}/cards/c1`);
-    expect(request.request.method).toBe('PATCH');
-    expect(request.request.body).toEqual({ priority: 'High' });
-    request.flush({});
-  });
-
-  it('moves a card with POST /cards/:id/move', () => {
-    service.moveCard('c1', 'col2', 0).subscribe();
-
-    const request = http.expectOne(`${API_URL}/cards/c1/move`);
-    expect(request.request.body).toEqual({ columnId: 'col2', position: 0 });
-    request.flush({});
-  });
 });

@@ -8,7 +8,6 @@ import {
   BoardInvitation,
   BoardMember,
   BoardTemplate,
-  Card,
   Column,
   CustomFieldDefinition,
   Sprint
@@ -21,12 +20,6 @@ import { environment } from '../environments/environment';
  * localhost while developing, the deployed server's address in the live app.
  */
 export const API_URL = environment.apiUrl;
-
-/** The card fields the API lets you change with PATCH /cards/:id. */
-export type CardUpdate = Partial<Pick<Card,
-  'title' | 'priority' | 'label' | 'description' | 'assignee' |
-  'startDate' | 'dueDate' | 'sprintId' | 'checklist' | 'customFields'
->>;
 
 /** Everything the app needs to show one board, as GET /boards/:id/state returns it. */
 export interface BoardState {
@@ -78,33 +71,6 @@ export class ApiService {
 
   addColumn(boardId: string, title: string): Observable<Column> {
     return this.http.post<Column>(`${API_URL}/boards/${boardId}/columns`, { title });
-  }
-
-  renameColumn(columnId: string, title: string): Observable<Column> {
-    return this.http.patch<Column>(`${API_URL}/columns/${columnId}`, { title });
-  }
-
-  deleteColumn(columnId: string): Observable<void> {
-    return this.http.delete<void>(`${API_URL}/columns/${columnId}`);
-  }
-
-  // ----- Cards -----
-
-  addCard(columnId: string, title: string): Observable<Card> {
-    return this.http.post<Card>(`${API_URL}/columns/${columnId}/cards`, { title });
-  }
-
-  updateCard(cardId: string, changes: CardUpdate): Observable<Card> {
-    return this.http.patch<Card>(`${API_URL}/cards/${cardId}`, changes);
-  }
-
-  /** Drag and drop: put the card in `columnId` at `position` (0 = top). */
-  moveCard(cardId: string, columnId: string, position: number): Observable<Card> {
-    return this.http.post<Card>(`${API_URL}/cards/${cardId}/move`, { columnId, position });
-  }
-
-  deleteCard(cardId: string): Observable<void> {
-    return this.http.delete<void>(`${API_URL}/cards/${cardId}`);
   }
 
   // ----- Sync: save or load a whole board at once (used by BoardService) -----

@@ -8,8 +8,6 @@ import { requireAuth } from './auth';
 import { authRouter } from './routes/auth';
 import { boardsRouter } from './routes/boards';
 import { boardStateRouter } from './routes/board-state';
-import { cardsRouter } from './routes/cards';
-import { columnsRouter } from './routes/columns';
 import { templatesRouter } from './routes/templates';
 import { membersRouter } from './routes/members';
 import { invitationsRouter } from './routes/invitations';
@@ -54,8 +52,6 @@ app.use('/api/boards', requireAuth, boardStateRouter);
 app.use('/api/boards', requireAuth, membersRouter);
 app.use('/api/invitations', requireAuth, invitationsRouter);
 app.use('/api/templates', requireAuth, templatesRouter);
-app.use('/api/columns', requireAuth, columnsRouter);
-app.use('/api/cards', requireAuth, cardsRouter);
 
 // Unknown address → 404
 app.use((_req, res) => {
