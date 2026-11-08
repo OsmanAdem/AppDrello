@@ -4,5 +4,5 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://YOUR-SERVER-ADDRESS/api'
+  apiUrl: 'https://drello-api.onrender.com/api'
 };
