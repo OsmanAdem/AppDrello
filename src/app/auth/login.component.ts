@@ -49,6 +49,9 @@ import { describeAuthError } from './auth-errors';
           <a *ngIf="mode === 'login'" class="auth-forgot" routerLink="/forgot-password">Forgot password?</a>
 
           <p class="auth-error" *ngIf="error" role="alert">{{ error }}</p>
+          <p class="auth-notice" *ngIf="loading && slowServer" role="status">
+            Waking up the server. The first visit can take up to a minute, after that it's fast.
+          </p>
 
           <button type="submit" class="auth-submit" [disabled]="loading">
             {{ loading ? 'Please wait…' : (mode === 'login' ? 'Log in' : 'Create account') }}
@@ -70,6 +73,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   password = '';
   error = '';
   loading = false;
+  /** True when the server takes long to answer: the free hosting is starting it up. */
+  slowServer = false;
+  private slowTimer?: ReturnType<typeof setTimeout>;
   expired = false;
   passwordReset = false;
   private subscription?: Subscription;
@@ -95,6 +101,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.slowTimer);
     this.subscription?.unsubscribe();
   }
 
@@ -120,6 +127,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
+    // A normal answer takes well under a second. If it takes longer, explain why.
+    this.slowServer = false;
+    clearTimeout(this.slowTimer);
+    this.slowTimer = setTimeout(() => (this.slowServer = true), 3000);
     const request = this.mode === 'login'
       ? this.auth.login(this.email.trim(), this.password)
       : this.auth.register(this.name.trim(), this.email.trim(), this.password);
@@ -128,6 +139,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: () => this.goToBoards(),
       error: (error: HttpErrorResponse) => {
         this.loading = false;
+        this.slowServer = false;
+        clearTimeout(this.slowTimer);
         this.error = describeAuthError(error);
       }
     });
