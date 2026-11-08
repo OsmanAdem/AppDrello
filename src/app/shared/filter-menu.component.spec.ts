@@ -39,6 +39,19 @@ describe('FilterMenuComponent', () => {
     expect(menu.selected).toEqual(['High']);
   });
 
+  it('checks a box when it is clicked, even though the counts are recalculated', () => {
+    (fixture.nativeElement.querySelector('.filter-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    menu.options = menu.options.map(option => ({ ...option })); // a new list, like the board makes
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('input[type=checkbox]')[1] as HTMLInputElement).click();
+    fixture.detectChanges();
+
+    expect(emitted).toEqual([['Medium']]);
+    expect((fixture.nativeElement.querySelectorAll('input[type=checkbox]')[1] as HTMLInputElement).checked).toBeTrue();
+  });
+
   it('opens a list of checkboxes, and closes when pressing outside', () => {
     (fixture.nativeElement.querySelector('.filter-button') as HTMLButtonElement).click();
     fixture.detectChanges();

@@ -31,7 +31,7 @@ export interface FilterMenuOption {
     </button>
 
     <div class="filter-popover" *ngIf="open" role="group" [attr.aria-label]="'Filter by ' + name">
-      <label class="filter-option" *ngFor="let option of options">
+      <label class="filter-option" *ngFor="let option of options; trackBy: trackByValue">
         <input type="checkbox" [checked]="isSelected(option.value)" (change)="toggle(option.value)">
         <span class="filter-option-label">{{ option.label }}</span>
         <span class="filter-option-count">{{ option.count }}</span>
@@ -85,6 +85,14 @@ export class FilterMenuComponent implements OnInit, OnDestroy {
     if (!this.selected.length) return 'All';
     const labels = this.options.filter(option => this.selected.includes(option.value)).map(option => option.label);
     return labels.length > 2 ? `${labels.length} selected` : labels.join(', ');
+  }
+
+  /**
+   * Keep the same checkbox elements when the options list is rebuilt (the counts change).
+   * Without this, Angular replaces them mid-click, and the click is lost.
+   */
+  trackByValue(_index: number, option: FilterMenuOption): string {
+    return option.value;
   }
 
   isSelected(value: string): boolean {
