@@ -56,7 +56,7 @@ Plan work on boards with columns and cards, schedule it on a calendar and a time
 | Backend | Node.js, Express, TypeScript |
 | Database | PostgreSQL |
 | Security | bcrypt password hashing, JWT login tokens, owner checks on every request, rate limiting |
-| Email | Nodemailer over SMTP |
+| Email | Brevo's email API (or any SMTP provider through Nodemailer) |
 | Tests | Jasmine and Karma |
 
 ## How it fits together
@@ -94,7 +94,7 @@ Open http://localhost:4200 and create an account.
 
 ### Email (optional)
 
-"Forgot password" sends a reset link. Without email settings, the server prints the email in its terminal instead. To send real emails, fill in the `SMTP_*` settings in `server/.env`. Any SMTP provider works, for example Gmail with an App Password.
+"Forgot password" and invitations send emails. Without email settings, the server prints them in its terminal instead. To send real emails, set `BREVO_API_KEY` and `EMAIL_FROM` (a sender verified in Brevo) in `server/.env`, or fill in the `SMTP_*` settings for any SMTP provider, for example Gmail with an App Password.
 
 ## Scripts
 
