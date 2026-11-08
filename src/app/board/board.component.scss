@@ -187,43 +187,6 @@
 .clear-search { display: grid; flex: 0 0 21px; place-items: center; width: 21px; height: 21px; border: 0; border-radius: 6px; background: transparent; color: var(--text-subtle); font-size: 16px; cursor: pointer; }
 .clear-search:hover { background: var(--accent-soft); color: var(--accent); }
 
-.filter-select {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color .15s ease, background-color .15s ease;
-}
-
-.filter-select:hover,
-.filter-select:focus-within { border-color: var(--accent-border); }
-.filter-select:focus-within { box-shadow: 0 0 0 3px rgba(81, 70, 216, .08); }
-.filter-select.is-active { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-hover); }
-.filter-select-name { font-weight: 650; }
-.filter-select select {
-  min-width: 0;
-  padding: 0 18px 0 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text-strong);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-}
-.filter-select.is-active select { color: var(--accent-hover); }
-.filter-select app-icon { position: absolute; right: 9px; pointer-events: none; color: var(--text-subtle); }
-
 .clear-filters {
   display: inline-flex;
   align-items: center;
@@ -482,8 +445,7 @@
   }
 
   /* Priority and Label share a row; each takes half the width. */
-  .filter-select { flex: 1 1 40%; }
-  .filter-select select { flex: 1; }
+  app-filter-menu { flex: 1 1 40%; }
 
   .results-bar {
     align-items: flex-start;

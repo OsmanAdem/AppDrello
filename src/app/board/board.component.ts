@@ -11,6 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { IconName } from '../shared/icon.component';
 import { LiveBoardService } from '../shared/live-board.service';
+import { FilterMenuOption } from '../shared/filter-menu.component';
 import {
   AutomationAction,
   AutomationRule,
@@ -37,9 +38,9 @@ import {
   toDateKey
 } from '../shared/date-utils';
 
-/** Filters on the board. '' = no filter, 'none' = cards without a priority/label. */
-type PriorityFilter = '' | 'High' | 'Medium' | 'Low' | 'none';
-type LabelFilter = '' | 'Bug' | 'Feature' | 'Improvement' | 'Planning' | 'Completed' | 'none';
+/** Values for the board filters. 'none' = cards without a priority/label. */
+type PriorityFilter = 'High' | 'Medium' | 'Low' | 'none';
+type LabelFilter = 'Bug' | 'Feature' | 'Improvement' | 'Planning' | 'Completed' | 'none';
 
 type BoardView = 'board' | 'calendar' | 'timeline' | 'backlog';
 
@@ -80,8 +81,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   columns: Column[] = [];
   boardId = 'default';
   boardName = '';
-  priorityFilter: PriorityFilter = '';
-  labelFilter: LabelFilter = '';
+  /** The checked values in each filter menu. Empty = no filter (show all). */
+  priorityFilters: PriorityFilter[] = [];
+  labelFilters: LabelFilter[] = [];
   taskSearch = '';
   activeView: BoardView = 'board';
   timelineStart = startOfWeek(new Date());
@@ -134,13 +136,13 @@ export class BoardComponent implements OnInit, OnDestroy {
   activity: BoardActivity[] = [];
   selectedCalendarCard: Card | null = null;
   readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  readonly priorityFilterOptions: { value: Exclude<PriorityFilter, ''>; label: string }[] = [
+  readonly priorityFilterOptions: { value: PriorityFilter; label: string }[] = [
     { value: 'High', label: 'High' },
     { value: 'Medium', label: 'Medium' },
     { value: 'Low', label: 'Low' },
     { value: 'none', label: 'No priority' }
   ];
-  readonly labelFilterOptions: { value: Exclude<LabelFilter, ''>; label: string }[] = [
+  readonly labelFilterOptions: { value: LabelFilter; label: string }[] = [
     { value: 'Bug', label: 'Bug' },
     { value: 'Feature', label: 'Feature' },
     { value: 'Improvement', label: 'Improvement' },
@@ -890,16 +892,21 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   get filtersActive(): boolean {
-    return !!this.priorityFilter || !!this.labelFilter || !!this.taskSearch.trim() || this.showActiveSprintOnly;
+    return this.priorityFilters.length > 0 || this.labelFilters.length > 0 || !!this.taskSearch.trim() || this.showActiveSprintOnly;
   }
 
   /** The filters that are on, shown as small removable chips under the toolbar. */
   get activeFilters(): { label: string; clear: () => void }[] {
     const chips: { label: string; clear: () => void }[] = [];
-    const priority = this.priorityFilterOptions.find(option => option.value === this.priorityFilter);
-    if (priority) chips.push({ label: priority.value === 'none' ? 'No priority' : `${priority.label} priority`, clear: () => (this.priorityFilter = '') });
-    const label = this.labelFilterOptions.find(option => option.value === this.labelFilter);
-    if (label) chips.push({ label: label.label, clear: () => (this.labelFilter = '') });
+    for (const priority of this.priorityFilterOptions.filter(option => this.priorityFilters.includes(option.value))) {
+      chips.push({
+        label: priority.value === 'none' ? 'No priority' : `${priority.label} priority`,
+        clear: () => (this.priorityFilters = this.priorityFilters.filter(value => value !== priority.value))
+      });
+    }
+    for (const label of this.labelFilterOptions.filter(option => this.labelFilters.includes(option.value))) {
+      chips.push({ label: label.label, clear: () => (this.labelFilters = this.labelFilters.filter(value => value !== label.value)) });
+    }
     if (this.showActiveSprintOnly && this.activeSprint) chips.push({ label: this.activeSprint.name, clear: () => (this.showActiveSprintOnly = false) });
     if (this.taskSearch.trim()) chips.push({ label: `“${this.taskSearch.trim()}”`, clear: () => (this.taskSearch = '') });
     return chips;
@@ -914,6 +921,24 @@ export class BoardComponent implements OnInit, OnDestroy {
       (total, column) => total + this.getFilteredCards(column).length,
       0
     );
+  }
+
+  /** The choices in the Priority menu, with how many cards each one matches. */
+  get priorityMenuOptions(): FilterMenuOption[] {
+    return this.priorityFilterOptions.map(option => ({ ...option, count: this.countPriority(option.value) }));
+  }
+
+  /** The choices in the Label menu, with how many cards each one matches. */
+  get labelMenuOptions(): FilterMenuOption[] {
+    return this.labelFilterOptions.map(option => ({ ...option, count: this.countLabel(option.value) }));
+  }
+
+  setPriorityFilters(values: string[]): void {
+    this.priorityFilters = values as PriorityFilter[];
+  }
+
+  setLabelFilters(values: string[]): void {
+    this.labelFilters = values as LabelFilter[];
   }
 
   /** How many cards have this priority (shown in the Priority menu). */
@@ -932,8 +957,10 @@ export class BoardComponent implements OnInit, OnDestroy {
     return column.cards.filter(card => {
       const matchesSprint = ignoreSprintFilter || !this.showActiveSprintOnly ||
         (!!activeSprintId && card.sprintId === activeSprintId);
-      const matchesFilters = this.matchesPriority(card, this.priorityFilter) &&
-        this.matchesLabel(card, column, this.labelFilter);
+      // Within a menu any checked value may match; across menus both must match.
+      const matchesFilters =
+        (!this.priorityFilters.length || this.priorityFilters.some(value => this.matchesPriority(card, value))) &&
+        (!this.labelFilters.length || this.labelFilters.some(value => this.matchesLabel(card, column, value)));
       const searchableText = [card.title, card.description, card.issueKey]
         .filter(Boolean)
         .join(' ')
@@ -943,19 +970,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.priorityFilter = '';
-    this.labelFilter = '';
+    this.priorityFilters = [];
+    this.labelFilters = [];
     this.taskSearch = '';
     this.showActiveSprintOnly = false;
   }
 
   private matchesPriority(card: Card, filter: PriorityFilter): boolean {
-    if (!filter) return true;
     return filter === 'none' ? !card.priority : card.priority === filter;
   }
 
   private matchesLabel(card: Card, column: Column, filter: LabelFilter): boolean {
-    if (!filter) return true;
     if (filter === 'none') return !card.label;
     if (filter === 'Completed') return this.isCompleted(card, column);
     return card.label === filter;

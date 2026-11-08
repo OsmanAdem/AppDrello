@@ -108,22 +108,8 @@
         aria-label="Clear task search"
         (click)="taskSearch = ''"><app-icon name="x" [size]="14" /></button>
     </label>
-    <label class="filter-select" [class.is-active]="priorityFilter">
-      <span class="filter-select-name">Priority</span>
-      <select name="priorityFilter" [(ngModel)]="priorityFilter" aria-label="Filter by priority">
-        <option value="">All</option>
-        <option *ngFor="let option of priorityFilterOptions" [value]="option.value">{{ option.label }} ({{ countPriority(option.value) }})</option>
-      </select>
-      <app-icon name="chevron-down" [size]="14" />
-    </label>
-    <label class="filter-select" [class.is-active]="labelFilter">
-      <span class="filter-select-name">Label</span>
-      <select name="labelFilter" [(ngModel)]="labelFilter" aria-label="Filter by label">
-        <option value="">All</option>
-        <option *ngFor="let option of labelFilterOptions" [value]="option.value">{{ option.label }} ({{ countLabel(option.value) }})</option>
-      </select>
-      <app-icon name="chevron-down" [size]="14" />
-    </label>
+    <app-filter-menu name="Priority" [options]="priorityMenuOptions" [selected]="priorityFilters" (selectedChange)="setPriorityFilters($event)" />
+    <app-filter-menu name="Label" [options]="labelMenuOptions" [selected]="labelFilters" (selectedChange)="setLabelFilters($event)" />
     <button type="button" class="clear-filters" *ngIf="filtersActive" (click)="clearFilters()">
       <app-icon name="x" [size]="14" /> Clear filters
     </button>

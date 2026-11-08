@@ -7,6 +7,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BoardComponent } from './board.component';
 import { BoardService } from '../board.service';
 import { IconComponent } from '../shared/icon.component';
+import { FilterMenuComponent } from '../shared/filter-menu.component';
 
 describe('BoardComponent', () => {
   let fixture: ComponentFixture<BoardComponent>;
@@ -17,7 +18,7 @@ describe('BoardComponent', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       declarations: [BoardComponent],
-      imports: [FormsModule, RouterModule.forRoot([]), IconComponent],
+      imports: [FormsModule, RouterModule.forRoot([]), IconComponent, FilterMenuComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()], // no real requests in tests
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
@@ -59,7 +60,7 @@ describe('BoardComponent', () => {
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['1']);
 
     component.taskSearch = '';
-    component.priorityFilter = 'Low';
+    component.priorityFilters = ['Low'];
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['2']);
   });
 
@@ -71,13 +72,16 @@ describe('BoardComponent', () => {
       { id: 'c', boardId: component.boardId, columnId: todo.id, title: 'Typo', priority: 'Low', label: 'Bug' }
     );
 
-    component.priorityFilter = 'High';
-    component.labelFilter = 'Bug';
+    component.priorityFilters = ['High'];
+    component.labelFilters = ['Bug'];
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a']);
     expect(component.activeFilters.map(chip => chip.label)).toEqual(['High priority', 'Bug']);
 
-    component.activeFilters[1].clear(); // remove "Bug"
-    expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'b']);
+    component.priorityFilters = ['High', 'Low']; // several in one menu: any of them
+    expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'c']);
+
+    component.activeFilters.find(chip => chip.label === 'Bug')!.clear();
+    expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'b', 'c']);
 
     component.clearFilters();
     expect(component.filtersActive).toBeFalse();
