@@ -22,7 +22,7 @@ export interface FilterMenuOption {
       class="filter-button"
       [class.is-active]="selected.length"
       [class.is-open]="open"
-      (click)="open = !open"
+      (click)="toggleOpen()"
       aria-haspopup="true"
       [attr.aria-expanded]="open">
       <span class="filter-name">{{ name }}</span>
@@ -30,7 +30,7 @@ export interface FilterMenuOption {
       <app-icon name="chevron-down" [size]="14" />
     </button>
 
-    <div class="filter-popover" *ngIf="open" role="group" [attr.aria-label]="'Filter by ' + name">
+    <div class="filter-popover" *ngIf="open" [class.align-right]="alignRight" role="group" [attr.aria-label]="'Filter by ' + name">
       <label class="filter-option" *ngFor="let option of options; trackBy: trackByValue">
         <input type="checkbox" [checked]="isSelected(option.value)" (change)="toggle(option.value)">
         <span class="filter-option-label">{{ option.label }}</span>
@@ -53,7 +53,8 @@ export interface FilterMenuOption {
     .filter-button app-icon { margin-left: auto; color: var(--text-subtle); transition: transform .15s ease; }
     .filter-button.is-open app-icon { transform: rotate(180deg); }
 
-    .filter-popover { position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; display: flex; flex-direction: column; min-width: 210px; padding: 6px; border: 1px solid var(--line-soft); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); animation: filter-in .12s ease-out; }
+    .filter-popover { position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; display: flex; flex-direction: column; min-width: 210px; max-width: calc(100vw - 24px); padding: 6px; border: 1px solid var(--line-soft); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); animation: filter-in .12s ease-out; }
+    .filter-popover.align-right { left: auto; right: 0; }
     .filter-option { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 7px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; }
     .filter-option:hover { background: var(--accent-soft); }
     .filter-option input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
@@ -73,6 +74,8 @@ export class FilterMenuComponent implements OnInit, OnDestroy {
   @Output() selectedChange = new EventEmitter<string[]>();
 
   open = false;
+  /** Open the list towards the left when the button is near the right edge (phones). */
+  alignRight = false;
 
   constructor(
     private host: ElementRef<HTMLElement>,
@@ -93,6 +96,14 @@ export class FilterMenuComponent implements OnInit, OnDestroy {
    */
   trackByValue(_index: number, option: FilterMenuOption): string {
     return option.value;
+  }
+
+  toggleOpen(): void {
+    if (!this.open && isPlatformBrowser(this.platformId)) {
+      const button = this.host.nativeElement.getBoundingClientRect();
+      this.alignRight = button.left + 220 > window.innerWidth;
+    }
+    this.open = !this.open;
   }
 
   isSelected(value: string): boolean {

@@ -466,3 +466,9 @@
     animation: none;
   }
 }
+
+/* Small phones: the four views keep only their names, so they fit side by side. */
+@media (max-width: 380px) {
+  .board-view-switch button app-icon { display: none; }
+  .board-view-switch button { padding: 0 2px; font-size: 11px; }
+}

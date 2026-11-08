@@ -150,3 +150,13 @@
 /* "Sign up" stands out a little, as the main action for new visitors */
 .navbar-signup { border-color: var(--accent-border); color: var(--accent-hover); }
 @media (max-width: 600px) { .navbar-signup { display: none; } }
+
+/* Small phones (iPhone SE and similar): keep only the logo square and tighten the spacing,
+   so Home, Boards, About, the theme button and the avatar all fit on one line. */
+@media (max-width: 400px) {
+  .brand-name { display: none; }
+  .navbar.container { width: calc(100% - 20px); }
+  .navbar-link { padding: 0 8px; }
+  .theme-toggle { width: 34px; height: 34px; margin-left: 2px; }
+  .user-menu { margin-left: 4px; }
+}
