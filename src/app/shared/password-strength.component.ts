@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { checkPassword, MIN_PASSWORD_LENGTH, PasswordCheck } from './password-strength';
 
@@ -11,7 +11,6 @@ import { checkPassword, MIN_PASSWORD_LENGTH, PasswordCheck } from './password-st
   selector: 'app-password-strength',
   standalone: true,
   imports: [CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <small class="strength-hint" *ngIf="!password">{{ emptyHint }}</small>
     <div class="strength" *ngIf="password" [attr.data-score]="check.score">
