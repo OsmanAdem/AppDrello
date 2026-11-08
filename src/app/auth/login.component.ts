@@ -6,12 +6,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { RevealPasswordDirective } from '../shared/reveal-password.directive';
+import { PasswordStrengthComponent } from '../shared/password-strength.component';
+import { checkPassword } from '../shared/password-strength';
 
 /** One page for both logging in and creating an account. */
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective],
+  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective, PasswordStrengthComponent],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="auth-title">
@@ -41,7 +43,7 @@ import { RevealPasswordDirective } from '../shared/reveal-password.directive';
               [(ngModel)]="password"
               [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
               required>
-            <small *ngIf="mode === 'register'">At least 8 characters.</small>
+            <app-password-strength *ngIf="mode === 'register'" [password]="password" [personal]="[name, email]" />
           </label>
           <a *ngIf="mode === 'login'" class="auth-forgot" routerLink="/forgot-password">Forgot password?</a>
 
@@ -110,8 +112,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.error = 'Please fill in all fields.';
       return;
     }
-    if (this.mode === 'register' && this.password.length < 8) {
-      this.error = 'The password must be at least 8 characters.';
+    const weakness = this.mode === 'register' ? checkPassword(this.password, [this.name, this.email]).problem : null;
+    if (weakness) {
+      this.error = weakness;
       return;
     }
 

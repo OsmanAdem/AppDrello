@@ -75,6 +75,24 @@ describe('LoginComponent', () => {
     expect(text()).toContain('Wrong email or password.');
   });
 
+  it('shows password strength on sign-up, and refuses a weak password', async () => {
+    const signup = await harness.navigateByUrl('/signup', LoginComponent);
+    signup.name = 'Osman Adem';
+    signup.email = 'osman@example.com';
+    signup.password = 'password123';
+    harness.detectChanges();
+    expect(text()).toContain('Weak');
+
+    signup.submit();
+    harness.detectChanges();
+    http.expectNone(`${API_URL}/auth/register`);
+    expect(text()).toContain('very common password');
+
+    signup.password = 'purple-horse-runs-fast';
+    harness.detectChanges();
+    expect(text()).toContain('Strong');
+  });
+
   it('asks for all fields before sending anything', async () => {
     const login = await harness.navigateByUrl('/login', LoginComponent);
     login.submit();

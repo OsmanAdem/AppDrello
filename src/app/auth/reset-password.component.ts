@@ -6,12 +6,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from './auth.service';
 import { describeAuthError } from './auth-errors';
 import { RevealPasswordDirective } from '../shared/reveal-password.directive';
+import { PasswordStrengthComponent } from '../shared/password-strength.component';
+import { checkPassword } from '../shared/password-strength';
 
 /** Step 2 of "forgot password": the page the reset link opens. */
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective],
+  imports: [CommonModule, FormsModule, RouterLink, RevealPasswordDirective, PasswordStrengthComponent],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="reset-title">
@@ -23,7 +25,7 @@ import { RevealPasswordDirective } from '../shared/reveal-password.directive';
             <label>
               <span>New password</span>
               <input name="password" type="password" appRevealPassword [(ngModel)]="password" autocomplete="new-password" required>
-              <small>At least 8 characters.</small>
+              <app-password-strength [password]="password" />
             </label>
             <label>
               <span>Repeat new password</span>
@@ -64,8 +66,9 @@ export class ResetPasswordComponent implements OnInit {
 
   submit(): void {
     this.error = '';
-    if (this.password.length < 8) {
-      this.error = 'The password must be at least 8 characters.';
+    const weakness = checkPassword(this.password).problem;
+    if (weakness) {
+      this.error = weakness;
       return;
     }
     if (this.password !== this.confirm) {

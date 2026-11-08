@@ -5,6 +5,7 @@ import { pool, withTransaction } from '../db';
 import { createToken, requireAuth, userIdOf } from '../auth';
 import { asyncHandler, HttpError, requireText } from '../http';
 import { sendEmail } from '../email';
+import { checkPassword } from '../password-strength';
 import { APP_URL } from '../app-url';
 import { byEmail, byIp, rateLimit } from '../rate-limit';
 
@@ -17,9 +18,14 @@ function toUser(row: any) {
   return { id: row.id, name: row.name, email: row.email };
 }
 
-function readNewPassword(value: unknown): string {
+/**
+ * Reads a new password and refuses weak ones: too short, very common, simple patterns,
+ * or containing the user's own name or email (`personal`). The app shows the same check while typing.
+ */
+function readNewPassword(value: unknown, personal: string[] = []): string {
   const password = typeof value === 'string' ? value : '';
-  if (password.length < 8) throw new HttpError(400, 'The password must be at least 8 characters.');
+  const { problem } = checkPassword(password, personal);
+  if (problem) throw new HttpError(400, problem);
   return password;
 }
 
@@ -43,7 +49,7 @@ const registerLimit = rateLimit({ max: 10, windowMinutes: 60, key: req => 'regis
 authRouter.post('/register', registerLimit, asyncHandler(async (req, res) => {
   const name = requireText(req.body.name, 'name');
   const email = readEmail(req.body.email);
-  const password = readNewPassword(req.body.password);
+  const password = readNewPassword(req.body.password, [name, email]);
 
   const passwordHash = await bcrypt.hash(password, HASH_ROUNDS);
 
@@ -97,7 +103,6 @@ authRouter.get('/me', requireAuth, asyncHandler(async (_req, res) => {
 // POST /api/auth/change-password { currentPassword, newPassword } → for a logged-in user
 authRouter.post('/change-password', requireAuth, asyncHandler(async (req, res) => {
   const userId = userIdOf(res);
-  const newPassword = readNewPassword(req.body.newPassword);
   const currentPassword = typeof req.body.currentPassword === 'string' ? req.body.currentPassword : '';
 
   const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
@@ -105,6 +110,7 @@ authRouter.post('/change-password', requireAuth, asyncHandler(async (req, res) =
   if (!rows[0] || !(await bcrypt.compare(currentPassword, rows[0].password_hash))) {
     throw new HttpError(400, 'Your current password is wrong.');
   }
+  const newPassword = readNewPassword(req.body.newPassword, [rows[0].name, rows[0].email]);
 
   await pool.query(
     'UPDATE users SET password_hash = $1, password_changed_at = now() WHERE id = $2',
@@ -156,7 +162,7 @@ authRouter.post('/forgot-password', ...resetEmailLimit, asyncHandler(async (req,
 // POST /api/auth/reset-password { token, password } → sets a new password with a reset link
 authRouter.post('/reset-password', asyncHandler(async (req, res) => {
   const token = requireText(req.body.token, 'token');
-  const password = readNewPassword(req.body.password);
+  readNewPassword(req.body.password); // basic check first; the name/email check needs the user below
 
   await withTransaction(async client => {
     const { rows } = await client.query(
@@ -167,6 +173,9 @@ authRouter.post('/reset-password', asyncHandler(async (req, res) => {
     );
     const reset = rows[0];
     if (!reset) throw new HttpError(400, 'This reset link is invalid or has expired. Please ask for a new one.');
+
+    const owner = await client.query('SELECT name, email FROM users WHERE id = $1', [reset.user_id]);
+    const password = readNewPassword(req.body.password, [owner.rows[0]?.name, owner.rows[0]?.email]);
 
     await client.query(
       'UPDATE users SET password_hash = $1, password_changed_at = now() WHERE id = $2',

@@ -8,12 +8,14 @@ import { describeAuthError } from './auth-errors';
 import { BoardService } from '../board.service';
 import { ConfirmService } from '../shared/confirm.service';
 import { RevealPasswordDirective } from '../shared/reveal-password.directive';
+import { PasswordStrengthComponent } from '../shared/password-strength.component';
+import { checkPassword } from '../shared/password-strength';
 
 /** The logged-in user's account page: who you are, and changing your password. */
 @Component({
   selector: 'app-account',
   standalone: true,
-  imports: [CommonModule, FormsModule, RevealPasswordDirective],
+  imports: [CommonModule, FormsModule, RevealPasswordDirective, PasswordStrengthComponent],
   template: `
     <main class="auth-page">
       <section class="auth-card" aria-labelledby="account-title">
@@ -29,7 +31,8 @@ import { RevealPasswordDirective } from '../shared/reveal-password.directive';
           <label>
             <span>New password</span>
             <input name="new" type="password" appRevealPassword [(ngModel)]="newPassword" autocomplete="new-password" required>
-            <small>At least 8 characters. You'll be logged out on your other devices.</small>
+            <app-password-strength [password]="newPassword" [personal]="[auth.user?.name, auth.user?.email]"
+              emptyHint="At least 8 characters. You'll be logged out on your other devices." />
           </label>
           <label>
             <span>Repeat new password</span>
@@ -128,8 +131,9 @@ export class AccountComponent {
       this.error = 'Enter your current password.';
       return;
     }
-    if (this.newPassword.length < 8) {
-      this.error = 'The new password must be at least 8 characters.';
+    const weakness = checkPassword(this.newPassword, [this.auth.user?.name ?? '', this.auth.user?.email ?? '']).problem;
+    if (weakness) {
+      this.error = weakness;
       return;
     }
     if (this.newPassword !== this.confirm) {
