@@ -1,11 +1,9 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { pool } from './db';
+import { applySchema } from './schema';
 
-/** Creates the tables from db/schema.sql. Safe to run more than once. */
+/** Creates the tables from db/schema.sql. Safe to run more than once. (The server also does this when it starts.) */
 async function setup(): Promise<void> {
-  const schema = readFileSync(join(__dirname, '..', 'db', 'schema.sql'), 'utf8');
-  await pool.query(schema);
+  await applySchema();
   console.log('Database tables are ready.');
   await pool.end();
 }

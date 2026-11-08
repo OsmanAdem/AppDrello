@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { pool } from './db';
+import { applySchema } from './schema';
 import { HttpError } from './http';
 import { requireAuth } from './auth';
 import { authRouter } from './routes/auth';
@@ -72,6 +73,11 @@ app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Something went wrong on the server.' });
 });
 
-app.listen(port, () => {
-  console.log(`AppDrello API running on http://localhost:${port}`);
-});
+// Bring the database up to date first (new tables or columns), then start answering requests.
+applySchema()
+  .catch(error => console.error('Could not update the database tables:', error.message))
+  .finally(() => {
+    app.listen(port, () => {
+      console.log(`AppDrello API running on http://localhost:${port}`);
+    });
+  });
