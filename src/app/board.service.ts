@@ -14,6 +14,7 @@ interface BoardBundle {
 import {
   AutomationRule,
   BoardActivity,
+  BoardInvitation,
   BoardMember,
   BoardTemplate,
   Card,
@@ -326,6 +327,28 @@ export class BoardService {
 
   removeMember(boardId: string, userId: string): Promise<BoardMember[]> {
     return firstValueFrom(this.api.removeMember(boardId, userId));
+  }
+
+  // ----- Invitations -----
+
+  /** Invitations to other people's boards that wait for an answer. Empty if the server can't be reached. */
+  async getInvitations(): Promise<BoardInvitation[]> {
+    if (!this.isBrowser) return [];
+    try {
+      return await firstValueFrom(this.api.getInvitations());
+    } catch {
+      return [];
+    }
+  }
+
+  /** Accepts an invitation: the board is added to the list, under "Shared with you". */
+  async acceptInvitation(boardId: string): Promise<void> {
+    const board = await firstValueFrom(this.api.acceptInvitation(boardId));
+    this.writeBoards([...this.readStoredBoards().filter(item => item.id !== boardId), board]);
+  }
+
+  declineInvitation(boardId: string): Promise<void> {
+    return firstValueFrom(this.api.declineInvitation(boardId));
   }
 
   /** Leaves a board someone shared with you, and removes it from this browser. */

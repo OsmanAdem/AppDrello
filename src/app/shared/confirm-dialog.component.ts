@@ -38,7 +38,7 @@ import { ConfirmService, OpenDialog } from './confirm.service';
         </form>
 
         <div class="confirm-actions">
-          <button type="button" class="confirm-cancel" *ngIf="dialog.kind !== 'notice'" (click)="dialogs.answer(false)" #cancelButton>Cancel</button>
+          <button type="button" class="confirm-cancel" *ngIf="dialog.kind !== 'notice'" (click)="dialogs.answer(false)" #cancelButton>{{ dialog.cancelLabel }}</button>
           <button type="button" class="confirm-ok" [class.is-danger]="dialog.danger" (click)="dialogs.answer(true)" #okButton>
             {{ dialog.confirmLabel }}
           </button>

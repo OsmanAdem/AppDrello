@@ -65,12 +65,14 @@ export function userIdOf(res: Response): string {
 
 /**
  * SQL condition: "the user owns this board or is a member of it".
+ * Someone who has only been invited (and not accepted yet) has no access.
  * `userParam` is the query parameter that holds the user's id, e.g. '$2'.
  * Used everywhere a board is read or changed, so sharing works the same in every route.
  */
 export function canAccessBoard(userParam: string): string {
   return `(boards.owner_id = ${userParam} OR EXISTS (
-    SELECT 1 FROM board_members m WHERE m.board_id = boards.id AND m.user_id = ${userParam}))`;
+    SELECT 1 FROM board_members m
+     WHERE m.board_id = boards.id AND m.user_id = ${userParam} AND m.status = 'accepted'))`;
 }
 
 export type BoardRole = 'owner' | 'member';

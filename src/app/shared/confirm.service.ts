@@ -7,6 +7,8 @@ export interface ConfirmOptions {
   message: string;
   /** Text on the confirm button, e.g. "Delete board". */
   confirmLabel: string;
+  /** Text on the other button. Default "Cancel". */
+  cancelLabel?: string;
   /** Red confirm button for actions that delete something. */
   danger?: boolean;
 }
@@ -37,6 +39,7 @@ export interface OpenDialog {
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel: string;
   danger: boolean;
   label: string;
   placeholder: string;
@@ -64,6 +67,7 @@ export class ConfirmService {
       kind: 'confirm',
       ...options,
       danger: !!options.danger,
+      cancelLabel: options.cancelLabel ?? 'Cancel',
       finish: resolve
     }));
   }
@@ -113,7 +117,7 @@ export class ConfirmService {
     this.current?.finish(false);
 
     const dialog: OpenDialog = {
-      message: '', danger: false, label: '', placeholder: '', maxLength: 80,
+      message: '', cancelLabel: 'Cancel', danger: false, label: '', placeholder: '', maxLength: 80,
       emptyError: '', value: '', error: '',
       ...partial
     };

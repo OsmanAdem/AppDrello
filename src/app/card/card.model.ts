@@ -106,7 +106,17 @@ export interface BoardMember {
   name: string;
   email: string;
   role: BoardRole;
+  /** 'pending' = invited, but hasn't accepted yet. */
+  status?: 'pending' | 'accepted';
   addedAt?: string;
+}
+
+/** An invitation to someone else's board, waiting for Accept or Decline. */
+export interface BoardInvitation {
+  boardId: string;
+  boardName: string;
+  ownerName: string;
+  invitedAt: string;
 }
 
 export interface BoardActivity {

@@ -507,7 +507,7 @@
 <div class="panel-backdrop" *ngIf="showSharePanel" (click)="closeSharePanel()">
   <div class="side-panel fields-panel share-panel" role="dialog" aria-modal="true" aria-labelledby="share-title" (click)="$event.stopPropagation()">
     <header class="side-panel-header">
-      <div><p class="panel-eyebrow">SHARING</p><h2 id="share-title">Share “{{ boardName }}”</h2><p>Everyone here can open the board and work on its cards.</p></div>
+      <div><p class="panel-eyebrow">SHARING</p><h2 id="share-title">Share “{{ boardName }}”</h2><p>Everyone here can open the board and work on its cards. Invited people get access when they accept.</p></div>
       <button type="button" class="panel-close" aria-label="Close sharing" (click)="closeSharePanel()"><app-icon name="x" [size]="18" /></button>
     </header>
 
@@ -518,7 +518,7 @@
           <span>Their email</span>
           <input name="inviteEmail" type="email" [(ngModel)]="inviteEmail" (ngModelChange)="inviteError = ''" placeholder="name@example.com" autocomplete="off">
         </label>
-        <p class="share-hint">They need a Drello account with this email. We'll send them a link to the board.</p>
+        <p class="share-hint">They need a Drello account with this email. They'll get an invitation to accept or decline.</p>
         <p class="fields-error" *ngIf="inviteError" role="alert">{{ inviteError }}</p>
         <p class="share-success" *ngIf="inviteSuccess" role="status">{{ inviteSuccess }}</p>
         <button type="submit" class="fields-add" [disabled]="inviting">{{ inviting ? 'Inviting…' : 'Invite' }}</button>
@@ -538,13 +538,13 @@
                 <small>{{ member.email }}</small>
               </span>
             </div>
-            <span class="member-role" [class.is-owner]="member.role === 'owner'">{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+            <span class="member-role" [class.is-owner]="member.role === 'owner'" [class.is-pending]="member.status === 'pending'">{{ member.role === 'owner' ? 'Owner' : member.status === 'pending' ? 'Invited' : 'Member' }}</span>
             <button
               type="button"
               class="fields-remove"
               *ngIf="isOwner && member.role !== 'owner'"
               (click)="removeMember(member)"
-              [attr.aria-label]="'Remove ' + member.name"><app-icon name="x" [size]="14" /></button>
+              [attr.aria-label]="(member.status === 'pending' ? 'Cancel the invitation to ' : 'Remove ') + member.name"><app-icon name="x" [size]="14" /></button>
           </li>
         </ul>
       </section>

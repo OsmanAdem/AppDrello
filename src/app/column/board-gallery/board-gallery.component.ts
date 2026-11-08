@@ -8,7 +8,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../shared/icon.component';
-import { Board, BoardTemplate } from '../../card/card.model';
+import { Board, BoardInvitation, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
 import { AuthService } from '../../auth/auth.service';
 import { ConfirmService, quoted } from '../../shared/confirm.service';
@@ -33,7 +33,30 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
         </div>
       </header>
 
-      <h2 class="section-title" *ngIf="sharedBoards.length && ownBoards.length">Your boards</h2>
+      <section class="invitations" *ngIf="invitations.length" aria-labelledby="invitations-title">
+        <h2 class="section-title" id="invitations-title">
+          Invitations <span class="invitation-count">{{ invitations.length }}</span>
+        </h2>
+        <ul class="invitation-list">
+          <li *ngFor="let invitation of invitations" class="invitation">
+            <span class="preview-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+            <span class="board-info">
+              <span class="board-name">{{ invitation.boardName }}</span>
+              <span class="board-meta">{{ invitation.ownerName }} invited you · {{ invitation.invitedAt | date:'mediumDate' }}</span>
+            </span>
+            <span class="invitation-actions">
+              <button type="button" class="invitation-decline" [disabled]="answering === invitation.boardId"
+                (click)="declineInvitation(invitation)" [attr.aria-label]="'Decline the invitation to ' + invitation.boardName">Decline</button>
+              <button type="button" class="invitation-accept" [disabled]="answering === invitation.boardId"
+                (click)="acceptInvitation(invitation)" [attr.aria-label]="'Accept the invitation to ' + invitation.boardName">
+                <app-icon name="check" [size]="15" /> Accept
+              </button>
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <h2 class="section-title" *ngIf="(sharedBoards.length || invitations.length) && ownBoards.length">Your boards</h2>
       <section class="boards-grid" *ngIf="ownBoards.length > 0" aria-label="Your boards">
         <article *ngFor="let board of ownBoards" class="board-card">
           <button type="button" class="board-open" (click)="goToBoard(board.id)" [attr.aria-label]="'Open ' + board.name">
@@ -123,6 +146,22 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
     .header-actions { display: flex; align-items: center; gap: 16px; }
     .section-title { margin: 28px 0 12px; color: var(--text-strong); font-size: 15px; font-weight: 750; letter-spacing: -.01em; }
     .section-title:first-of-type { margin-top: 0; }
+    .invitations .section-title { display: flex; align-items: center; gap: 8px; margin-top: 0; }
+    .invitation-count { padding: 1px 8px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; }
+    .invitation-list { display: grid; gap: 10px; margin: 0 0 8px; padding: 0; list-style: none; }
+    .invitation { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 13px; border: 1px solid var(--accent-border); border-radius: 15px; background: var(--board-card-bg); box-shadow: var(--shadow-sm); }
+    .invitation .board-info { flex: 1; }
+    .invitation-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+    .invitation-actions button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+    .invitation-actions button:disabled { opacity: .6; cursor: default; }
+    .invitation-decline { border: 1px solid var(--line); background: transparent; color: var(--text-muted); }
+    .invitation-decline:hover:not(:disabled) { border-color: var(--danger-strong); color: var(--danger-strong); }
+    .invitation-accept { border: 1px solid var(--accent); background: var(--accent); color: #fff; }
+    .invitation-accept:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    @media (max-width: 560px) {
+      .invitation { flex-wrap: wrap; }
+      .invitation-actions { width: 100%; justify-content: flex-end; }
+    }
     .board-total { color: var(--text-muted); font-size: 12px; font-weight: 650; }
     .create-board-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--accent); border-radius: 11px; background: linear-gradient(135deg, var(--accent), var(--accent)); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(81,70,216,.18); transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
     .create-board-btn:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(81,70,216,.24); }
@@ -212,10 +251,57 @@ export class BoardGalleryComponent implements OnInit {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
+  /** Invitations to other people's boards, waiting for Accept or Decline. */
+  invitations: BoardInvitation[] = [];
+  /** The board id of the invitation being answered (its buttons are disabled meanwhile). */
+  answering = '';
+
   ngOnInit(): void {
     this.refreshBoards();
     // Show the copy in this browser right away, then the latest list from the server.
     this.boardService.syncBoards().then(() => this.refreshBoards());
+    this.loadInvitations();
+  }
+
+  private async loadInvitations(): Promise<void> {
+    this.invitations = await this.boardService.getInvitations();
+  }
+
+  async acceptInvitation(invitation: BoardInvitation): Promise<void> {
+    this.answering = invitation.boardId;
+    try {
+      await this.boardService.acceptInvitation(invitation.boardId);
+      this.invitations = this.invitations.filter(item => item.boardId !== invitation.boardId);
+      this.refreshBoards();
+    } catch {
+      await this.confirm.notify({
+        title: "Couldn't accept the invitation",
+        message: `${invitation.ownerName} may have cancelled it. Check that the server is running and try again.`
+      });
+      await this.loadInvitations();
+    } finally {
+      this.answering = '';
+    }
+  }
+
+  async declineInvitation(invitation: BoardInvitation): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `Decline ${quoted(invitation.boardName)}?`,
+      message: `The board won't be added to your boards. ${invitation.ownerName} can invite you again later.`,
+      confirmLabel: 'Decline',
+      danger: true
+    });
+    if (!confirmed) return;
+
+    this.answering = invitation.boardId;
+    try {
+      await this.boardService.declineInvitation(invitation.boardId);
+    } catch {
+      // Already gone (cancelled by the owner) – either way it shouldn't show anymore.
+    } finally {
+      this.invitations = this.invitations.filter(item => item.boardId !== invitation.boardId);
+      this.answering = '';
+    }
   }
 
   private refreshBoards(): void {

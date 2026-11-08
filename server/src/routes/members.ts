@@ -10,17 +10,20 @@ import { rateLimit } from '../rate-limit';
 export const membersRouter = Router();
 
 function toMember(row: any) {
-  return { id: row.id, name: row.name, email: row.email, role: row.role, addedAt: row.added_at ?? undefined };
+  return {
+    id: row.id, name: row.name, email: row.email, role: row.role,
+    status: row.status ?? 'accepted', addedAt: row.added_at ?? undefined
+  };
 }
 
-/** The owner first, then members in the order they were added. */
+/** The owner first, then members and invited people in the order they were added. */
 async function listMembers(boardId: string) {
   const { rows } = await pool.query(
-    `SELECT users.id, users.name, users.email, 'owner' AS role, NULL::timestamptz AS added_at, 0 AS sort
+    `SELECT users.id, users.name, users.email, 'owner' AS role, 'accepted' AS status, NULL::timestamptz AS added_at, 0 AS sort
        FROM boards JOIN users ON users.id = boards.owner_id
       WHERE boards.id = $1
      UNION ALL
-     SELECT users.id, users.name, users.email, board_members.role, board_members.added_at, 1 AS sort
+     SELECT users.id, users.name, users.email, board_members.role, board_members.status, board_members.added_at, 1 AS sort
        FROM board_members JOIN users ON users.id = board_members.user_id
       WHERE board_members.board_id = $1
      ORDER BY sort, added_at`,
@@ -29,7 +32,7 @@ async function listMembers(boardId: string) {
   return rows.map(toMember);
 }
 
-// GET /api/boards/:id/members → everyone who can open the board
+// GET /api/boards/:id/members → everyone who can open the board, and who is invited
 membersRouter.get('/:id/members', asyncHandler(async (req, res) => {
   await assertBoardAccess(req.params['id'], userIdOf(res));
   res.json(await listMembers(req.params['id']));
@@ -41,7 +44,8 @@ const inviteLimit = rateLimit({
   message: "You've invited many people in a short time. Please wait a while and try again."
 });
 
-// POST /api/boards/:id/members { email } → the owner shares the board with someone who has an account
+// POST /api/boards/:id/members { email } → the owner invites someone who has an account.
+// They get an invitation (status 'pending') and can open the board once they accept it.
 membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
   const ownerId = userIdOf(res);
@@ -56,10 +60,16 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
   if (invitee.id === ownerId) throw new HttpError(400, "That's you. You already own this board.");
 
   const added = await pool.query(
-    'INSERT INTO board_members (board_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *',
+    `INSERT INTO board_members (board_id, user_id, status) VALUES ($1, $2, 'pending')
+     ON CONFLICT DO NOTHING RETURNING *`,
     [boardId, invitee.id]
   );
-  if (!added.rows[0]) throw new HttpError(409, `${invitee.name} already has access to this board.`);
+  if (!added.rows[0]) {
+    const existing = await pool.query('SELECT status FROM board_members WHERE board_id = $1 AND user_id = $2', [boardId, invitee.id]);
+    throw new HttpError(409, existing.rows[0]?.status === 'pending'
+      ? `${invitee.name} is already invited. They haven't answered yet.`
+      : `${invitee.name} already has access to this board.`);
+  }
 
   // Tell them by email. If sending fails, the invitation still works.
   const details = await pool.query(
@@ -70,9 +80,9 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
   try {
     await sendEmail(
       invitee.email,
-      `${ownerName} shared "${boardName}" with you`,
-      `Hi ${invitee.name},\n\n${ownerName} shared the board "${boardName}" with you on Drello.\n\n` +
-      `Open it here: ${APP_URL}/boards/${boardId}\n\nYou'll also find it under "Shared with you" on your Boards page.`
+      `${ownerName} invited you to "${boardName}"`,
+      `Hi ${invitee.name},\n\n${ownerName} invited you to work on the board "${boardName}" on Drello.\n\n` +
+      `Accept or decline the invitation on your Boards page: ${APP_URL}/boards`
     );
   } catch (error: any) {
     console.error('Could not send the invitation email:', error?.message ?? error);
@@ -81,7 +91,7 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
   res.status(201).json(await listMembers(boardId));
 }));
 
-// DELETE /api/boards/:id/members/:userId → the owner removes someone, or a member leaves
+// DELETE /api/boards/:id/members/:userId → the owner removes someone (or cancels an invitation), or a member leaves
 membersRouter.delete('/:id/members/:userId', asyncHandler(async (req, res) => {
   const boardId = req.params['id'];
   const me = userIdOf(res);

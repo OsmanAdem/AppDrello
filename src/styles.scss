@@ -503,6 +503,7 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display:
 .member-you { color: var(--text-subtle); font-weight: 600; }
 .member-role { flex: 0 0 auto; padding: 3px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-size: 11px; font-weight: 750; }
 .member-role.is-owner { background: var(--accent-soft); color: var(--accent-hover); }
+.member-role.is-pending { border: 1px dashed var(--line); background: transparent; color: var(--text-subtle); }
 .share-leave { padding-top: 16px; border-top: 1px solid var(--line-soft); }
 .share-leave p { margin: 0 0 12px; color: var(--text-muted); font-size: 13px; }
 .share-leave-button { height: 36px; padding: 0 14px; border: 1px solid var(--danger); border-radius: 9px; background: var(--surface); color: var(--danger-strong); font-family: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }

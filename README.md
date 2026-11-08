@@ -39,7 +39,7 @@ Plan work on boards with columns and cards, schedule it on a calendar and a time
 - Change password, forgot password with a single-use reset link, and delete account
 
 **Teamwork**
-- **Share boards** by email, with owner and member roles
+- **Share boards** by email, with owner and member roles. Invited people accept or decline the invitation on their Boards page
 - **Live updates**: when someone else changes a shared board, it updates on your screen (Server-Sent Events)
 
 **Design**

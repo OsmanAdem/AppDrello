@@ -301,8 +301,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     try {
       this.members = await this.boardService.inviteMember(this.boardId, email);
       const added = this.members.find(member => member.email === email.toLowerCase());
-      this.inviteSuccess = `${added?.name ?? email} can now open this board. We've sent them an email.`;
-      this.recordActivity('Member added', `Shared the board with ${added?.name ?? email}.`);
+      this.inviteSuccess = `Invitation sent to ${added?.name ?? email}. They can open the board once they accept it.`;
+      this.recordActivity('Member invited', `Invited ${added?.name ?? email} to the board.`);
       this.inviteEmail = '';
     } catch (error) {
       this.inviteError = this.describeError(error);
@@ -312,6 +312,24 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   async removeMember(member: BoardMember): Promise<void> {
+    if (member.status === 'pending') {
+      const cancel = await this.confirm.ask({
+        title: `Cancel the invitation to ${member.name}?`,
+        message: `${member.name} won't be able to accept it anymore. You can invite them again later.`,
+        confirmLabel: 'Cancel invitation',
+        cancelLabel: 'Keep it',
+        danger: true
+      });
+      if (!cancel) return;
+      try {
+        this.members = await this.boardService.removeMember(this.boardId, member.id);
+        this.recordActivity('Invitation cancelled', `Cancelled the invitation to ${member.name}.`);
+      } catch (error) {
+        this.inviteError = this.describeError(error);
+      }
+      return;
+    }
+
     const confirmed = await this.confirm.ask({
       title: `Remove ${member.name} from ${quoted(this.boardName)}?`,
       message: `${member.name} won't be able to open this board anymore. Their cards and changes stay on the board.`,

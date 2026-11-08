@@ -5,6 +5,7 @@ import {
   AutomationRule,
   Board,
   BoardActivity,
+  BoardInvitation,
   BoardMember,
   BoardTemplate,
   Card,
@@ -165,6 +166,20 @@ export class ApiService {
   /** Shares the board with the person who has this email (owner only). Returns the new member list. */
   addMember(boardId: string, email: string): Observable<BoardMember[]> {
     return this.http.post<BoardMember[]>(`${API_URL}/boards/${boardId}/members`, { email });
+  }
+
+  /** Invitations to other people's boards that the user hasn't answered yet. */
+  getInvitations(): Observable<BoardInvitation[]> {
+    return this.http.get<BoardInvitation[]>(`${API_URL}/invitations`);
+  }
+
+  /** Accepts an invitation. Returns the board, which now shows under "Shared with you". */
+  acceptInvitation(boardId: string): Observable<Board> {
+    return this.http.post<Board>(`${API_URL}/invitations/${boardId}/accept`, {});
+  }
+
+  declineInvitation(boardId: string): Observable<void> {
+    return this.http.post<void>(`${API_URL}/invitations/${boardId}/decline`, {});
   }
 
   /** Removes someone from the board, or leaves it when userId is your own id. */

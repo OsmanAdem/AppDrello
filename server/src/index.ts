@@ -11,6 +11,7 @@ import { cardsRouter } from './routes/cards';
 import { columnsRouter } from './routes/columns';
 import { templatesRouter } from './routes/templates';
 import { membersRouter } from './routes/members';
+import { invitationsRouter } from './routes/invitations';
 import { announceBoardChanges, liveRouter } from './live';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/boards', announceBoardChanges);
 app.use('/api/boards', requireAuth, boardsRouter);
 app.use('/api/boards', requireAuth, boardStateRouter);
 app.use('/api/boards', requireAuth, membersRouter);
+app.use('/api/invitations', requireAuth, invitationsRouter);
 app.use('/api/templates', requireAuth, templatesRouter);
 app.use('/api/columns', requireAuth, columnsRouter);
 app.use('/api/cards', requireAuth, cardsRouter);

@@ -155,3 +155,11 @@ CREATE TABLE IF NOT EXISTS board_members (
   PRIMARY KEY (board_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS board_members_user_idx ON board_members(user_id);
+
+-- ---------- Invitations ----------
+-- Sharing a board first sends an invitation ('pending'). The person can accept it
+-- ('accepted', then they can open the board) or decline it (the row is deleted).
+-- Boards shared before invitations existed count as accepted.
+ALTER TABLE board_members ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'accepted';
+ALTER TABLE board_members DROP CONSTRAINT IF EXISTS board_members_status_check;
+ALTER TABLE board_members ADD CONSTRAINT board_members_status_check CHECK (status IN ('pending', 'accepted'));
