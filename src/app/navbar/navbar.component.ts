@@ -74,6 +74,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
     setTimeout(() => this.confirmButton?.nativeElement.focus());
   }
 
+  @ViewChild('userMenu') userMenu?: ElementRef<HTMLElement>;
+
+  /** A click anywhere outside the user menu closes it (like any native menu). */
+  @HostListener('document:click', ['$event'])
+  closeUserMenuOnOutsideClick(event: MouseEvent): void {
+    if (this.showUserMenu && !this.userMenu?.nativeElement.contains(event.target as Node)) {
+      this.showUserMenu = false;
+    }
+  }
+
   @HostListener('document:keydown.escape')
   cancelLogout(): void {
     this.showLogoutConfirm = false;

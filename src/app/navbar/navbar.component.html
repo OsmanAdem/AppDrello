@@ -30,7 +30,7 @@
       </button>
 
       <!-- The logged-in user: avatar + first name, opens a menu with Account settings and Log out -->
-      <div class="user-menu" *ngIf="auth.isLoggedIn">
+      <div class="user-menu" *ngIf="auth.isLoggedIn" #userMenu>
         <button
           type="button"
           class="user-button"
@@ -43,7 +43,6 @@
           <span class="user-first-name">{{ firstName }}</span>
           <app-icon name="chevron-down" [size]="14" />
         </button>
-        <div class="menu-dismiss" *ngIf="showUserMenu" (click)="showUserMenu = false"></div>
         <div class="user-dropdown" role="menu" *ngIf="showUserMenu">
           <div class="user-dropdown-header">
             <span class="user-avatar is-large" aria-hidden="true">{{ initials }}</span>

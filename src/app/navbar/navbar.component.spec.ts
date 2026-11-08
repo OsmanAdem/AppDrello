@@ -58,6 +58,19 @@ describe('NavbarComponent', () => {
     expect(menu.textContent).toContain('Log out');
   });
 
+  it('closes the user menu when clicking somewhere else on the page', () => {
+    loginAs('Osman Adem');
+    const page: HTMLElement = fixture.nativeElement;
+    (page.querySelector('.user-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(page.querySelector('.user-dropdown')).not.toBeNull();
+
+    document.body.click();
+    fixture.detectChanges();
+
+    expect(page.querySelector('.user-dropdown')).toBeNull();
+  });
+
   it('shows the number of invitations on "Boards"', () => {
     loginAs('Osman Adem');
     fixture.componentInstance.invitations.invitations = [
