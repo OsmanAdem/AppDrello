@@ -82,7 +82,7 @@ export function checkPassword(password: string, personal: string[] = []): Passwo
     return weak('Use more different characters, not the same few repeated.');
   }
   if (isSequence(lower) || isSequence(lower.replace(/[^a-z0-9]/g, ''))) {
-    return weak('Avoid simple sequences like 12345678 or qwertyui.');
+    return weak('Avoid simple sequences, like numbers or keyboard letters in a row.');
   }
   if (isCommon(lower)) {
     return weak('This is a very common password. Pick something harder to guess.');
