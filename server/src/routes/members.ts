@@ -75,13 +75,16 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
   // Their open Boards page shows the invitation right away.
   notifyUser(invitee.id);
 
-  // Tell them by email. If sending fails, the invitation still works.
-  const details = await pool.query(
-    'SELECT boards.name AS board_name, users.name AS owner_name FROM boards JOIN users ON users.id = boards.owner_id WHERE boards.id = $1',
-    [boardId]
-  );
-  const { board_name: boardName, owner_name: ownerName } = details.rows[0];
+  // Answer the owner right away. The email is sent in the background, because sending
+  // through an email provider can take a few seconds. If it fails, the invitation still works.
+  res.status(201).json(await listMembers(boardId));
+
   try {
+    const details = await pool.query(
+      'SELECT boards.name AS board_name, users.name AS owner_name FROM boards JOIN users ON users.id = boards.owner_id WHERE boards.id = $1',
+      [boardId]
+    );
+    const { board_name: boardName, owner_name: ownerName } = details.rows[0];
     await sendEmail(
       invitee.email,
       `${ownerName} invited you to "${boardName}"`,
@@ -89,10 +92,9 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
       `Accept or decline the invitation on your Boards page: ${APP_URL}/boards`
     );
   } catch (error: any) {
+    // The answer was already sent, so just note it in the server log.
     console.error('Could not send the invitation email:', error?.message ?? error);
   }
-
-  res.status(201).json(await listMembers(boardId));
 }));
 
 // DELETE /api/boards/:id/members/:userId → the owner removes someone (or cancels an invitation), or a member leaves
