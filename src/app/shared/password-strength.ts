@@ -94,13 +94,12 @@ export function checkPassword(password: string, personal: string[] = []): Passwo
   // Allowed. Longer passwords and passphrases of several words score higher.
   const kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(kind => kind.test(password)).length;
   const words = password.split(/[\s\-_.,]+/).filter(word => word.length >= 3).length;
-  let points = 0;
-  if (password.length >= 12) points++;
-  if (password.length >= 16) points++;
-  if (kinds >= 3) points++;
-  if (words >= 3) points++;
-
-  if (points >= 3) return { score: 3, label: 'Strong', problem: null, tip: 'Strong password.' };
-  if (points >= 1) return { score: 2, label: 'Good', problem: null, tip: 'Good. A few more characters make it even stronger.' };
+  const length = password.length;
+  if ((length >= 12 && kinds >= 3) || length >= 16 || (words >= 3 && length >= 14)) {
+    return { score: 3, label: 'Strong', problem: null, tip: 'Strong password.' };
+  }
+  if (length >= 10 || kinds >= 3 || words >= 2) {
+    return { score: 2, label: 'Good', problem: null, tip: 'Good. A few more characters make it strong.' };
+  }
   return { score: 1, label: 'Fair', problem: null, tip: 'Fair. Make it longer, or use a few words, to make it stronger.' };
 }

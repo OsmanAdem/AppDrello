@@ -27,7 +27,8 @@ describe('checkPassword', () => {
 
   it('gives longer passwords and passphrases a higher score', () => {
     assert.equal(checkPassword('mxqbtrwz').label, 'Fair');
-    assert.equal(checkPassword('Kettle9-blue').label, 'Good');
+    assert.equal(checkPassword('Kaffe2026!').label, 'Good');
+    assert.equal(checkPassword('Xk9!mPq2#Lw4').label, 'Strong');
     assert.equal(checkPassword('purple-horse-runs-fast').label, 'Strong');
   });
 });
