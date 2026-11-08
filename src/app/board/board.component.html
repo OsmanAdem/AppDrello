@@ -66,8 +66,8 @@
 
   <p class="sync-warning" *ngIf="hasUnsavedChanges" role="alert">
     <strong>Not saved to the server.</strong>
-    Your latest changes are only in this browser. Check that the server is running
-    (<code>npm run dev</code> in the server folder); they'll be sent again automatically.
+    Your latest changes are only in this browser for now. They'll be sent again automatically
+    as soon as the connection is back<ng-container *ngIf="isDevelopment"> (is the server running? <code>npm run dev</code> in the server folder)</ng-container>.
   </p>
 
   <section class="board-toolbar" aria-label="Task views">

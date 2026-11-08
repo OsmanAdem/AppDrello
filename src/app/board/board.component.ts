@@ -12,6 +12,8 @@ import { Subscription } from 'rxjs';
 import { IconName } from '../shared/icon.component';
 import { LiveBoardService } from '../shared/live-board.service';
 import { FilterMenuOption } from '../shared/filter-menu.component';
+import { describeHttpError } from '../shared/server-errors';
+import { environment } from '../../environments/environment';
 import {
   AutomationAction,
   AutomationRule,
@@ -28,7 +30,6 @@ import {
 } from '../card/card.model';
 import { BoardService } from '../board.service';
 import { AuthService } from '../auth/auth.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { ConfirmService, quoted } from '../shared/confirm.service';
 import {
   addDays,
@@ -361,10 +362,11 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   private describeError(error: unknown): string {
-    const http = error as HttpErrorResponse;
-    if (http?.status === 0) return "Can't reach the server. Is it running? (npm run dev in the server folder)";
-    return http?.error?.error || 'Something went wrong. Please try again.';
+    return describeHttpError(error);
   }
+
+  /** Shown only while developing, so the "not saved" banner can say how to start the server. */
+  readonly isDevelopment = !environment.production;
 
   /** True when some changes are only saved in this browser (the server didn't get them). */
   get hasUnsavedChanges(): boolean {

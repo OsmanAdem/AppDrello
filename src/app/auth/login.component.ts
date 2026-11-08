@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { RevealPasswordDirective } from '../shared/reveal-password.directive';
 import { PasswordStrengthComponent } from '../shared/password-strength.component';
 import { checkPassword } from '../shared/password-strength';
+import { describeAuthError } from './auth-errors';
 
 /** One page for both logging in and creating an account. */
 @Component({
@@ -127,9 +128,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: () => this.goToBoards(),
       error: (error: HttpErrorResponse) => {
         this.loading = false;
-        this.error = error.status === 0
-          ? "Can't reach the server. Is it running? (npm run dev in the server folder)"
-          : error.error?.error || 'Something went wrong. Please try again.';
+        this.error = describeAuthError(error);
       }
     });
   }
