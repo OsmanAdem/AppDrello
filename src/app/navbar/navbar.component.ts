@@ -31,9 +31,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   showUserMenu = false;
 
   readonly themeOptions: { value: ThemeChoice; label: string; icon: IconName; hint: string }[] = [
+    { value: 'system', label: 'System', icon: 'monitor', hint: "Follow your computer's setting (the default)" },
     { value: 'light', label: 'Light', icon: 'sun', hint: 'Always light' },
-    { value: 'dark', label: 'Dark', icon: 'moon', hint: 'Always dark' },
-    { value: 'system', label: 'System', icon: 'monitor', hint: "Follow your computer's setting" }
+    { value: 'dark', label: 'Dark', icon: 'moon', hint: 'Always dark' }
   ];
   private navigationSubscription?: Subscription;
 
