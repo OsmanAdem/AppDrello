@@ -2,7 +2,8 @@ import { Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, O
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { InvitationService } from '../shared/invitation.service';
-import { ThemeService } from '../shared/theme.service';
+import { ThemeChoice, ThemeService } from '../shared/theme.service';
+import { IconName } from '../shared/icon.component';
 import { AuthService } from '../auth/auth.service';
 import { BoardService } from '../board.service';
 
@@ -25,6 +26,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   showUserMenu = false;
+
+  readonly themeOptions: { value: ThemeChoice; label: string; icon: IconName; hint: string }[] = [
+    { value: 'light', label: 'Light', icon: 'sun', hint: 'Always light' },
+    { value: 'dark', label: 'Dark', icon: 'moon', hint: 'Always dark' },
+    { value: 'system', label: 'System', icon: 'monitor', hint: "Follow your computer's setting" }
+  ];
   private navigationSubscription?: Subscription;
 
   ngOnInit(): void {

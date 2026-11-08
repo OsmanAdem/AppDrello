@@ -2,6 +2,10 @@
 
 A Trello-style project board, built as a fullstack app with **Angular**, **Node.js/Express** and **PostgreSQL**.
 
+**🔗 Live demo: [drello-jqwv.onrender.com](https://drello-jqwv.onrender.com)**
+
+> Hosted on free plans: the server sleeps when nobody uses it, so the first visit can take up to a minute. Sign up with any email to try it.
+
 Plan work on boards with columns and cards, schedule it on a calendar and a timeline, run sprints, add your own fields, and let automations handle repetitive steps. Every user has their own account, and boards are saved in a real database.
 
 ![A board in Drello](docs/screenshots/board-light.png)
@@ -134,6 +138,21 @@ server/
 - "Forgot password" answers the same way whether or not an email has an account
 - Secrets live in `server/.env`, which is never committed
 
-## Roadmap
+## Hosting
 
-- Deploy online
+The live demo runs on free plans:
+
+| Part | Service |
+|---|---|
+| Website (Angular build) | Render static site, with a rewrite from `/*` to `/index.html` |
+| Server (Express) | Render web service, root directory `server` |
+| Database (PostgreSQL) | Neon (Frankfurt) |
+| Email | Brevo's email API |
+
+The server creates and updates the database tables by itself when it starts. Its settings (`DATABASE_URL`, `JWT_SECRET`, `BREVO_API_KEY`, `EMAIL_FROM`, `CLIENT_ORIGIN`, `APP_URL`) are set as environment variables on Render.
+
+## Ideas for later
+
+- Comments and attachments on cards
+- Profile pictures
+- A custom domain

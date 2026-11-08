@@ -36,6 +36,7 @@ const ICONS = {
   'checklist': ["m9 11 3 3L22 4", "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"],
   'check': ["M20 6 9 17l-5-5"],
   'expand': ["M15 3L21 3L21 9", "M9 21L3 21L3 15", "M21 3l-7 7M3 21l7-7"],
+  'monitor': ["M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z", "M8 21h8M12 17v4"],
   'dot': ["M10.5 12a1.5 1.5 0 1 0 3.0 0a1.5 1.5 0 1 0 -3.0 0"],
 } satisfies Record<string, string[]>;
 

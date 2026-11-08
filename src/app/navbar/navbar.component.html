@@ -60,6 +60,19 @@
             <span class="nav-badge">{{ invitations.count }}</span>
           </a>
           <div class="user-dropdown-divider" role="separator"></div>
+          <div class="theme-choice" role="group" aria-labelledby="theme-choice-label">
+            <span id="theme-choice-label">Theme</span>
+            <div class="theme-options">
+              <button type="button" *ngFor="let option of themeOptions"
+                [class.is-active]="theme.choice === option.value"
+                [attr.aria-pressed]="theme.choice === option.value"
+                [title]="option.hint"
+                (click)="theme.set(option.value)">
+                <app-icon [name]="option.icon" [size]="14" /> {{ option.label }}
+              </button>
+            </div>
+          </div>
+          <div class="user-dropdown-divider" role="separator"></div>
           <button type="button" role="menuitem" (click)="showUserMenu = false; askToLogout()">
             <app-icon name="log-out" /> Log out
           </button>
