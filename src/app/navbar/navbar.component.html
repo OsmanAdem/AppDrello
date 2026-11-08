@@ -7,16 +7,19 @@
 
     <div class="navbar-menu">
       <a class="navbar-link" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-      <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">Boards</a>
+      <a class="navbar-link" routerLink="/boards" routerLinkActive="is-active">
+        Boards
+        <span
+          class="nav-badge"
+          *ngIf="auth.isLoggedIn && invitations.count"
+          [attr.aria-label]="invitations.count + (invitations.count === 1 ? ' invitation' : ' invitations')"
+          [title]="invitations.count + (invitations.count === 1 ? ' invitation waiting' : ' invitations waiting')">{{ invitations.count }}</span>
+      </a>
       <a class="navbar-link" routerLink="/about" routerLinkActive="is-active">About</a>
-      <ng-container *ngIf="auth.isLoggedIn; else loggedOut">
-        <a class="navbar-link navbar-user" routerLink="/account" routerLinkActive="is-active" [title]="'Your account (' + (auth.user?.email || '') + ')'"><span class="navbar-user-name">{{ auth.user?.name }}</span></a>
-        <button type="button" class="navbar-link navbar-logout" (click)="askToLogout()">Log out</button>
-      </ng-container>
-      <ng-template #loggedOut>
+      <ng-container *ngIf="!auth.isLoggedIn">
         <a class="navbar-link" routerLink="/login" routerLinkActive="is-active">Log in</a>
         <a class="navbar-link navbar-signup" routerLink="/signup" routerLinkActive="is-active">Sign up</a>
-      </ng-template>
+      </ng-container>
       <button
         type="button"
         class="theme-toggle"
@@ -25,6 +28,43 @@
         [title]="theme.current === 'dark' ? 'Light mode' : 'Dark mode'">
         <app-icon [name]="theme.current === 'dark' ? 'sun' : 'moon'" [size]="18" />
       </button>
+
+      <!-- The logged-in user: avatar + first name, opens a menu with Account settings and Log out -->
+      <div class="user-menu" *ngIf="auth.isLoggedIn">
+        <button
+          type="button"
+          class="user-button"
+          [class.is-open]="showUserMenu"
+          (click)="showUserMenu = !showUserMenu"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="showUserMenu"
+          [attr.aria-label]="'Account menu for ' + (auth.user?.name || 'you')">
+          <span class="user-avatar" aria-hidden="true">{{ initials }}</span>
+          <span class="user-first-name">{{ firstName }}</span>
+          <app-icon name="chevron-down" [size]="14" />
+        </button>
+        <div class="menu-dismiss" *ngIf="showUserMenu" (click)="showUserMenu = false"></div>
+        <div class="user-dropdown" role="menu" *ngIf="showUserMenu">
+          <div class="user-dropdown-header">
+            <span class="user-avatar is-large" aria-hidden="true">{{ initials }}</span>
+            <span class="user-identity">
+              <strong>{{ auth.user?.name }}</strong>
+              <small>{{ auth.user?.email }}</small>
+            </span>
+          </div>
+          <a role="menuitem" routerLink="/account" (click)="showUserMenu = false">
+            <app-icon name="settings" /> Account settings
+          </a>
+          <a role="menuitem" routerLink="/boards" (click)="showUserMenu = false" *ngIf="invitations.count">
+            <app-icon name="checklist" /> Invitations
+            <span class="nav-badge">{{ invitations.count }}</span>
+          </a>
+          <div class="user-dropdown-divider" role="separator"></div>
+          <button type="button" role="menuitem" (click)="showUserMenu = false; askToLogout()">
+            <app-icon name="log-out" /> Log out
+          </button>
+        </div>
+      </div>
     </div>
   </nav>
 </header>

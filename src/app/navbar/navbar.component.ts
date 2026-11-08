@@ -1,5 +1,7 @@
-import { Component, ElementRef, EventEmitter, HostListener, Output, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import { InvitationService } from '../shared/invitation.service';
 import { ThemeService } from '../shared/theme.service';
 import { AuthService } from '../auth/auth.service';
 import { BoardService } from '../board.service';
@@ -11,15 +13,46 @@ export type DrelloPage = 'home' | 'boards' | 'about';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   @Output() pageChange = new EventEmitter<DrelloPage>();
 
   constructor(
     public theme: ThemeService,
     public auth: AuthService,
     public boards: BoardService,
+    public invitations: InvitationService,
     private router: Router
   ) {}
+
+  showUserMenu = false;
+  private navigationSubscription?: Subscription;
+
+  ngOnInit(): void {
+    // Logging in or out always changes the page, so that's when we check whose invitations to show.
+    this.invitations.followLoggedInUser();
+    this.navigationSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.showUserMenu = false;
+        this.invitations.followLoggedInUser();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.navigationSubscription?.unsubscribe();
+  }
+
+  /** "Osman Adem" → "OA". */
+  get initials(): string {
+    const parts = (this.auth.user?.name ?? '').trim().split(/\s+/).filter(Boolean);
+    const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? '?').slice(0, 2);
+    return letters.toUpperCase();
+  }
+
+  /** "Osman Adem" → "Osman". The full name is shown in the menu. */
+  get firstName(): string {
+    return (this.auth.user?.name ?? '').trim().split(/\s+/)[0] || 'Account';
+  }
 
   showLogoutConfirm = false;
   loggingOut = false;
@@ -37,6 +70,7 @@ export class NavbarComponent {
   @HostListener('document:keydown.escape')
   cancelLogout(): void {
     this.showLogoutConfirm = false;
+    this.showUserMenu = false;
   }
 
   /**

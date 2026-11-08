@@ -20,6 +20,14 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
   });
 
+  /** Pretends someone is logged in: a token that expires far in the future, and the user. */
+  function loginAs(name: string): void {
+    const payload = btoa(JSON.stringify({ sub: 'u1', exp: 4102444800 }));
+    localStorage.setItem('drello-token', `x.${payload}.y`);
+    localStorage.setItem('drello-user', JSON.stringify({ id: 'u1', name, email: 'osman@example.com' }));
+    fixture.detectChanges();
+  }
+
   afterEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-theme');
@@ -33,7 +41,35 @@ describe('NavbarComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Log in');
   });
 
-  it('switches between light and dark mode', () => {
+  it('shows the logged-in user as initials and first name, with a menu', () => {
+    loginAs('Osman Adem');
+    const page: HTMLElement = fixture.nativeElement;
+
+    expect(page.querySelector('.user-avatar')?.textContent?.trim()).toBe('OA');
+    expect(page.querySelector('.user-first-name')?.textContent?.trim()).toBe('Osman');
+    expect(page.querySelector('.user-dropdown')).toBeNull();
+
+    (page.querySelector('.user-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const menu = page.querySelector('.user-dropdown')!;
+    expect(menu.textContent).toContain('osman@example.com');
+    expect(menu.textContent).toContain('Account settings');
+    expect(menu.textContent).toContain('Log out');
+  });
+
+  it('shows the number of invitations on "Boards"', () => {
+    loginAs('Osman Adem');
+    fixture.componentInstance.invitations.invitations = [
+      { boardId: 'b1', boardName: 'Website', ownerName: 'Sara', invitedAt: '2026-11-08' },
+      { boardId: 'b2', boardName: 'App', ownerName: 'Omar', invitedAt: '2026-11-08' }
+    ];
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.nav-badge')?.textContent?.trim()).toBe('2');
+  });
+
+    it('switches between light and dark mode', () => {
     const theme = fixture.componentInstance.theme;
     theme.set('light');
 

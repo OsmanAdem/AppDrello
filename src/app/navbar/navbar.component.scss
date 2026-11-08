@@ -89,10 +89,40 @@
 .theme-toggle:hover { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-hover); }
 .theme-toggle:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-/* The name and Log out use the same .navbar-link style as Home, Boards and About. */
-.navbar-user-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.navbar-logout { background: none; font-family: inherit; cursor: pointer; }
-@media (max-width: 600px) { .navbar-user { display: none; } }
+/* ---------- Invitation badge (on "Boards" and in the user menu) ---------- */
+.nav-badge { display: inline-grid; min-width: 18px; height: 18px; margin-left: 7px; padding: 0 5px; place-items: center; border-radius: 999px; background: var(--accent); color: #ffffff; font-size: 11px; font-weight: 800; line-height: 1; animation: badge-pop .25s ease-out; }
+@keyframes badge-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- The logged-in user's menu ---------- */
+.user-menu { position: relative; margin-left: 6px; }
+.user-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 3px 10px 3px 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; font-weight: 650; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.user-button:hover, .user-button.is-open { border-color: var(--accent-border); background: var(--accent-soft); }
+.user-button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.user-button app-icon { color: var(--text-subtle); transition: transform .15s ease; }
+.user-button.is-open app-icon { transform: rotate(180deg); }
+.user-first-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-avatar { display: grid; flex: none; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--accent); color: #ffffff; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.user-avatar.is-large { width: 40px; height: 40px; font-size: 14px; }
+
+.menu-dismiss { position: fixed; inset: 0; z-index: 40; }
+.user-dropdown { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; display: flex; flex-direction: column; width: 260px; padding: 6px; border: 1px solid var(--line-soft); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); animation: user-menu-in .14s ease-out; }
+.user-dropdown-header { display: flex; align-items: center; gap: 11px; padding: 10px 10px 12px; border-bottom: 1px solid var(--line-soft); margin-bottom: 6px; }
+.user-identity { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.user-identity strong { overflow: hidden; color: var(--text-strong); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.user-identity small { overflow: hidden; color: var(--text-subtle); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.user-dropdown a, .user-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 0; border-radius: 8px; background: none; color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; }
+.user-dropdown a:hover, .user-dropdown button:hover, .user-dropdown a:focus-visible, .user-dropdown button:focus-visible { background: var(--accent-soft); color: var(--accent-hover); outline: none; }
+.user-dropdown app-icon { color: var(--text-subtle); }
+.user-dropdown a:hover app-icon, .user-dropdown button:hover app-icon { color: inherit; }
+.user-dropdown .nav-badge { margin-left: auto; }
+.user-dropdown-divider { height: 1px; margin: 6px 4px; background: var(--line-soft); }
+@keyframes user-menu-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 600px) {
+  .user-first-name, .user-button app-icon { display: none; }
+  .user-button { padding: 3px; }
+}
+@media (prefers-reduced-motion: reduce) { .user-dropdown, .nav-badge { animation: none; } }
 
 /* ---------- "Log out?" confirmation ---------- */
 .logout-backdrop { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; padding: 20px; background: rgba(12, 16, 27, .45); backdrop-filter: blur(4px); animation: logout-fade .14s ease; }

@@ -13,7 +13,8 @@ import { Board, BoardInvitation, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
 import { AuthService } from '../../auth/auth.service';
 import { ConfirmService, quoted } from '../../shared/confirm.service';
-import { LiveBoardService } from '../../shared/live-board.service';
+import { InvitationService } from '../../shared/invitation.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-board-gallery',
@@ -249,50 +250,46 @@ export class BoardGalleryComponent implements OnInit, OnDestroy {
     private boardService: BoardService,
     private confirm: ConfirmService,
     private auth: AuthService,
-    private live: LiveBoardService
+    private invitationService: InvitationService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  /** Invitations to other people's boards, waiting for Accept or Decline. */
-  invitations: BoardInvitation[] = [];
+  /** Invitations to other people's boards, waiting for Accept or Decline (shared with the navbar badge). */
+  get invitations(): BoardInvitation[] {
+    return this.invitationService.invitations;
+  }
   /** The board id of the invitation being answered (its buttons are disabled meanwhile). */
   answering = '';
+  private changesSubscription?: Subscription;
 
   ngOnInit(): void {
     this.refreshBoards();
     // Show the copy in this browser right away, then the latest list from the server.
     this.boardService.syncBoards().then(() => this.refreshBoards());
-    this.loadInvitations();
-    // New invitations (or being removed from a board) show up without reloading the page.
-    this.stopWatching = this.live.watchInvitations(() => {
-      this.loadInvitations();
-      this.boardService.syncBoards().then(() => this.refreshBoards());
-    });
+    this.invitationService.followLoggedInUser();
+    this.invitationService.refresh();
+    // Removed from a board, or a new invitation: reload the list without a page reload.
+    this.changesSubscription = this.invitationService.changes.subscribe(() =>
+      this.boardService.syncBoards().then(() => this.refreshBoards())
+    );
   }
-
-  private stopWatching?: () => void;
 
   ngOnDestroy(): void {
-    this.stopWatching?.();
-  }
-
-  private async loadInvitations(): Promise<void> {
-    this.invitations = await this.boardService.getInvitations();
+    this.changesSubscription?.unsubscribe();
   }
 
   async acceptInvitation(invitation: BoardInvitation): Promise<void> {
     this.answering = invitation.boardId;
     try {
-      await this.boardService.acceptInvitation(invitation.boardId);
-      this.invitations = this.invitations.filter(item => item.boardId !== invitation.boardId);
+      await this.invitationService.accept(invitation);
       this.refreshBoards();
     } catch {
       await this.confirm.notify({
         title: "Couldn't accept the invitation",
         message: `${invitation.ownerName} may have cancelled it. Check that the server is running and try again.`
       });
-      await this.loadInvitations();
+      await this.invitationService.refresh();
     } finally {
       this.answering = '';
     }
@@ -309,11 +306,10 @@ export class BoardGalleryComponent implements OnInit, OnDestroy {
 
     this.answering = invitation.boardId;
     try {
-      await this.boardService.declineInvitation(invitation.boardId);
+      await this.invitationService.decline(invitation);
     } catch {
-      // Already gone (cancelled by the owner) – either way it shouldn't show anymore.
+      // Already gone (cancelled by the owner) – either way it doesn't show anymore.
     } finally {
-      this.invitations = this.invitations.filter(item => item.boardId !== invitation.boardId);
       this.answering = '';
     }
   }
