@@ -4,6 +4,18 @@ A Trello-style project board, built as a fullstack app with **Angular**, **Node.
 
 Plan work on boards with columns and cards, schedule it on a calendar and a timeline, run sprints, add your own fields, and let automations handle repetitive steps. Every user has their own account, and boards are saved in a real database.
 
+![A board in Drello](docs/screenshots/board-light.png)
+
+## Screenshots
+
+| Dark mode | Task details |
+|---|---|
+| ![Board in dark mode](docs/screenshots/board-dark.png) | ![Task details](docs/screenshots/card-details.png) |
+| **Calendar** | **Timeline** |
+| ![Calendar view](docs/screenshots/calendar.png) | ![Timeline view](docs/screenshots/timeline.png) |
+| **Backlog and sprints** | **Your boards** |
+| ![Backlog and sprints](docs/screenshots/backlog.png) | ![Boards page](docs/screenshots/boards.png) |
+
 ## Features
 
 **Boards and tasks**
