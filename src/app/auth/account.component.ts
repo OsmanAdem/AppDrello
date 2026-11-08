@@ -115,7 +115,14 @@ export class AccountComponent {
     await this.boards.flushPendingWrites();
 
     this.auth.deleteAccount(this.deletePassword).subscribe({
-      next: () => this.router.navigate(['/home']),
+      next: async () => {
+        await this.router.navigate(['/home']);
+        // Say clearly that it worked, in the app's own dialog (shown on top of the home page).
+        await this.confirmDialog.notify({
+          title: 'Your account has been deleted',
+          message: 'Your account and all your boards are gone for good. Thanks for using Drello. You can sign up again any time.'
+        });
+      },
       error: (error: HttpErrorResponse) => {
         this.deleting = false;
         this.deleteError = describeAuthError(error);
