@@ -1,5 +1,6 @@
 import {
   Component,
+  OnDestroy,
   OnInit,
   Inject,
   PLATFORM_ID
@@ -12,6 +13,7 @@ import { Board, BoardInvitation, BoardTemplate } from '../../card/card.model';
 import { BoardService } from '../../board.service';
 import { AuthService } from '../../auth/auth.service';
 import { ConfirmService, quoted } from '../../shared/confirm.service';
+import { LiveBoardService } from '../../shared/live-board.service';
 
 @Component({
   selector: 'app-board-gallery',
@@ -232,7 +234,7 @@ import { ConfirmService, quoted } from '../../shared/confirm.service';
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   `]
 })
-export class BoardGalleryComponent implements OnInit {
+export class BoardGalleryComponent implements OnInit, OnDestroy {
   boards: Board[] = [];
   showModal = false;
   newBoardName = '';
@@ -246,7 +248,8 @@ export class BoardGalleryComponent implements OnInit {
     private router: Router,
     private boardService: BoardService,
     private confirm: ConfirmService,
-    private auth: AuthService
+    private auth: AuthService,
+    private live: LiveBoardService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -261,6 +264,17 @@ export class BoardGalleryComponent implements OnInit {
     // Show the copy in this browser right away, then the latest list from the server.
     this.boardService.syncBoards().then(() => this.refreshBoards());
     this.loadInvitations();
+    // New invitations (or being removed from a board) show up without reloading the page.
+    this.stopWatching = this.live.watchInvitations(() => {
+      this.loadInvitations();
+      this.boardService.syncBoards().then(() => this.refreshBoards());
+    });
+  }
+
+  private stopWatching?: () => void;
+
+  ngOnDestroy(): void {
+    this.stopWatching?.();
   }
 
   private async loadInvitations(): Promise<void> {

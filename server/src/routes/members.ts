@@ -5,6 +5,7 @@ import { asyncHandler, HttpError, requireText } from '../http';
 import { sendEmail } from '../email';
 import { APP_URL } from '../app-url';
 import { rateLimit } from '../rate-limit';
+import { notifyUser } from '../live';
 
 /** Who has access to a board, and inviting or removing people. */
 export const membersRouter = Router();
@@ -71,6 +72,9 @@ membersRouter.post('/:id/members', inviteLimit, asyncHandler(async (req, res) =>
       : `${invitee.name} already has access to this board.`);
   }
 
+  // Their open Boards page shows the invitation right away.
+  notifyUser(invitee.id);
+
   // Tell them by email. If sending fails, the invitation still works.
   const details = await pool.query(
     'SELECT boards.name AS board_name, users.name AS owner_name FROM boards JOIN users ON users.id = boards.owner_id WHERE boards.id = $1',
@@ -106,5 +110,6 @@ membersRouter.delete('/:id/members/:userId', asyncHandler(async (req, res) => {
   }
 
   await pool.query('DELETE FROM board_members WHERE board_id = $1 AND user_id = $2', [boardId, target]);
+  notifyUser(target); // their invitation or the shared board disappears from their Boards page
   res.json(target === me ? [] : await listMembers(boardId));
 }));

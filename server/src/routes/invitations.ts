@@ -3,13 +3,18 @@ import { pool } from '../db';
 import { userIdOf } from '../auth';
 import { asyncHandler, HttpError } from '../http';
 import { toBoard } from '../mappers';
-import { notifyBoardChanged } from '../live';
+import { addListener, notifyBoardChanged, userChannel } from '../live';
 
 /**
  * Invitations to boards. When an owner shares a board, the other person gets an
  * invitation first. They see it on their Boards page and choose Accept or Decline.
  */
 export const invitationsRouter = Router();
+
+// GET /api/invitations/events → stays open; says "changed" when the user is invited or removed somewhere
+invitationsRouter.get('/events', (req, res) => {
+  addListener(userChannel(userIdOf(res)), String(req.header('x-client-id') ?? ''), req, res);
+});
 
 // GET /api/invitations → the invitations waiting for the logged-in user
 invitationsRouter.get('/', asyncHandler(async (_req, res) => {
@@ -56,5 +61,6 @@ invitationsRouter.post('/:boardId/decline', asyncHandler(async (req, res) => {
     [req.params['boardId'], userIdOf(res)]
   );
   if (!rowCount) throw new HttpError(404, 'This invitation no longer exists.');
+  notifyBoardChanged(req.params['boardId']); // the owner's share panel updates
   res.status(204).end();
 }));

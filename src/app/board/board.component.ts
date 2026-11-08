@@ -223,7 +223,11 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   private startLiveUpdates(boardId: string): void {
     this.stopLiveUpdates();
-    this.stopWatching = this.live.watch(boardId, () => this.scheduleLiveRefresh(boardId, 300));
+    this.stopWatching = this.live.watch(boardId, () => {
+      // Someone accepted or declined an invitation: keep the open share panel up to date.
+      if (this.showSharePanel) this.refreshMembers();
+      this.scheduleLiveRefresh(boardId, 300);
+    });
   }
 
   private stopLiveUpdates(): void {
@@ -281,6 +285,14 @@ export class BoardComponent implements OnInit, OnDestroy {
       this.inviteError = this.describeError(error);
     } finally {
       this.membersLoading = false;
+    }
+  }
+
+  private async refreshMembers(): Promise<void> {
+    try {
+      this.members = await this.boardService.getMembers(this.boardId);
+    } catch {
+      // Keep the list we have; the next change will try again.
     }
   }
 

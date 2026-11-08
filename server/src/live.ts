@@ -10,6 +10,9 @@ import { asyncHandler } from './http';
  * board, it writes a short message into it ("changed"), and the browser fetches the board again.
  *
  * Every browser tab sends its own random X-Client-Id, so a tab isn't told about its own saves.
+ *
+ * The same idea is used per user ("user:<id>"), so the Boards page shows a new invitation
+ * the moment someone invites you.
  */
 
 interface Listener {
@@ -17,7 +20,7 @@ interface Listener {
   clientId: string;
 }
 
-/** boardId → the open connections watching that board. */
+/** Channel (a board id, or "user:<id>") → the open connections watching it. */
 const listeners = new Map<string, Set<Listener>>();
 
 /** How many open connections there are (used by the tests). */
@@ -25,13 +28,25 @@ export function listenerCount(boardId: string): number {
   return listeners.get(boardId)?.size ?? 0;
 }
 
-/** Tells everyone watching the board that it changed, except the tab that made the change. */
-export function notifyBoardChanged(boardId: string, fromClientId = ''): void {
-  for (const listener of listeners.get(boardId) ?? []) {
+/** Tells everyone watching the channel that something changed, except the tab that made the change. */
+function notify(channel: string, fromClientId = ''): void {
+  for (const listener of listeners.get(channel) ?? []) {
     if (fromClientId && listener.clientId === fromClientId) continue;
-    listener.res.write(`event: changed\ndata: ${JSON.stringify({ boardId })}\n\n`);
+    listener.res.write(`event: changed\ndata: {}\n\n`);
   }
 }
+
+/** Tells everyone watching the board that it changed, except the tab that made the change. */
+export function notifyBoardChanged(boardId: string, fromClientId = ''): void {
+  notify(boardId, fromClientId);
+}
+
+/** Tells a user's open Boards pages that their invitations or boards changed. */
+export function notifyUser(userId: string): void {
+  notify(`user:${userId}`);
+}
+
+export const userChannel = (userId: string) => `user:${userId}`;
 
 /** Starts watching: keeps the response open and registers it until the browser disconnects. */
 export function addListener(boardId: string, clientId: string, req: Request, res: Response): void {

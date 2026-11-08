@@ -7,8 +7,8 @@ import { AuthService } from '../auth/auth.service';
 export const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
 /**
- * Live updates: keeps a connection open to GET /api/boards/:id/events and calls
- * `onChange` whenever someone else saves a change to that board.
+ * Live updates: keeps a connection open to GET /api/boards/:id/events (or /api/invitations/events)
+ * and calls `onChange` whenever someone else changes that board (or the user's invitations).
  *
  * Uses fetch() instead of EventSource, because EventSource can't send the login token header.
  * If the connection drops (server restarted, Wi-Fi gone), it reconnects after a short wait.
@@ -27,7 +27,17 @@ export class LiveBoardService {
 
   /** Starts watching a board. Call the returned function to stop. */
   watch(boardId: string, onChange: () => void): () => void {
-    if (!this.isBrowser || boardId === 'default' || typeof fetch !== 'function') return () => undefined;
+    if (boardId === 'default') return () => undefined;
+    return this.listen(`${API_URL}/boards/${encodeURIComponent(boardId)}/events`, onChange);
+  }
+
+  /** Starts watching the user's invitations (someone invites you, or removes you from a board). */
+  watchInvitations(onChange: () => void): () => void {
+    return this.listen(`${API_URL}/invitations/events`, onChange);
+  }
+
+  private listen(url: string, onChange: () => void): () => void {
+    if (!this.isBrowser || typeof fetch !== 'function') return () => undefined;
 
     const controller = new AbortController();
     let retryDelay = 2000;
@@ -37,7 +47,7 @@ export class LiveBoardService {
       const token = this.auth.token;
       if (!token) return;
       try {
-        const response = await fetch(`${API_URL}/boards/${encodeURIComponent(boardId)}/events`, {
+        const response = await fetch(url, {
           headers: { Authorization: `Bearer ${token}`, 'X-Client-Id': CLIENT_ID, Accept: 'text/event-stream' },
           signal: controller.signal
         });
