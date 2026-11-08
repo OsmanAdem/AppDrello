@@ -1,0 +1,43 @@
+# Runs the tests and the builds on GitHub every time code is pushed.
+# The result shows as a green ✓ (or a red ✗) next to each commit, and as the badge in the README.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: App (Angular)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Unit tests
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+      - name: Production build
+        run: npm run build
+
+  server:
+    name: Server (Express)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: Type check and build
+        run: npm run build
+      - name: Tests
+        run: npm test

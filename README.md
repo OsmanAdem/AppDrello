@@ -1,5 +1,7 @@
 # Drello
 
+[![CI](https://github.com/OsmanAdem/AppDrello/actions/workflows/ci.yml/badge.svg)](https://github.com/OsmanAdem/AppDrello/actions/workflows/ci.yml)
+
 A Trello-style project board, built as a fullstack app with **Angular**, **Node.js/Express** and **PostgreSQL**.
 
 **🔗 Live demo: [drello-jqwv.onrender.com](https://drello-jqwv.onrender.com)**
@@ -61,7 +63,7 @@ Plan work on boards with columns and cards, schedule it on a calendar and a time
 | Database | PostgreSQL |
 | Security | bcrypt password hashing, JWT login tokens, owner checks on every request, rate limiting |
 | Email | Brevo's email API (or any SMTP provider through Nodemailer) |
-| Tests | Jasmine and Karma |
+| Tests | Jasmine and Karma (app), Node's test runner (server), run on every push with GitHub Actions |
 
 ## How it fits together
 
@@ -108,24 +110,31 @@ Open http://localhost:4200 and create an account.
 | project folder | `npm test` | Runs the unit tests |
 | project folder | `npm run build` | Production build into `dist/` |
 | `server/` | `npm run dev` | Runs the API and restarts on changes |
-| `server/` | `npm run db:setup` | Creates or updates the database tables |
+| `server/` | `npm run db:setup` | Creates or updates the database tables (the server also does this when it starts) |
+| `server/` | `npm test` | Runs the server tests |
 
 ## Project structure
 
 ```
 src/app/
   auth/            Log in, sign up, account, forgot/reset password, guard, interceptor
-  board/           The board page: columns, calendar, timeline, settings panels
+  board/           The board page: columns, calendar, timeline, settings and share panels
   backlog/         Backlog and sprint planning
   card/            Cards and the task details dialog, plus the data models
-  column/          Columns, and the Boards page (board-gallery)
-  shared/          Dialogs, date helpers, theme, show/hide password
+  column/          Columns, and the Boards page with invitations (board-gallery)
+  navbar/          Top bar: links, invitation badge, user menu with theme choice
+  home/  about/    Start page and About page
+  shared/          Icons, dialogs, live updates, invitations, theme, show/hide password
   board.service.ts Saving and syncing boards with the API
   api.service.ts   One method per API endpoint
 server/
   db/schema.sql    The database tables
-  src/routes/      API endpoints (auth, boards, board state, templates, ...)
+  src/routes/      API endpoints (auth, boards, board state, members, invitations, templates)
   src/auth.ts      Login tokens and access checks
+  src/live.ts      Live updates (Server-Sent Events)
+  src/email.ts     Sending email (Brevo, SMTP, or printed in the terminal)
+  test/            Server tests
+.github/workflows/ CI: tests and builds on every push
 ```
 
 ## Security notes

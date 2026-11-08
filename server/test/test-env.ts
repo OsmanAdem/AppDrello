@@ -3,3 +3,4 @@
 process.env['JWT_SECRET'] = 'test-secret-only-used-in-tests';
 process.env['DATABASE_URL'] = 'postgres://test:test@localhost:5432/not-used-by-these-tests';
 process.env['SMTP_HOST'] = ''; // print emails instead of sending them
+process.env['BREVO_API_KEY'] = ''; // never send real emails from tests
