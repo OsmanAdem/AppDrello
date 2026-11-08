@@ -124,6 +124,7 @@ src/app/
   column/          Columns, and the Boards page with invitations (board-gallery)
   navbar/          Top bar: links, invitation badge, user menu with theme choice
   home/  about/    Start page and About page
+  not-found/       The "Page not found" page for unknown addresses
   shared/          Icons, dialogs, live updates, invitations, theme, show/hide password
   board.service.ts Saving and syncing boards with the API
   api.service.ts   One method per API endpoint

@@ -10,6 +10,7 @@ import { ForgotPasswordComponent } from './auth/forgot-password.component';
 import { ResetPasswordComponent } from './auth/reset-password.component';
 import { AccountComponent } from './auth/account.component';
 import { authGuard } from './auth/auth.guard';
+import { NotFoundComponent } from './not-found/not-found.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -23,7 +24,8 @@ const routes: Routes = [
   { path: 'boards', component: BoardGalleryComponent, canActivate: [authGuard] },
   { path: 'boards/:id', component: BoardComponent, canActivate: [authGuard] },
   { path: 'about', component: AboutComponent },
-  { path: '**', redirectTo: 'home' }
+  // Any other address: a clear "Page not found" instead of silently going home.
+  { path: '**', component: NotFoundComponent }
 ];
 
 @NgModule({
