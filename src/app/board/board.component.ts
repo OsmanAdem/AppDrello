@@ -37,23 +37,9 @@ import {
   toDateKey
 } from '../shared/date-utils';
 
-type TaskView =
-  | 'all'
-  | 'priority-high'
-  | 'priority-medium'
-  | 'priority-low'
-  | 'priority-none'
-  | 'label-bug'
-  | 'label-feature'
-  | 'label-improvement'
-  | 'label-planning'
-  | 'label-completed'
-  | 'label-none';
-
-interface TaskViewGroup {
-  title: string;
-  views: { id: TaskView; label: string }[];
-}
+/** Filters on the board. '' = no filter, 'none' = cards without a priority/label. */
+type PriorityFilter = '' | 'High' | 'Medium' | 'Low' | 'none';
+type LabelFilter = '' | 'Bug' | 'Feature' | 'Improvement' | 'Planning' | 'Completed' | 'none';
 
 type BoardView = 'board' | 'calendar' | 'timeline' | 'backlog';
 
@@ -94,7 +80,8 @@ export class BoardComponent implements OnInit, OnDestroy {
   columns: Column[] = [];
   boardId = 'default';
   boardName = '';
-  taskView: TaskView = 'all';
+  priorityFilter: PriorityFilter = '';
+  labelFilter: LabelFilter = '';
   taskSearch = '';
   activeView: BoardView = 'board';
   timelineStart = startOfWeek(new Date());
@@ -147,27 +134,19 @@ export class BoardComponent implements OnInit, OnDestroy {
   activity: BoardActivity[] = [];
   selectedCalendarCard: Card | null = null;
   readonly weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  quickViewGroups: TaskViewGroup[] = [
-    {
-      title: 'Priority',
-      views: [
-        { id: 'priority-high', label: 'High' },
-        { id: 'priority-medium', label: 'Medium' },
-        { id: 'priority-low', label: 'Low' },
-        { id: 'priority-none', label: 'No priority' }
-      ]
-    },
-    {
-      title: 'Label',
-      views: [
-        { id: 'label-bug', label: 'Bug' },
-        { id: 'label-feature', label: 'Feature' },
-        { id: 'label-improvement', label: 'Improvement' },
-        { id: 'label-planning', label: 'Planning' },
-        { id: 'label-completed', label: 'Completed' },
-        { id: 'label-none', label: 'No label' }
-      ]
-    }
+  readonly priorityFilterOptions: { value: Exclude<PriorityFilter, ''>; label: string }[] = [
+    { value: 'High', label: 'High' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'Low', label: 'Low' },
+    { value: 'none', label: 'No priority' }
+  ];
+  readonly labelFilterOptions: { value: Exclude<LabelFilter, ''>; label: string }[] = [
+    { value: 'Bug', label: 'Bug' },
+    { value: 'Feature', label: 'Feature' },
+    { value: 'Improvement', label: 'Improvement' },
+    { value: 'Planning', label: 'Planning' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'none', label: 'No label' }
   ];
 
   private isBrowser: boolean;
@@ -911,7 +890,19 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   get filtersActive(): boolean {
-    return this.taskView !== 'all' || !!this.taskSearch.trim() || this.showActiveSprintOnly;
+    return !!this.priorityFilter || !!this.labelFilter || !!this.taskSearch.trim() || this.showActiveSprintOnly;
+  }
+
+  /** The filters that are on, shown as small removable chips under the toolbar. */
+  get activeFilters(): { label: string; clear: () => void }[] {
+    const chips: { label: string; clear: () => void }[] = [];
+    const priority = this.priorityFilterOptions.find(option => option.value === this.priorityFilter);
+    if (priority) chips.push({ label: priority.value === 'none' ? 'No priority' : `${priority.label} priority`, clear: () => (this.priorityFilter = '') });
+    const label = this.labelFilterOptions.find(option => option.value === this.labelFilter);
+    if (label) chips.push({ label: label.label, clear: () => (this.labelFilter = '') });
+    if (this.showActiveSprintOnly && this.activeSprint) chips.push({ label: this.activeSprint.name, clear: () => (this.showActiveSprintOnly = false) });
+    if (this.taskSearch.trim()) chips.push({ label: `“${this.taskSearch.trim()}”`, clear: () => (this.taskSearch = '') });
+    return chips;
   }
 
   get totalTaskCount(): number {
@@ -925,14 +916,14 @@ export class BoardComponent implements OnInit, OnDestroy {
     );
   }
 
-  countTasks(view: TaskView): number {
-    return this.columns.reduce((total, column) => total + column.cards.filter(card =>
-      this.matchesTaskView(card, column, view)
-    ).length, 0);
+  /** How many cards have this priority (shown in the Priority menu). */
+  countPriority(value: PriorityFilter): number {
+    return this.columns.reduce((total, column) => total + column.cards.filter(card => this.matchesPriority(card, value)).length, 0);
   }
 
-  setTaskView(view: TaskView): void {
-    this.taskView = view;
+  /** How many cards have this label (shown in the Label menu). */
+  countLabel(value: LabelFilter): number {
+    return this.columns.reduce((total, column) => total + column.cards.filter(card => this.matchesLabel(card, column, value)).length, 0);
   }
 
   getFilteredCards(column: Column, ignoreSprintFilter = false): Card[] {
@@ -941,36 +932,33 @@ export class BoardComponent implements OnInit, OnDestroy {
     return column.cards.filter(card => {
       const matchesSprint = ignoreSprintFilter || !this.showActiveSprintOnly ||
         (!!activeSprintId && card.sprintId === activeSprintId);
-      const matchesView = this.taskView === 'all' ||
-        this.matchesTaskView(card, column, this.taskView);
+      const matchesFilters = this.matchesPriority(card, this.priorityFilter) &&
+        this.matchesLabel(card, column, this.labelFilter);
       const searchableText = [card.title, card.description, card.issueKey]
         .filter(Boolean)
         .join(' ')
         .toLocaleLowerCase();
-      return matchesSprint && matchesView && (!query || searchableText.includes(query));
+      return matchesSprint && matchesFilters && (!query || searchableText.includes(query));
     });
   }
 
   clearFilters(): void {
-    this.taskView = 'all';
+    this.priorityFilter = '';
+    this.labelFilter = '';
     this.taskSearch = '';
     this.showActiveSprintOnly = false;
   }
 
-  private matchesTaskView(card: Card, column: Column, view: TaskView): boolean {
-    switch (view) {
-      case 'priority-high': return card.priority === 'High';
-      case 'priority-medium': return card.priority === 'Medium';
-      case 'priority-low': return card.priority === 'Low';
-      case 'priority-none': return !card.priority;
-      case 'label-bug': return card.label === 'Bug';
-      case 'label-feature': return card.label === 'Feature';
-      case 'label-improvement': return card.label === 'Improvement';
-      case 'label-planning': return card.label === 'Planning';
-      case 'label-completed': return this.isCompleted(card, column);
-      case 'label-none': return !card.label;
-      default: return true;
-    }
+  private matchesPriority(card: Card, filter: PriorityFilter): boolean {
+    if (!filter) return true;
+    return filter === 'none' ? !card.priority : card.priority === filter;
+  }
+
+  private matchesLabel(card: Card, column: Column, filter: LabelFilter): boolean {
+    if (!filter) return true;
+    if (filter === 'none') return !card.label;
+    if (filter === 'Completed') return this.isCompleted(card, column);
+    return card.label === filter;
   }
 
   private isCompleted(card: Card, column: Column): boolean {

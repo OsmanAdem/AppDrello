@@ -108,32 +108,40 @@
         aria-label="Clear task search"
         (click)="taskSearch = ''"><app-icon name="x" [size]="14" /></button>
     </label>
-    <span class="toolbar-label">Quick views</span>
-    <button type="button" class="view-button" [class.is-active]="taskView === 'all'" (click)="setTaskView('all')" [attr.aria-pressed]="taskView === 'all'">
-      All tasks <span>{{ totalTaskCount }}</span>
+    <label class="filter-select" [class.is-active]="priorityFilter">
+      <span class="filter-select-name">Priority</span>
+      <select name="priorityFilter" [(ngModel)]="priorityFilter" aria-label="Filter by priority">
+        <option value="">All</option>
+        <option *ngFor="let option of priorityFilterOptions" [value]="option.value">{{ option.label }} ({{ countPriority(option.value) }})</option>
+      </select>
+      <app-icon name="chevron-down" [size]="14" />
+    </label>
+    <label class="filter-select" [class.is-active]="labelFilter">
+      <span class="filter-select-name">Label</span>
+      <select name="labelFilter" [(ngModel)]="labelFilter" aria-label="Filter by label">
+        <option value="">All</option>
+        <option *ngFor="let option of labelFilterOptions" [value]="option.value">{{ option.label }} ({{ countLabel(option.value) }})</option>
+      </select>
+      <app-icon name="chevron-down" [size]="14" />
+    </label>
+    <button type="button" class="clear-filters" *ngIf="filtersActive" (click)="clearFilters()">
+      <app-icon name="x" [size]="14" /> Clear filters
     </button>
-    <div class="quick-view-group" *ngFor="let group of quickViewGroups">
-      <span class="quick-view-group-label">{{ group.title }}</span>
-      <div class="quick-views">
-        <button
-          type="button"
-          class="view-button"
-          *ngFor="let view of group.views"
-          [class.is-active]="taskView === view.id"
-          (click)="setTaskView(view.id)"
-          [attr.aria-pressed]="taskView === view.id">
-          {{ view.label }} <span>{{ countTasks(view.id) }}</span>
-        </button>
-      </div>
-    </div>
   </section>
 
   <div class="results-bar" aria-live="polite" *ngIf="activeView === 'board'">
-    <span>
-      Showing <strong>{{ filteredTaskCount }}</strong> of {{ totalTaskCount }} tasks
+    <span class="results-summary">
+      <span>Showing <strong>{{ filteredTaskCount }}</strong> of {{ totalTaskCount }} tasks</span>
+      <span class="active-filters" *ngIf="activeFilters.length">
+        <span class="active-filters-label">Filtered by</span>
+        <button type="button" class="filter-chip" *ngFor="let filter of activeFilters"
+          (click)="filter.clear()" [attr.aria-label]="'Remove filter ' + filter.label">
+          {{ filter.label }} <app-icon name="x" [size]="12" />
+        </button>
+      </span>
     </span>
     <span class="drag-hint" *ngIf="filtersActive">
-      Choose All tasks to move cards between columns.
+      Clear the filters to move cards between columns.
     </span>
     <span class="scroll-hint">
       Scroll sideways to see more columns <app-icon name="arrow-right" [size]="14" />

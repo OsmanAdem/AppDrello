@@ -59,8 +59,30 @@ describe('BoardComponent', () => {
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['1']);
 
     component.taskSearch = '';
-    component.setTaskView('priority-low');
+    component.priorityFilter = 'Low';
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['2']);
+  });
+
+  it('combines the priority and label filters, and each chip removes its filter', () => {
+    const [todo] = component.columns;
+    todo.cards.push(
+      { id: 'a', boardId: component.boardId, columnId: todo.id, title: 'Crash on login', priority: 'High', label: 'Bug' },
+      { id: 'b', boardId: component.boardId, columnId: todo.id, title: 'New page', priority: 'High', label: 'Feature' },
+      { id: 'c', boardId: component.boardId, columnId: todo.id, title: 'Typo', priority: 'Low', label: 'Bug' }
+    );
+
+    component.priorityFilter = 'High';
+    component.labelFilter = 'Bug';
+    expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a']);
+    expect(component.activeFilters.map(chip => chip.label)).toEqual(['High priority', 'Bug']);
+
+    component.activeFilters[1].clear(); // remove "Bug"
+    expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'b']);
+
+    component.clearFilters();
+    expect(component.filtersActive).toBeFalse();
+    expect(component.countPriority('High')).toBe(2);
+    expect(component.countLabel('Bug')).toBe(2);
   });
 
   it('runs an automation when a card is moved into a column', () => {
