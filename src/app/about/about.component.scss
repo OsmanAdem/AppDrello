@@ -325,3 +325,8 @@
     padding: 30px 18px;
   }
 }
+
+/* Tablets: two cards per row before going down to one on phones. */
+@media (min-width: 761px) and (max-width: 980px) {
+  .about-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
