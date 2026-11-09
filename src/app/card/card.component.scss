@@ -640,6 +640,18 @@
   cursor: pointer;
 }
 
+/* Nothing chosen yet: show the word "Priority" / "Label" as a light placeholder. */
+.priority-select.is-empty,
+.label-select.is-empty {
+  color: var(--text-subtle);
+}
+
+/* The options in the open list always use the normal text color. */
+.priority-select option,
+.label-select option {
+  color: var(--text);
+}
+
 .priority-select:focus,
 .label-select:focus {
   outline: 2px solid var(--focus-ring);

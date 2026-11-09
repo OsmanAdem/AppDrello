@@ -59,8 +59,9 @@
         [(ngModel)]="card.priority"
         (ngModelChange)="onTitleChange()"
         aria-label="Card priority"
-        class="priority-select">
-        <option value=""></option>
+        class="priority-select"
+        [class.is-empty]="!card.priority">
+        <option value="">Priority</option>
         <option value="Low">Low</option>
         <option value="Medium">Medium</option>
         <option value="High">High</option>
@@ -70,8 +71,9 @@
         [(ngModel)]="card.label"
         (ngModelChange)="onTitleChange()"
         aria-label="Card label"
-        class="label-select">
-        <option value=""></option>
+        class="label-select"
+        [class.is-empty]="!card.label">
+        <option value="">Label</option>
         <option value="Bug">Bug</option>
         <option value="Feature">Feature</option>
         <option value="Improvement">Improvement</option>
@@ -163,7 +165,7 @@
             [(ngModel)]="card.priority"
             (ngModelChange)="onTitleChange()"
             aria-label="Task priority">
-            <option value=""></option>
+            <option value="">No priority</option>
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
             <option value="High">High</option>
@@ -176,7 +178,7 @@
             [(ngModel)]="card.label"
             (ngModelChange)="onTitleChange()"
             aria-label="Task label">
-            <option value=""></option>
+            <option value="">No label</option>
             <option value="Bug">Bug</option>
             <option value="Feature">Feature</option>
             <option value="Improvement">Improvement</option>
@@ -203,7 +205,7 @@
                 [ngModel]="fieldValue(field) ?? ''"
                 (ngModelChange)="setFieldValue(field, $event)"
                 [attr.aria-label]="field.name">
-                <option value=""></option>
+                <option value="">Choose…</option>
                 <option *ngFor="let option of field.options" [value]="option">{{ option }}</option>
               </select>
             </label>
