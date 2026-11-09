@@ -898,23 +898,6 @@ export class BoardComponent implements OnInit, OnDestroy {
     return this.priorityFilters.length > 0 || this.labelFilters.length > 0 || !!this.taskSearch.trim() || this.showActiveSprintOnly;
   }
 
-  /** The filters that are on, shown as small removable chips under the toolbar. */
-  get activeFilters(): { label: string; clear: () => void }[] {
-    const chips: { label: string; clear: () => void }[] = [];
-    for (const priority of this.priorityFilterOptions.filter(option => this.priorityFilters.includes(option.value))) {
-      chips.push({
-        label: priority.value === 'none' ? 'No priority' : `${priority.label} priority`,
-        clear: () => this.setPriorityFilters(this.priorityFilters.filter(value => value !== priority.value))
-      });
-    }
-    for (const label of this.labelFilterOptions.filter(option => this.labelFilters.includes(option.value))) {
-      chips.push({ label: label.label, clear: () => this.setLabelFilters(this.labelFilters.filter(value => value !== label.value)) });
-    }
-    if (this.showActiveSprintOnly && this.activeSprint) chips.push({ label: this.activeSprint.name, clear: () => this.toggleActiveSprintFilter() });
-    if (this.taskSearch.trim()) chips.push({ label: `“${this.taskSearch.trim()}”`, clear: () => { this.taskSearch = ''; this.saveFilters(); } });
-    return chips;
-  }
-
   get totalTaskCount(): number {
     return this.columns.reduce((total, column) => total + column.cards.length, 0);
   }

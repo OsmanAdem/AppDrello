@@ -117,16 +117,7 @@
   </section>
 
   <div class="results-bar" aria-live="polite" *ngIf="activeView === 'board'">
-    <span class="results-summary">
-      <span>Showing <strong>{{ filteredTaskCount }}</strong> of {{ totalTaskCount }} tasks</span>
-      <span class="active-filters" *ngIf="activeFilters.length">
-        <span class="active-filters-label">Filtered by</span>
-        <button type="button" class="filter-chip" *ngFor="let filter of activeFilters"
-          (click)="filter.clear()" [attr.aria-label]="'Remove filter ' + filter.label">
-          {{ filter.label }} <app-icon name="x" [size]="12" />
-        </button>
-      </span>
-    </span>
+    <span>Showing <strong>{{ filteredTaskCount }}</strong> of {{ totalTaskCount }} tasks</span>
     <span class="drag-hint" *ngIf="filtersActive">
       Clear the filters to move cards between columns.
     </span>

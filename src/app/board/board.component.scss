@@ -204,24 +204,6 @@
 }
 .clear-filters:hover { background: var(--danger-soft); color: var(--danger-strong); }
 
-.results-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.active-filters { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.active-filters-label { color: var(--text-subtle); }
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 6px 3px 9px;
-  border: 1px solid var(--accent-border);
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-hover);
-  font: inherit;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.filter-chip:hover { background: var(--surface); }
 
 .view-button {
   display: inline-flex;

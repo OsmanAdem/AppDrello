@@ -64,7 +64,7 @@ describe('BoardComponent', () => {
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['2']);
   });
 
-  it('combines the priority and label filters, and each chip removes its filter', () => {
+  it('combines the priority and label filters', () => {
     const [todo] = component.columns;
     todo.cards.push(
       { id: 'a', boardId: component.boardId, columnId: todo.id, title: 'Crash on login', priority: 'High', label: 'Bug' },
@@ -75,12 +75,11 @@ describe('BoardComponent', () => {
     component.priorityFilters = ['High'];
     component.labelFilters = ['Bug'];
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a']);
-    expect(component.activeFilters.map(chip => chip.label)).toEqual(['High priority', 'Bug']);
 
     component.priorityFilters = ['High', 'Low']; // several in one menu: any of them
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'c']);
 
-    component.activeFilters.find(chip => chip.label === 'Bug')!.clear();
+    component.setLabelFilters([]); // remove "Bug"
     expect(component.getFilteredCards(todo).map(card => card.id)).toEqual(['a', 'b', 'c']);
 
     component.clearFilters();
