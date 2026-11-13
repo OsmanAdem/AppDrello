@@ -1,5 +1,7 @@
 :root {
-  color-scheme: light;
+  /* "only" stops phone browsers (Chrome on Android, Samsung Internet) from darkening the
+     light theme by themselves: Drello has its own dark mode, so they shouldn't. */
+  color-scheme: only light;
 
   /* ---------- Design tokens ----------
      Every color, radius and shadow in the app comes from here.
