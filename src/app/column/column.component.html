@@ -24,6 +24,7 @@
           (keyup.enter)="saveRename()"
           (keyup.escape)="cancelRename()"
           class="edit-title-input"
+          maxlength="60"
           autofocus>
         <button class="save-title-button" (click)="saveRename()" aria-label="Save column name"><app-icon name="check" /></button>
       </div>

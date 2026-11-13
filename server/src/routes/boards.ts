@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '../db';
-import { asyncHandler, HttpError, requireText } from '../http';
+import { HttpError, MAX_BOARD_NAME, MAX_COLUMN_TITLE, asyncHandler, requireText } from '../http';
 import { assertBoardAccess, assertBoardOwner, canAccessBoard, userIdOf } from '../auth';
 import { toBoard, toCard, toColumn } from '../mappers';
 
@@ -30,9 +30,9 @@ boardsRouter.get('/', asyncHandler(async (_req, res) => {
 
 // POST /api/boards { name, columns? } → creates a board with its columns
 boardsRouter.post('/', asyncHandler(async (req, res) => {
-  const name = requireText(req.body.name, 'name');
+  const name = requireText(req.body.name, 'name').slice(0, MAX_BOARD_NAME);
   const columnTitles: string[] = Array.isArray(req.body.columns) && req.body.columns.length
-    ? req.body.columns.map((title: unknown) => requireText(title, 'column title'))
+    ? req.body.columns.map((title: unknown) => requireText(title, 'column title').slice(0, MAX_COLUMN_TITLE))
     : DEFAULT_COLUMNS;
 
   // A transaction: if creating a column fails, the board isn't saved either.
@@ -65,7 +65,7 @@ boardsRouter.get('/:id', asyncHandler(async (req, res) => {
 // PATCH /api/boards/:id { name } → rename a board
 boardsRouter.patch('/:id', asyncHandler(async (req, res) => {
   await assertBoardOwner(req.params['id'], userIdOf(res), 'rename it');
-  const name = requireText(req.body.name, 'name');
+  const name = requireText(req.body.name, 'name').slice(0, MAX_BOARD_NAME);
   const { rows } = await pool.query(
     'UPDATE boards SET name = $1, updated_at = now() WHERE id = $2 RETURNING *',
     [name, req.params['id']]

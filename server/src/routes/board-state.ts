@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PoolClient } from 'pg';
 import { pool, withTransaction } from '../db';
-import { asyncHandler, HttpError, requireText } from '../http';
+import { asyncHandler, HttpError, MAX_BOARD_NAME, MAX_CARD_TITLE, MAX_COLUMN_TITLE, requireText } from '../http';
 import { assertBoardAccess, assertBoardOwner, canAccessBoard, userIdOf } from '../auth';
 import { toActivity, toAutomation, toBoard, toCard, toColumn, toField, toSprint } from '../mappers';
 
@@ -15,8 +15,6 @@ import { toActivity, toAutomation, toBoard, toCard, toColumn, toField, toSprint 
 export const boardStateRouter = Router();
 
 const PRIORITIES = new Set(['', 'Low', 'Medium', 'High']);
-/** Same limit as the title fields in the app; longer titles are cut, so a huge paste can't break a card. */
-const MAX_CARD_TITLE = 160;
 
 /** Empty strings and missing values become NULL in the database. */
 function orNull(value: unknown): unknown {
@@ -60,7 +58,7 @@ async function loadBoardFor(boardId: string, userId: string) {
 
 // PUT /api/boards/:id { name, createdAt? } → create the board, or rename it if it exists
 boardStateRouter.put('/:id', asyncHandler(async (req, res) => {
-  const name = requireText(req.body.name, 'name');
+  const name = requireText(req.body.name, 'name').slice(0, MAX_BOARD_NAME);
   const userId = userIdOf(res);
 
   // A board shared with you: members may "save" it unchanged (the app does that when it
@@ -136,7 +134,7 @@ boardStateRouter.put('/:id/columns', asyncHandler(async (req, res) => {
          VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, position = EXCLUDED.position, is_backlog = EXCLUDED.is_backlog
          WHERE columns.board_id = EXCLUDED.board_id`,
-        [column.id, boardId, String(column.title ?? ''), position, !!column.isBacklog]
+        [column.id, boardId, String(column.title ?? '').slice(0, MAX_COLUMN_TITLE), position, !!column.isBacklog]
       );
     }
 

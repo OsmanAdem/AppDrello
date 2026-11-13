@@ -19,6 +19,14 @@ export function asyncHandler(
   };
 }
 
+/**
+ * The longest names the app lets you type. The server cuts anything longer,
+ * so a huge paste (or a request sent without the app) can't break the layout.
+ */
+export const MAX_BOARD_NAME = 80;
+export const MAX_COLUMN_TITLE = 60;
+export const MAX_CARD_TITLE = 160;
+
 /** Reads a required, non-empty string from the request body. */
 export function requireText(value: unknown, fieldName: string): string {
   if (typeof value !== 'string' || !value.trim()) {
