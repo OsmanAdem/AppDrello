@@ -15,6 +15,8 @@ import { toActivity, toAutomation, toBoard, toCard, toColumn, toField, toSprint 
 export const boardStateRouter = Router();
 
 const PRIORITIES = new Set(['', 'Low', 'Medium', 'High']);
+/** Same limit as the title fields in the app; longer titles are cut, so a huge paste can't break a card. */
+const MAX_CARD_TITLE = 160;
 
 /** Empty strings and missing values become NULL in the database. */
 function orNull(value: unknown): unknown {
@@ -157,7 +159,7 @@ boardStateRouter.put('/:id/columns', asyncHandler(async (req, res) => {
          WHERE cards.board_id = EXCLUDED.board_id`,
         [
           card.id, boardId, card.columnId, orNull(card.sprintId), String(card.issueKey || card.id),
-          String(card.title ?? ''), PRIORITIES.has(card.priority) ? card.priority : '', String(card.label ?? ''),
+          String(card.title ?? '').slice(0, MAX_CARD_TITLE), PRIORITIES.has(card.priority) ? card.priority : '', String(card.label ?? ''),
           orNull(card.description), orNull(card.assignee), orNull(card.startDate), orNull(card.dueDate),
           JSON.stringify(card.checklist ?? []), JSON.stringify(card.customFields ?? {}), card.position
         ]
