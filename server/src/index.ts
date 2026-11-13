@@ -20,6 +20,24 @@ const port = Number(process.env['PORT'] || 3000);
 // visitor's real address, which the rate limits rely on.
 app.set('trust proxy', 1);
 
+// Don't tell visitors which server software runs here ("X-Powered-By: Express").
+app.disable('x-powered-by');
+
+// Standard security headers on every answer:
+// - nosniff: the browser must trust the stated file type, never guess it
+// - Referrer-Policy: don't send full addresses (with board ids) to other sites
+// - DENY: the API may not be shown inside someone else's page (clickjacking)
+// - HSTS: always use HTTPS for this server from now on (ignored on http://localhost)
+app.use((_req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'DENY',
+    'Strict-Transport-Security': 'max-age=15552000'
+  });
+  next();
+});
+
 // Allow the Angular app to call this API from the browser. CLIENT_ORIGIN can hold several
 // addresses separated by commas, e.g. the live site and localhost.
 const allowedOrigins = (process.env['CLIENT_ORIGIN'] || 'http://localhost:4200')
